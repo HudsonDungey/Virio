@@ -71,6 +71,10 @@ interface IPulsePayrollManager {
         uint256 failCount
     );
 
+    /// Emitted when the optional executor callback fails. The add / remove
+    /// operation still succeeds; an owner can backfill on the executor.
+    event RegistrationFailed(bytes32 indexed recipientId, bytes32 reasonHash);
+
     // ─── Errors ───────────────────────────────────────────────────────────────
 
     error ZeroAddress();
@@ -83,6 +87,8 @@ interface IPulsePayrollManager {
     error TooEarlyToPay(bytes32 recipientId, uint256 nextPayAt);
     error TransferFailed();
     error ArrayLengthMismatch();
+    error NotTrustedExecutor(address caller);
+    error FeeBpsExceedsMax(uint16 bps, uint16 max);
 
     // ─── Functions ────────────────────────────────────────────────────────────
 
@@ -116,9 +122,27 @@ interface IPulsePayrollManager {
         uint256 newSpendCap
     ) external;
 
-    function executePayroll(bytes32 planId, bytes32 recipientId) external;
+    /// @notice Execute payroll for a single recipient. Only callable by the
+    ///         trusted executor router so every charge is scored and recorded.
+    /// @param  executorFeeBpsOverride  Dynamic executor fee (capped at 30 bps).
+    /// @param  executorPayee  Address that receives the executor fee
+    ///                        (the router contract, which then splits it).
+    function executePayrollFor(
+        bytes32 planId,
+        bytes32 recipientId,
+        uint16  executorFeeBpsOverride,
+        address executorPayee
+    ) external returns (uint256 grossAmount, uint256 executorFeePaid, uint256 protocolFeePaid);
 
-    function executePayrollBatch(bytes32 planId, bytes32[] calldata recipientIds) external;
+    /// @notice Batch variant. Per-recipient failures are absorbed and counted
+    ///         in the BatchPayrollExecuted event; the call as a whole does not
+    ///         revert. Returns aggregate executor / protocol fees.
+    function executePayrollBatchFor(
+        bytes32   planId,
+        bytes32[] calldata recipientIds,
+        uint16    executorFeeBpsOverride,
+        address   executorPayee
+    ) external returns (uint256 totalExecutorFee, uint256 totalProtocolFee, uint256 successCount, uint256 failCount);
 
     function getPlan(bytes32 planId) external view returns (Plan memory);
 

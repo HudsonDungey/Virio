@@ -4,12 +4,13 @@ pragma solidity ^0.8.24;
 import {Test} from "forge-std/Test.sol";
 import {PulsePayrollManager} from "../src/PulsePayrollManager.sol";
 import {IPulsePayrollManager} from "../src/interfaces/IPulsePayrollManager.sol";
+import {IPulseExecutor} from "../src/interfaces/IPulseExecutor.sol";
 import {MockUSDC} from "../src/test-helpers/MockUSDC.sol";
 
-/// Smoke tests for PulsePayrollManager.
-/// Covers: plan create / deactivate, add (single + batch), update, remove,
-/// single payroll execute, batch execute with partial fail, spend-cap auto-remove,
-/// owner-only setters, and full event capture on the happy path.
+/// Unit tests for PulsePayrollManager. executePayrollFor / executePayrollBatchFor
+/// are executor-only, so the test contract is wired as the trustedExecutor and
+/// drives the calls directly. The executor fee is routed to KEEPER (the payee
+/// address the router would use in production).
 contract PulsePayrollManagerTest is Test {
     PulsePayrollManager internal mgr;
     MockUSDC            internal usdc;
@@ -18,7 +19,7 @@ contract PulsePayrollManagerTest is Test {
     address internal FEE_REC  = makeAddr("feeRecipient");
     address internal EMPLOYER = makeAddr("employer");
     address internal STRANGER = makeAddr("stranger");
-    address internal BOT      = makeAddr("bot");
+    address internal KEEPER   = makeAddr("keeper");
 
     address internal alice = makeAddr("alice");
     address internal bob   = makeAddr("bob");
@@ -31,7 +32,7 @@ contract PulsePayrollManagerTest is Test {
     uint256 constant CAROL_AMOUNT = 1_200e6;
     uint256 constant DAVE_AMOUNT  = 600e6;
 
-    // Fee math (matches contract globals: 10 bps exec, 25 bps proto, 1 USDC flat)
+    // Fee math (matches contract globals: 10 bps exec via ramp min, 25 bps proto, 1 USDC flat)
     uint16  constant EXEC_BPS  = 10;
     uint16  constant PROTO_BPS = 25;
     uint256 constant FLAT_FEE  = 1e6;
@@ -45,12 +46,14 @@ contract PulsePayrollManagerTest is Test {
         vm.prank(OWNER);
         mgr = new PulsePayrollManager(FEE_REC);
 
-        // Fund the employer with enough USDC for many pay cycles and approve.
+        // Test contract is the trusted executor for these unit tests.
+        vm.prank(OWNER);
+        mgr.setTrustedExecutor(address(this));
+
         usdc.mint(EMPLOYER, 1_000_000e6);
         vm.prank(EMPLOYER);
         usdc.approve(address(mgr), type(uint256).max);
 
-        // Employer creates a weekly plan
         vm.prank(EMPLOYER);
         planId = mgr.createPlan(address(usdc), PERIOD);
     }
@@ -62,6 +65,22 @@ contract PulsePayrollManagerTest is Test {
         proto   = (amount * PROTO_BPS) / 10_000 + FLAT_FEE;
         net     = amount - execFee - proto;
     }
+
+    function _execPay(bytes32 rid) internal {
+        mgr.executePayrollFor(planId, rid, EXEC_BPS, KEEPER);
+    }
+
+    /// @dev IPulseExecutor stub for the manager's register/deregister callbacks.
+    function registerPayment(
+        IPulseExecutor.ManagerKind,
+        bytes32,
+        bytes32,
+        uint64,
+        uint64
+    ) external pure returns (bytes32) {
+        return bytes32(0);
+    }
+    function deregisterPayment(bytes32) external pure {}
 
     // ─── createPlan ───────────────────────────────────────────────────────────
 
@@ -177,9 +196,9 @@ contract PulsePayrollManagerTest is Test {
         mgr.addRecipientsBatch(planId, wallets, amounts, caps);
     }
 
-    // ─── executePayroll (single) ──────────────────────────────────────────────
+    // ─── executePayrollFor (single) ──────────────────────────────────────────
 
-    function test_executePayroll_balanceDeltasAndEvent() public {
+    function test_executePayrollFor_balanceDeltasAndEvent() public {
         vm.prank(EMPLOYER);
         bytes32 rid = mgr.addRecipient(planId, alice, ALICE_AMOUNT, 0);
 
@@ -188,58 +207,72 @@ contract PulsePayrollManagerTest is Test {
         uint256 eBefore = usdc.balanceOf(EMPLOYER);
         uint256 aBefore = usdc.balanceOf(alice);
         uint256 fBefore = usdc.balanceOf(FEE_REC);
-        uint256 bBefore = usdc.balanceOf(BOT);
+        uint256 kBefore = usdc.balanceOf(KEEPER);
 
         vm.expectEmit(true, true, true, true, address(mgr));
         emit IPulsePayrollManager.PayrollExecuted(
-            planId, rid, BOT, alice, ALICE_AMOUNT, net, execFee, proto, block.timestamp + PERIOD
+            planId, rid, KEEPER, alice, ALICE_AMOUNT, net, execFee, proto, block.timestamp + PERIOD
         );
-        vm.prank(BOT);
-        mgr.executePayroll(planId, rid);
+        _execPay(rid);
 
         assertEq(usdc.balanceOf(EMPLOYER), eBefore - ALICE_AMOUNT, "employer");
         assertEq(usdc.balanceOf(alice),    aBefore + net,          "recipient");
         assertEq(usdc.balanceOf(FEE_REC),  fBefore + proto,        "feeRecipient");
-        assertEq(usdc.balanceOf(BOT),      bBefore + execFee,      "bot");
+        assertEq(usdc.balanceOf(KEEPER),   kBefore + execFee,      "keeper");
     }
 
-    function test_executePayroll_revertsIfTooEarly() public {
+    function test_executePayrollFor_revertsIfTooEarly() public {
         vm.prank(EMPLOYER);
         bytes32 rid = mgr.addRecipient(planId, alice, ALICE_AMOUNT, 0);
-        vm.prank(BOT);
-        mgr.executePayroll(planId, rid);
+        _execPay(rid);
 
         vm.expectRevert(
             abi.encodeWithSelector(
                 IPulsePayrollManager.TooEarlyToPay.selector, rid, block.timestamp + PERIOD
             )
         );
-        vm.prank(BOT);
-        mgr.executePayroll(planId, rid);
+        _execPay(rid);
     }
 
-    function test_executePayroll_autoRemovesOnCapExceeded() public {
-        // Cap exactly one payment worth → second exec should auto-remove
+    function test_executePayrollFor_revertsForNonExecutor() public {
+        vm.prank(EMPLOYER);
+        bytes32 rid = mgr.addRecipient(planId, alice, ALICE_AMOUNT, 0);
+
+        vm.prank(STRANGER);
+        vm.expectRevert(
+            abi.encodeWithSelector(IPulsePayrollManager.NotTrustedExecutor.selector, STRANGER)
+        );
+        mgr.executePayrollFor(planId, rid, EXEC_BPS, KEEPER);
+    }
+
+    function test_executePayrollFor_revertsAboveMaxBps() public {
+        vm.prank(EMPLOYER);
+        bytes32 rid = mgr.addRecipient(planId, alice, ALICE_AMOUNT, 0);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(IPulsePayrollManager.FeeBpsExceedsMax.selector, uint16(31), uint16(30))
+        );
+        mgr.executePayrollFor(planId, rid, 31, KEEPER);
+    }
+
+    function test_executePayrollFor_autoRemovesOnCapExceeded() public {
         vm.prank(EMPLOYER);
         bytes32 rid = mgr.addRecipient(planId, alice, ALICE_AMOUNT, ALICE_AMOUNT);
 
-        vm.prank(BOT);
-        mgr.executePayroll(planId, rid);
+        _execPay(rid);
 
         vm.warp(block.timestamp + PERIOD);
 
         vm.expectEmit(true, true, true, false, address(mgr));
         emit IPulsePayrollManager.RecipientRemoved(planId, rid, address(mgr));
-        vm.prank(BOT);
-        mgr.executePayroll(planId, rid);
+        _execPay(rid);
 
         assertFalse(mgr.getRecipient(planId, rid).active);
     }
 
-    // ─── executePayrollBatch ──────────────────────────────────────────────────
+    // ─── executePayrollBatchFor ───────────────────────────────────────────────
 
-    function test_executePayrollBatch_paysAllAndEmitsBatchEvent() public {
-        // Add 4 recipients
+    function test_executePayrollBatchFor_paysAllAndEmitsBatchEvent() public {
         address[] memory wallets = new address[](4);
         uint256[] memory amounts = new uint256[](4);
         uint256[] memory caps    = new uint256[](4);
@@ -252,21 +285,16 @@ contract PulsePayrollManagerTest is Test {
         bytes32[] memory rids = mgr.addRecipientsBatch(planId, wallets, amounts, caps);
 
         vm.expectEmit(true, true, false, true, address(mgr));
-        emit IPulsePayrollManager.BatchPayrollExecuted(planId, BOT, 4, 0);
-        vm.prank(BOT);
-        mgr.executePayrollBatch(planId, rids);
+        emit IPulsePayrollManager.BatchPayrollExecuted(planId, KEEPER, 4, 0);
+        mgr.executePayrollBatchFor(planId, rids, EXEC_BPS, KEEPER);
 
-        // All recipients got paid net amount
         (, , uint256 aliceNet) = _split(ALICE_AMOUNT);
         (, , uint256 bobNet)   = _split(BOB_AMOUNT);
         assertEq(usdc.balanceOf(alice), aliceNet);
         assertEq(usdc.balanceOf(bob),   bobNet);
     }
 
-    function test_executePayrollBatch_partialFailDoesNotBlockOthers() public {
-        // Add 3 recipients; second one will fail because we revoke employer
-        // allowance below their threshold mid-batch — actually simpler approach:
-        // include a non-existent recipient id in the batch.
+    function test_executePayrollBatchFor_partialFailDoesNotBlockOthers() public {
         address[] memory wallets = new address[](2);
         uint256[] memory amounts = new uint256[](2);
         uint256[] memory caps    = new uint256[](2);
@@ -276,25 +304,22 @@ contract PulsePayrollManagerTest is Test {
         vm.prank(EMPLOYER);
         bytes32[] memory rids = mgr.addRecipientsBatch(planId, wallets, amounts, caps);
 
-        // Manually craft a batch with one real and one bogus id
         bytes32[] memory batch = new bytes32[](3);
         batch[0] = rids[0];
         batch[1] = keccak256("nonexistent");
         batch[2] = rids[1];
 
         vm.expectEmit(true, true, false, true, address(mgr));
-        emit IPulsePayrollManager.BatchPayrollExecuted(planId, BOT, 2, 1);
-        vm.prank(BOT);
-        mgr.executePayrollBatch(planId, batch);
+        emit IPulsePayrollManager.BatchPayrollExecuted(planId, KEEPER, 2, 1);
+        mgr.executePayrollBatchFor(planId, batch, EXEC_BPS, KEEPER);
 
-        // Real recipients still got paid
         (, , uint256 aliceNet) = _split(ALICE_AMOUNT);
         (, , uint256 bobNet)   = _split(BOB_AMOUNT);
         assertEq(usdc.balanceOf(alice), aliceNet);
         assertEq(usdc.balanceOf(bob),   bobNet);
     }
 
-    function test_executePayrollBatch_revertsIfPlanInactive() public {
+    function test_executePayrollBatchFor_revertsIfPlanInactive() public {
         vm.prank(EMPLOYER);
         mgr.deactivatePlan(planId);
 
@@ -302,8 +327,7 @@ contract PulsePayrollManagerTest is Test {
         vm.expectRevert(
             abi.encodeWithSelector(IPulsePayrollManager.PlanNotActive.selector, planId)
         );
-        vm.prank(BOT);
-        mgr.executePayrollBatch(planId, empty);
+        mgr.executePayrollBatchFor(planId, empty, EXEC_BPS, KEEPER);
     }
 
     // ─── removeRecipient ──────────────────────────────────────────────────────
@@ -337,13 +361,10 @@ contract PulsePayrollManagerTest is Test {
         bytes32 rid = mgr.addRecipient(planId, alice, ALICE_AMOUNT, 0);
         vm.stopPrank();
 
-        // Pay once, then remove
-        vm.prank(BOT);
-        mgr.executePayroll(planId, rid);
+        _execPay(rid);
         vm.prank(EMPLOYER);
         mgr.removeRecipient(planId, rid);
 
-        // Re-add — totalPaid should reset
         vm.prank(EMPLOYER);
         mgr.addRecipient(planId, alice, ALICE_AMOUNT, 0);
         assertEq(mgr.getRecipient(planId, rid).totalPaid, 0, "totals should reset on re-add");
@@ -372,7 +393,7 @@ contract PulsePayrollManagerTest is Test {
         mgr.updateRecipient(planId, rid, 0, 0);
     }
 
-    // ─── owner-only fee setters ───────────────────────────────────────────────
+    // ─── owner-only setters ───────────────────────────────────────────────────
 
     function test_setProtocolFeeBps_onlyOwner() public {
         vm.prank(OWNER);
@@ -394,29 +415,26 @@ contract PulsePayrollManagerTest is Test {
         mgr.setProtocolFlatFee(5e6);
     }
 
-    function test_setExecutorFeeBps_onlyOwner() public {
+    function test_setTrustedExecutor_onlyOwner() public {
         vm.prank(OWNER);
-        mgr.setExecutorFeeBps(20);
-        assertEq(mgr.executorFeeBps(), 20);
+        mgr.setTrustedExecutor(KEEPER);
+        assertEq(mgr.trustedExecutor(), KEEPER);
 
         vm.prank(STRANGER);
         vm.expectRevert("Pulse: not owner");
-        mgr.setExecutorFeeBps(20);
+        mgr.setTrustedExecutor(address(this));
     }
 
     // ─── getDueRecipients ────────────────────────────────────────────────────
 
     function test_getDueRecipients_returnsOnlyDue() public {
-        // Add 2 recipients; pay one; advance halfway through period
         vm.startPrank(EMPLOYER);
         bytes32 rA = mgr.addRecipient(planId, alice, ALICE_AMOUNT, 0);
         bytes32 rB = mgr.addRecipient(planId, bob,   BOB_AMOUNT,   0);
         vm.stopPrank();
 
-        vm.prank(BOT);
-        mgr.executePayroll(planId, rA);
+        _execPay(rA);
 
-        // Both due at t=0; after paying alice, only bob is due (alice is not until next period)
         bytes32[] memory due = mgr.getDueRecipients(planId);
         assertEq(due.length, 1);
         assertEq(due[0], rB);

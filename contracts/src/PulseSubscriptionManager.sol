@@ -7,24 +7,29 @@ pragma solidity ^0.8.24;
 // Pull-based ERC-20 subscription protocol.
 //
 // Key design invariants:
-//   1. charge() is permissionless — any address may call it and earns
-//      executorFeeBps as an incentive to run a keeper bot.
-//   2. Checks-Effects-Interactions (CEI) ordering in charge():
+//   1. chargeFor() is callable ONLY by the trustedExecutor router contract —
+//      this guarantees every charge is scored, recorded, and routed through
+//      the same dynamic-fee + penalty logic.
+//   2. Checks-Effects-Interactions (CEI) ordering in chargeFor():
 //      every state mutation happens before any external token call.
-//   3. nonReentrant guard (uint256 1/2 pattern) for defense-in-depth.
+//   3. nonReentrant guard (uint256 1/2 pattern) on every external mutator.
 //   4. subscriptionId = keccak256(planId ‖ customer) — deterministic.
 //   5. Subscriptions are denormalized at subscribe() time: merchant, token,
-//      amount, period, feeBps are copied from the plan so the subscription
-//      remains valid even if the plan is later modified.
+//      amount, period are copied from the plan so the subscription remains
+//      valid even if the plan is later modified.
 //   6. nextChargeAt += period (additive, no timestamp drift).
 //   7. planId includes block.chainid to prevent cross-chain replay.
 //   8. Spend cap exceeded → auto-cancel (emit Cancelled), NOT revert.
 //   9. cancel() callable by customer OR merchant.
-//  10. Direct transferFrom: customer → merchant / executor / feeRecipient
+//  10. Direct transferFrom: customer → merchant / executorPayee / feeRecipient
 //      (no intermediate custody).
+//  11. subscribe() and cancel() best-effort callback into the executor router;
+//      a reverting callback emits RegistrationFailed and does NOT block the
+//      user-facing operation.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import {IPulseSubscriptionManager} from "./interfaces/IPulseSubscriptionManager.sol";
+import {IPulseExecutor}           from "./interfaces/IPulseExecutor.sol";
 
 /// @dev Minimal ERC-20 interface (only what we call).
 interface IERC20 {
@@ -32,9 +37,15 @@ interface IERC20 {
 }
 
 contract PulseSubscriptionManager is IPulseSubscriptionManager {
-    // ─── Constants ────────────────────────────────────────────────────────────
+    // ─── Constants / Config ───────────────────────────────────────────────────
 
-    uint16  public executorFeeBps  = 10;  // 0.1%
+    /// Hard ceiling on the executor fee bps the router may request — must match
+    /// IPulseExecutor.MAX_FEE_BPS. 30 = 0.30%.
+    uint16 public constant MAX_EXECUTOR_FEE_BPS = 30;
+
+    /// Legacy storage field — kept for ABI back-compat, no longer used in
+    /// chargeFor (the override fully replaces it). Deprecated.
+    uint16  public executorFeeBps  = 10;  // 0.1% — historical default
     uint16  public protocolFeeBps  = 25;  // 0.25%
     uint256 public protocolFlatFee = 1e6; // 1 USDC (6 decimals)
 
@@ -42,6 +53,7 @@ contract PulseSubscriptionManager is IPulseSubscriptionManager {
 
     address public owner;
     address public feeRecipient;
+    address public trustedExecutor;
 
     /// @dev Monotonic nonce used to make planIds unique per merchant + chain.
     uint256 private _planNonce;
@@ -66,7 +78,12 @@ contract PulseSubscriptionManager is IPulseSubscriptionManager {
         _;
     }
 
-    // ─── EXECUTOR_FEE_BPS view (matches interface, returns same value) ────────
+    modifier onlyExecutor() {
+        if (msg.sender != trustedExecutor) revert NotTrustedExecutor(msg.sender);
+        _;
+    }
+
+    // ─── EXECUTOR_FEE_BPS view (interface compliance) ────────────────────────
 
     function EXECUTOR_FEE_BPS() external view returns (uint16) {
         return executorFeeBps;
@@ -84,9 +101,6 @@ contract PulseSubscriptionManager is IPulseSubscriptionManager {
     // ─── Plan management ─────────────────────────────────────────────────────
 
     /// @notice Merchant creates a subscription plan.
-    /// @param token   ERC-20 token customers will pay in.
-    /// @param amount  Gross amount (fee-inclusive) per charge.
-    /// @param period  Minimum seconds between consecutive charges.
     function createPlan(
         address token,
         uint256 amount,
@@ -96,8 +110,6 @@ contract PulseSubscriptionManager is IPulseSubscriptionManager {
         if (amount == 0)          revert InvalidAmount();
         if (period == 0)          revert InvalidPeriod();
 
-        // planId includes chainid so the same merchant nonce produces different
-        // ids across chains, preventing cross-chain subscription replays.
         planId = keccak256(abi.encodePacked(msg.sender, ++_planNonce, block.chainid));
 
         plans[planId] = Plan({
@@ -111,9 +123,6 @@ contract PulseSubscriptionManager is IPulseSubscriptionManager {
         emit PlanCreated(planId, msg.sender, token, amount, period);
     }
 
-    /// @notice Merchant deactivates a plan.  Existing subscriptions are
-    ///         unaffected (they hold their own denormalized copy of the params)
-    ///         but callers may inspect the plan's active flag before charging.
     function deactivatePlan(bytes32 planId) external {
         Plan storage plan = plans[planId];
         if (plan.merchant != msg.sender) revert UnauthorizedMerchant(planId);
@@ -125,34 +134,54 @@ contract PulseSubscriptionManager is IPulseSubscriptionManager {
 
     // ─── Subscription lifecycle ───────────────────────────────────────────────
 
-    /// @notice Customer subscribes to a plan.
+    /// @notice Customer subscribes to a plan. If a trustedExecutor is wired,
+    ///         the subscription is registered with it via a try/catch so a
+    ///         reverting executor never blocks onboarding.
     function subscribe(
         bytes32 planId,
         uint256 totalSpendCap
-    ) external returns (bytes32 subscriptionId) {
+    ) external nonReentrant returns (bytes32 subscriptionId) {
         Plan storage plan = plans[planId];
         if (!plan.active) revert PlanNotActive(planId);
 
         subscriptionId = _subId(planId, msg.sender);
         if (subscriptions[subscriptionId].active) revert AlreadySubscribed(subscriptionId);
 
+        uint256 nextAt = block.timestamp; // immediately chargeable
+        uint256 period = plan.period;
+
         subscriptions[subscriptionId] = Subscription({
             customer:      msg.sender,
             merchant:      plan.merchant,
             token:         plan.token,
             amount:        plan.amount,
-            period:        plan.period,
-            nextChargeAt:  block.timestamp, // immediately chargeable
+            period:        period,
+            nextChargeAt:  nextAt,
             totalSpendCap: totalSpendCap,
             totalSpent:    0,
             active:        true
         });
 
         emit Subscribed(subscriptionId, planId, msg.sender, totalSpendCap);
+
+        // Best-effort callback into the executor router.
+        if (trustedExecutor != address(0)) {
+            try IPulseExecutor(trustedExecutor).registerPayment(
+                IPulseExecutor.ManagerKind.Subscription,
+                planId,
+                subscriptionId,
+                uint64(nextAt),
+                uint64(period)
+            ) {
+                // ok
+            } catch (bytes memory reason) {
+                emit RegistrationFailed(subscriptionId, _hashReason(reason));
+            }
+        }
     }
 
-    /// @notice Cancel a subscription.  Callable by the customer OR merchant.
-    function cancel(bytes32 subscriptionId) external {
+    /// @notice Cancel a subscription. Callable by the customer OR merchant.
+    function cancel(bytes32 subscriptionId) external nonReentrant {
         Subscription storage sub = subscriptions[subscriptionId];
         if (!sub.active) revert NotSubscribed(subscriptionId);
         if (msg.sender != sub.customer && msg.sender != sub.merchant)
@@ -160,25 +189,47 @@ contract PulseSubscriptionManager is IPulseSubscriptionManager {
 
         sub.active = false;
         emit Cancelled(subscriptionId, msg.sender);
+
+        if (trustedExecutor != address(0)) {
+            try IPulseExecutor(trustedExecutor).deregisterPayment(subscriptionId) {
+                // ok
+            } catch (bytes memory reason) {
+                emit RegistrationFailed(subscriptionId, _hashReason(reason));
+            }
+        }
     }
 
-    // ─── Charging ────────────────────────────────────────────────────────────
+    // ─── Charging (executor-only) ────────────────────────────────────────────
 
-    /// @notice Charge a due subscription.  Permissionless — any address may
-    ///         call and earns executorFeeBps of the gross amount.
-    function charge(bytes32 subscriptionId) external nonReentrant {
+    /// @notice Charge a due subscription. Only the PulseExecutor router may
+    ///         call. The router supplies a dynamic executor fee bps (capped at
+    ///         30 = 0.30%) and a payee address (itself) which then splits the
+    ///         fee between the executor and the protocol per its penalty rules.
+    function chargeFor(
+        bytes32 subscriptionId,
+        uint16  executorFeeBpsOverride,
+        address executorPayee
+    )
+        external
+        onlyExecutor
+        nonReentrant
+        returns (uint256 grossAmount, uint256 executorFeePaid, uint256 protocolFeePaid)
+    {
+        if (executorFeeBpsOverride > MAX_EXECUTOR_FEE_BPS) {
+            revert FeeBpsExceedsMax(executorFeeBpsOverride, MAX_EXECUTOR_FEE_BPS);
+        }
+        if (executorPayee == address(0)) revert ZeroAddress();
+
         Subscription storage sub = subscriptions[subscriptionId];
 
         // ── CHECKS ────────────────────────────────────────────────────────────
         if (!sub.active) revert NotSubscribed(subscriptionId);
-
         if (block.timestamp < sub.nextChargeAt)
             revert TooEarlyToCharge(subscriptionId, sub.nextChargeAt);
 
         uint256 amount = sub.amount;
 
-        // ── EFFECTS (all state mutations before any external call) ────────────
-
+        // ── EFFECTS ───────────────────────────────────────────────────────────
         uint256 nextChargeAt = sub.nextChargeAt + sub.period;
         sub.nextChargeAt  = nextChargeAt;
         sub.totalSpent   += amount;
@@ -188,27 +239,27 @@ contract PulseSubscriptionManager is IPulseSubscriptionManager {
         if (sub.totalSpendCap != 0 && sub.totalSpent > sub.totalSpendCap) {
             sub.active = false;
             emit Cancelled(subscriptionId, address(this));
-            return;
+            return (0, 0, 0);
         }
 
-        address customer  = sub.customer;
-        address merchant  = sub.merchant;
-        address token     = sub.token;
-        address executor  = msg.sender;
+        address customer = sub.customer;
+        address merchant = sub.merchant;
+        address token    = sub.token;
 
-        uint256 execFee     = (amount * executorFeeBps) / 10_000;
-        uint256 protocolFee = (amount * protocolFeeBps) / 10_000 + protocolFlatFee;
+        uint256 execFee     = (amount * executorFeeBpsOverride) / 10_000;
+        uint256 protocolFee = (amount * protocolFeeBps)          / 10_000 + protocolFlatFee;
 
         if (amount < execFee + protocolFee) revert InvalidAmount();
         uint256 merchantAmt = amount - execFee - protocolFee;
 
+        // ── INTERACTIONS ──────────────────────────────────────────────────────
         _safeTransferFrom(token, customer, merchant, merchantAmt);
-        if (execFee     > 0) _safeTransferFrom(token, customer, executor,     execFee);
-        if (protocolFee > 0) _safeTransferFrom(token, customer, feeRecipient, protocolFee);
+        if (execFee     > 0) _safeTransferFrom(token, customer, executorPayee, execFee);
+        if (protocolFee > 0) _safeTransferFrom(token, customer, feeRecipient,  protocolFee);
 
         emit ChargeExecuted(
             subscriptionId,
-            executor,
+            executorPayee,
             customer,
             amount,
             merchantAmt,
@@ -216,6 +267,8 @@ contract PulseSubscriptionManager is IPulseSubscriptionManager {
             protocolFee,
             nextChargeAt
         );
+
+        return (amount, execFee, protocolFee);
     }
 
     // ─── Views ────────────────────────────────────────────────────────────────
@@ -230,7 +283,6 @@ contract PulseSubscriptionManager is IPulseSubscriptionManager {
         return subscriptions[subscriptionId];
     }
 
-    /// @notice Compute the deterministic subscription id for a (plan, customer) pair.
     function computeSubId(bytes32 planId, address customer)
         external pure returns (bytes32)
     {
@@ -249,7 +301,14 @@ contract PulseSubscriptionManager is IPulseSubscriptionManager {
         owner = newOwner;
     }
 
+    function setTrustedExecutor(address newExecutor) external onlyOwner {
+        // address(0) is allowed: disables the executor callback path.
+        trustedExecutor = newExecutor;
+    }
+
     function setExecutorFeeBps(uint16 _bps) external onlyOwner {
+        // Retained for back-compat; only affects the EXECUTOR_FEE_BPS view.
+        // chargeFor uses the override from the router, capped at MAX_EXECUTOR_FEE_BPS.
         require(_bps <= 10_000, "Pulse: bps > 10000");
         executorFeeBps = _bps;
     }
@@ -267,6 +326,18 @@ contract PulseSubscriptionManager is IPulseSubscriptionManager {
 
     function _subId(bytes32 planId, address customer) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked(planId, customer));
+    }
+
+    function _hashReason(bytes memory reason) internal pure returns (bytes32) {
+        // Hash up to the first 32 bytes — revert data is unbounded so we cap.
+        if (reason.length == 0) return bytes32(0);
+        uint256 n = reason.length > 32 ? 32 : reason.length;
+        bytes memory trimmed = new bytes(n);
+        for (uint256 i; i < n; ) {
+            trimmed[i] = reason[i];
+            unchecked { ++i; }
+        }
+        return keccak256(trimmed);
     }
 
     /// @dev Calls transferFrom and reverts if it returns false or reverts.

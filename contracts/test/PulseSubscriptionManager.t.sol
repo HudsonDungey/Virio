@@ -4,9 +4,12 @@ pragma solidity ^0.8.24;
 import {Test, console} from "forge-std/Test.sol";
 import {PulseSubscriptionManager} from "../src/PulseSubscriptionManager.sol";
 import {IPulseSubscriptionManager} from "../src/interfaces/IPulseSubscriptionManager.sol";
+import {IPulseExecutor} from "../src/interfaces/IPulseExecutor.sol";
 import {MockUSDC} from "../src/test-helpers/MockUSDC.sol";
 
-/// Unit tests for the core PulseSubscriptionManager surface.
+/// Unit tests for the PulseSubscriptionManager surface. Since chargeFor() is
+/// now executor-only, the test contract itself is wired as the trustedExecutor
+/// so it can drive chargeFor directly without standing up the router.
 /// Run with:  forge test -vv
 contract PulseSubscriptionManagerTest is Test {
     PulseSubscriptionManager internal mgr;
@@ -16,24 +19,26 @@ contract PulseSubscriptionManagerTest is Test {
     address internal FEE_RECIP = makeAddr("feeRecipient");
     address internal MERCHANT  = makeAddr("merchant");
     address internal CUSTOMER  = makeAddr("customer");
-    address internal EXECUTOR  = makeAddr("executor");
+    address internal KEEPER    = makeAddr("keeper");        // payee of the executor fee
     address internal STRANGER  = makeAddr("stranger");
 
     uint256 internal constant AMOUNT = 10e6;     // 10 USDC
     uint256 internal constant PERIOD = 30 days;
+    uint16  internal constant FEE_BPS = 10;       // dynamic ramp min — what the router would use at delay = 0
 
     bytes32 internal planId;
     bytes32 internal subId;
 
-    // Helpers replicating contract fee math (globals: executor 10 bps, protocol 25 bps + 1 USDC flat).
-    uint256 internal constant EXEC_FEE     = (AMOUNT * 10) / 10_000;            // executorFeeBps = 10
-    uint256 internal constant PROTOCOL_FEE = (AMOUNT * 25) / 10_000 + 1e6;       // protocolFeeBps = 25, flat 1 USDC
+    uint256 internal constant EXEC_FEE     = (AMOUNT * FEE_BPS) / 10_000;
+    uint256 internal constant PROTOCOL_FEE = (AMOUNT * 25) / 10_000 + 1e6; // protocolFeeBps = 25, flat 1 USDC
     uint256 internal constant MERCHANT_AMT = AMOUNT - EXEC_FEE - PROTOCOL_FEE;
 
     function setUp() public {
         vm.startPrank(OWNER);
         usdc = new MockUSDC();
         mgr  = new PulseSubscriptionManager(FEE_RECIP);
+        // Test contract acts as the trusted executor for these unit tests.
+        mgr.setTrustedExecutor(address(this));
         vm.stopPrank();
 
         vm.prank(MERCHANT);
@@ -45,10 +50,26 @@ contract PulseSubscriptionManagerTest is Test {
         usdc.approve(address(mgr), type(uint256).max);
     }
 
+    /// @dev Drives chargeFor as the trusted executor. Fee goes to KEEPER.
+    function _charge() internal returns (uint256 gross, uint256 execFee, uint256 protoFee) {
+        return mgr.chargeFor(subId, FEE_BPS, KEEPER);
+    }
+
+    /// @dev IPulseExecutor stub — the manager calls this in subscribe/cancel.
+    function registerPayment(
+        IPulseExecutor.ManagerKind,
+        bytes32,
+        bytes32,
+        uint64,
+        uint64
+    ) external pure returns (bytes32) {
+        return bytes32(0);
+    }
+    function deregisterPayment(bytes32) external pure {}
+
     // ─── createPlan ───────────────────────────────────────────────────────────
 
     function test_createPlan_emitsEvent() public {
-        // The next plan created by MERCHANT will use nonce=2 (nonce=1 used in setUp).
         bytes32 expected = keccak256(abi.encodePacked(MERCHANT, uint256(2), block.chainid));
 
         vm.expectEmit(true, true, false, true, address(mgr));
@@ -103,22 +124,16 @@ contract PulseSubscriptionManagerTest is Test {
         assertEq(mgr.protocolFlatFee(), 5e6);
     }
 
-    function test_setProtocolFlatFee_revertsForNonOwner() public {
-        vm.prank(STRANGER);
-        vm.expectRevert("Pulse: not owner");
-        mgr.setProtocolFlatFee(5e6);
-    }
-
-    function test_setExecutorFeeBps_byOwner() public {
+    function test_setTrustedExecutor_byOwner() public {
         vm.prank(OWNER);
-        mgr.setExecutorFeeBps(15);
-        assertEq(mgr.executorFeeBps(), 15);
+        mgr.setTrustedExecutor(KEEPER);
+        assertEq(mgr.trustedExecutor(), KEEPER);
     }
 
-    function test_setExecutorFeeBps_revertsForNonOwner() public {
+    function test_setTrustedExecutor_revertsForNonOwner() public {
         vm.prank(STRANGER);
         vm.expectRevert("Pulse: not owner");
-        mgr.setExecutorFeeBps(15);
+        mgr.setTrustedExecutor(KEEPER);
     }
 
     // ─── subscribe ────────────────────────────────────────────────────────────
@@ -171,35 +186,34 @@ contract PulseSubscriptionManagerTest is Test {
         assertTrue(mgr.getSubscription(subId).active);
     }
 
-    // ─── charge — happy path ──────────────────────────────────────────────────
+    // ─── chargeFor — happy path ──────────────────────────────────────────────
 
-    function test_charge_balanceDeltasAndEvent() public {
+    function test_chargeFor_balanceDeltasAndEvent() public {
         vm.prank(CUSTOMER);
         mgr.subscribe(planId, 0);
 
         uint256 mBefore = usdc.balanceOf(MERCHANT);
         uint256 fBefore = usdc.balanceOf(FEE_RECIP);
         uint256 cBefore = usdc.balanceOf(CUSTOMER);
-        uint256 eBefore = usdc.balanceOf(EXECUTOR);
+        uint256 kBefore = usdc.balanceOf(KEEPER);
 
         vm.expectEmit(true, true, true, true, address(mgr));
         emit IPulseSubscriptionManager.ChargeExecuted(
-            subId, EXECUTOR, CUSTOMER, AMOUNT, MERCHANT_AMT, EXEC_FEE, PROTOCOL_FEE,
+            subId, KEEPER, CUSTOMER, AMOUNT, MERCHANT_AMT, EXEC_FEE, PROTOCOL_FEE,
             block.timestamp + PERIOD
         );
-        vm.prank(EXECUTOR);
-        mgr.charge(subId);
+        _charge();
 
         assertEq(usdc.balanceOf(MERCHANT),  mBefore + MERCHANT_AMT, "merchant delta");
         assertEq(usdc.balanceOf(FEE_RECIP), fBefore + PROTOCOL_FEE, "feeRecipient delta");
-        assertEq(usdc.balanceOf(EXECUTOR), eBefore + EXEC_FEE,      "executor delta");
-        assertEq(usdc.balanceOf(CUSTOMER), cBefore - AMOUNT,        "customer delta");
+        assertEq(usdc.balanceOf(KEEPER),    kBefore + EXEC_FEE,     "keeper delta");
+        assertEq(usdc.balanceOf(CUSTOMER),  cBefore - AMOUNT,       "customer delta");
     }
 
-    function test_charge_revertsIfTooEarly() public {
+    function test_chargeFor_revertsIfTooEarly() public {
         vm.prank(CUSTOMER);
         mgr.subscribe(planId, 0);
-        mgr.charge(subId);
+        _charge();
 
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -208,52 +222,71 @@ contract PulseSubscriptionManagerTest is Test {
                 block.timestamp + PERIOD
             )
         );
-        mgr.charge(subId);
+        _charge();
     }
 
-    function test_charge_succeedsAfterPeriod() public {
+    function test_chargeFor_succeedsAfterPeriod() public {
         vm.prank(CUSTOMER);
         mgr.subscribe(planId, 0);
-        mgr.charge(subId);
+        _charge();
 
         vm.warp(block.timestamp + PERIOD);
-        mgr.charge(subId);
+        _charge();
 
         assertEq(mgr.getSubscription(subId).totalSpent, 2 * AMOUNT);
     }
 
-    function test_charge_revertsIfNotSubscribed() public {
+    function test_chargeFor_revertsIfNotSubscribed() public {
         vm.expectRevert(
             abi.encodeWithSelector(IPulseSubscriptionManager.NotSubscribed.selector, subId)
         );
-        mgr.charge(subId);
+        _charge();
     }
 
-    // ─── charge — spend cap auto-cancel ───────────────────────────────────────
+    function test_chargeFor_revertsForNonExecutor() public {
+        vm.prank(CUSTOMER);
+        mgr.subscribe(planId, 0);
 
-    function test_charge_autoCancelsOnCapExceeded() public {
-        // Cap = exactly one charge worth → first succeeds, second triggers auto-cancel
+        vm.prank(STRANGER);
+        vm.expectRevert(
+            abi.encodeWithSelector(IPulseSubscriptionManager.NotTrustedExecutor.selector, STRANGER)
+        );
+        mgr.chargeFor(subId, FEE_BPS, KEEPER);
+    }
+
+    function test_chargeFor_revertsAboveMaxBps() public {
+        vm.prank(CUSTOMER);
+        mgr.subscribe(planId, 0);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(IPulseSubscriptionManager.FeeBpsExceedsMax.selector, uint16(31), uint16(30))
+        );
+        mgr.chargeFor(subId, 31, KEEPER);
+    }
+
+    // ─── chargeFor — spend cap auto-cancel ───────────────────────────────────
+
+    function test_chargeFor_autoCancelsOnCapExceeded() public {
         vm.prank(CUSTOMER);
         mgr.subscribe(planId, AMOUNT);
 
-        mgr.charge(subId);
+        _charge();
         vm.warp(block.timestamp + PERIOD);
 
         vm.expectEmit(true, true, false, false, address(mgr));
         emit IPulseSubscriptionManager.Cancelled(subId, address(mgr));
-        mgr.charge(subId);
+        _charge();
 
-        // No transfer should have happened on the auto-cancel charge.
         assertFalse(mgr.getSubscription(subId).active);
     }
 
-    function test_charge_unlimitedCap() public {
+    function test_chargeFor_unlimitedCap() public {
         vm.prank(CUSTOMER);
         mgr.subscribe(planId, 0);
 
         for (uint i = 0; i < 3; i++) {
             vm.warp(mgr.getSubscription(subId).nextChargeAt);
-            mgr.charge(subId);
+            _charge();
         }
         assertEq(mgr.getSubscription(subId).totalSpent, 3 * AMOUNT);
     }
@@ -302,7 +335,7 @@ contract PulseSubscriptionManagerTest is Test {
         vm.expectRevert(
             abi.encodeWithSelector(IPulseSubscriptionManager.NotSubscribed.selector, subId)
         );
-        mgr.charge(subId);
+        _charge();
     }
 
     // ─── deactivatePlan ───────────────────────────────────────────────────────
@@ -316,17 +349,15 @@ contract PulseSubscriptionManagerTest is Test {
     }
 
     function test_deactivatePlan_existingSubsKeepCharging() public {
-        // Subscriptions denormalize plan fields, so deactivation should NOT
-        // break existing subs from continuing to be charged.
         vm.prank(CUSTOMER);
         mgr.subscribe(planId, 0);
 
         vm.prank(MERCHANT);
         mgr.deactivatePlan(planId);
 
-        mgr.charge(subId); // first charge after deactivation still works
+        _charge();
         vm.warp(block.timestamp + PERIOD);
-        mgr.charge(subId); // and the next one
+        _charge();
         assertEq(mgr.getSubscription(subId).totalSpent, 2 * AMOUNT);
     }
 
@@ -361,7 +392,7 @@ contract PulseSubscriptionManagerTest is Test {
 
     // ─── allowance revocation ────────────────────────────────────────────────
 
-    function test_charge_revertsOnRevokedAllowance() public {
+    function test_chargeFor_revertsOnRevokedAllowance() public {
         vm.prank(CUSTOMER);
         mgr.subscribe(planId, 0);
 
@@ -369,6 +400,6 @@ contract PulseSubscriptionManagerTest is Test {
         usdc.approve(address(mgr), 0);
 
         vm.expectRevert();
-        mgr.charge(subId);
+        _charge();
     }
 }

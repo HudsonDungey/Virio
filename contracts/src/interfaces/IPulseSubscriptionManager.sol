@@ -36,6 +36,12 @@ interface IPulseSubscriptionManager {
     /// period must be > 0.
     error InvalidPeriod();
 
+    /// chargeFor() called by any address other than the trusted executor router.
+    error NotTrustedExecutor(address caller);
+
+    /// Override bps exceeds the hard ceiling (30 = 0.30%).
+    error FeeBpsExceedsMax(uint16 bps, uint16 max);
+
     // ─── Events ──────────────────────────────────────────────────────────────
 
     event PlanCreated(
@@ -76,6 +82,11 @@ interface IPulseSubscriptionManager {
 
     event Cancelled(bytes32 indexed subscriptionId, address indexed caller);
 
+    /// Emitted when the optional executor callback (registerPayment /
+    /// deregisterPayment) reverts. Subscription / cancellation still succeed —
+    /// an owner can backfill the registration on the executor.
+    event RegistrationFailed(bytes32 indexed subscriptionId, bytes32 reasonHash);
+
     // ─── Structs ─────────────────────────────────────────────────────────────
 
     struct Plan {
@@ -114,7 +125,20 @@ interface IPulseSubscriptionManager {
         uint256 totalSpendCap
     ) external returns (bytes32 subscriptionId);
 
-    function charge(bytes32 subscriptionId) external;
+    /// @notice Charge a due subscription. Only callable by the trusted executor
+    ///         router — keeps a single audit trail and uniform safety checks.
+    /// @param  subscriptionId    Target subscription.
+    /// @param  executorFeeBpsOverride  Dynamic executor fee (capped at 30 bps).
+    /// @param  executorPayee     Address that receives the executor fee
+    ///                           (the router contract, which then splits it).
+    /// @return grossAmount       Total pulled from customer.
+    /// @return executorFeePaid   Amount paid to executorPayee.
+    /// @return protocolFeePaid   Amount paid to feeRecipient.
+    function chargeFor(
+        bytes32 subscriptionId,
+        uint16  executorFeeBpsOverride,
+        address executorPayee
+    ) external returns (uint256 grossAmount, uint256 executorFeePaid, uint256 protocolFeePaid);
 
     /// @notice Cancel a subscription. Callable by customer OR merchant.
     function cancel(bytes32 subscriptionId) external;

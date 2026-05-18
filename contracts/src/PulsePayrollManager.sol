@@ -4,33 +4,33 @@ pragma solidity ^0.8.24;
 // ─────────────────────────────────────────────────────────────────────────────
 // PulsePayrollManager
 //
-// Automated, bot-executable ERC-20 payroll protocol.
+// Automated, executor-routed ERC-20 payroll protocol.
 //
 // A business owner (employer) creates a Plan, adds Recipients (employees /
-// contractors), and pre-approves the contract's token spend. Keeper bots call
-// executePayroll() or executePayrollBatch() once each pay period and earn
-// executorFeeBps as incentive. Funds flow directly from employer → recipient
-// with no intermediate custody.
+// contractors), and pre-approves the contract's token spend. The PulseExecutor
+// router is the sole caller of executePayrollFor() — every payment is scored,
+// recorded, and routed through the same dynamic-fee + penalty logic.
 //
 // Key design invariants:
-//   1.  executePayroll() is permissionless — any address may call it and
-//       earns executorFeeBps of the gross amount.
+//   1.  executePayrollFor / executePayrollBatchFor are callable ONLY by the
+//       trusted executor router.
 //   2.  CEI ordering: all state mutations before external token calls.
-//   3.  nonReentrant guard (uint256 1/2 pattern) for defense-in-depth.
+//   3.  nonReentrant guard (uint256 1/2 pattern) on every external mutator.
 //   4.  recipientId = keccak256(planId ‖ wallet) — deterministic & unique.
 //   5.  Plan stores only shared config (token, period). Per-recipient amounts
-//       live in the Recipient struct for full modularity.
+//       live in the Recipient struct.
 //   6.  nextPayAt += period (additive, drift-free).
 //   7.  planId includes block.chainid to prevent cross-chain replay.
 //   8.  Spend cap exceeded → auto-remove (emit RecipientRemoved), NOT revert.
 //   9.  removeRecipient() callable by employer only.
-//  10.  Direct transferFrom: employer → recipient / executor / feeRecipient
-//       (no intermediate custody — employer must approve this contract).
-//  11.  Batch operations for gas-efficient multi-recipient management.
-//  12.  Enumerable recipient list per plan for easy off-chain indexing.
+//  10.  Direct transferFrom: employer → recipient / executorPayee / feeRecipient
+//       (no intermediate custody).
+//  11.  addRecipient / removeRecipient best-effort callback into the executor
+//       router via try/catch; a reverting executor never blocks onboarding.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import {IPulsePayrollManager} from "./interfaces/IPulsePayrollManager.sol";
+import {IPulseExecutor}       from "./interfaces/IPulseExecutor.sol";
 
 /// @dev Minimal ERC-20 interface (only what we call).
 interface IERC20 {
@@ -41,7 +41,9 @@ interface IERC20 {
 contract PulsePayrollManager is IPulsePayrollManager {
     // ─── Constants / Config ───────────────────────────────────────────────────
 
-    uint16  public executorFeeBps  = 10;   // 0.1 %
+    uint16 public constant MAX_EXECUTOR_FEE_BPS = 30;
+
+    uint16  public executorFeeBps  = 10;   // 0.1 % (legacy; view-only)
     uint16  public protocolFeeBps  = 25;   // 0.25 %
     uint256 public protocolFlatFee = 1e6;  // 1 USDC (6 decimals)
 
@@ -49,6 +51,7 @@ contract PulsePayrollManager is IPulsePayrollManager {
 
     address public owner;
     address public feeRecipient;
+    address public trustedExecutor;
 
     uint256 private _planNonce;
     uint256 private _reentrancyStatus;
@@ -83,6 +86,11 @@ contract PulsePayrollManager is IPulsePayrollManager {
         _;
     }
 
+    modifier onlyExecutor() {
+        if (msg.sender != trustedExecutor) revert NotTrustedExecutor(msg.sender);
+        _;
+    }
+
     // ─── View (interface compliance) ──────────────────────────────────────────
 
     function EXECUTOR_FEE_BPS() external view returns (uint16) {
@@ -102,9 +110,6 @@ contract PulsePayrollManager is IPulsePayrollManager {
     //  PLAN MANAGEMENT
     // ═════════════════════════════════════════════════════════════════════════
 
-    /// @notice Create a payroll plan. The caller becomes the employer.
-    /// @param token   ERC-20 token used to pay recipients (e.g. USDC).
-    /// @param period  Seconds between pay cycles (604_800 = 1 week).
     function createPlan(
         address token,
         uint256 period
@@ -126,8 +131,6 @@ contract PulsePayrollManager is IPulsePayrollManager {
         emit PlanCreated(planId, msg.sender, token, period);
     }
 
-    /// @notice Deactivate a plan. Existing recipients remain queryable but
-    ///         executePayroll will revert for this plan.
     function deactivatePlan(bytes32 planId) external onlyEmployer(planId) {
         Plan storage plan = plans[planId];
         if (!plan.active) revert PlanNotActive(planId);
@@ -140,28 +143,22 @@ contract PulsePayrollManager is IPulsePayrollManager {
     //  RECIPIENT MANAGEMENT
     // ═════════════════════════════════════════════════════════════════════════
 
-    /// @notice Add a single recipient to a plan.
-    /// @param planId   The plan to add to.
-    /// @param wallet   Recipient's wallet address.
-    /// @param amount   Gross amount per pay cycle.
-    /// @param spendCap Lifetime spend cap (0 = unlimited).
     function addRecipient(
         bytes32 planId,
         address wallet,
         uint256 amount,
         uint256 spendCap
-    ) external onlyEmployer(planId) returns (bytes32 recipientId) {
+    ) external nonReentrant onlyEmployer(planId) returns (bytes32 recipientId) {
         if (!plans[planId].active) revert PlanNotActive(planId);
         recipientId = _addRecipient(planId, wallet, amount, spendCap);
     }
 
-    /// @notice Batch-add multiple recipients in a single tx.
     function addRecipientsBatch(
         bytes32   planId,
         address[] calldata wallets,
         uint256[] calldata amounts,
         uint256[] calldata spendCaps
-    ) external onlyEmployer(planId) returns (bytes32[] memory recipientIds) {
+    ) external nonReentrant onlyEmployer(planId) returns (bytes32[] memory recipientIds) {
         if (!plans[planId].active) revert PlanNotActive(planId);
 
         uint256 len = wallets.length;
@@ -177,16 +174,13 @@ contract PulsePayrollManager is IPulsePayrollManager {
         }
     }
 
-    /// @notice Remove a recipient. Only employer can call.
     function removeRecipient(
         bytes32 planId,
         bytes32 recipientId
-    ) external onlyEmployer(planId) {
+    ) external nonReentrant onlyEmployer(planId) {
         _removeRecipient(planId, recipientId, msg.sender);
     }
 
-    /// @notice Update a recipient's pay amount and/or spend cap.
-    ///         Takes effect on the NEXT pay cycle (doesn't reset nextPayAt).
     function updateRecipient(
         bytes32 planId,
         bytes32 recipientId,
@@ -205,39 +199,71 @@ contract PulsePayrollManager is IPulsePayrollManager {
     }
 
     // ═════════════════════════════════════════════════════════════════════════
-    //  PAYROLL EXECUTION  (permissionless — keeper bots earn executor fee)
+    //  PAYROLL EXECUTION  (executor-only)
     // ═════════════════════════════════════════════════════════════════════════
 
-    /// @notice Execute payroll for a single recipient.
-    function executePayroll(
+    /// @notice Execute payroll for a single recipient. Only callable by the
+    ///         trusted PulseExecutor router.
+    function executePayrollFor(
         bytes32 planId,
-        bytes32 recipientId
-    ) external nonReentrant {
-        _executePayroll(planId, recipientId);
+        bytes32 recipientId,
+        uint16  executorFeeBpsOverride,
+        address executorPayee
+    )
+        external
+        onlyExecutor
+        nonReentrant
+        returns (uint256 grossAmount, uint256 executorFeePaid, uint256 protocolFeePaid)
+    {
+        if (executorFeeBpsOverride > MAX_EXECUTOR_FEE_BPS) {
+            revert FeeBpsExceedsMax(executorFeeBpsOverride, MAX_EXECUTOR_FEE_BPS);
+        }
+        if (executorPayee == address(0)) revert ZeroAddress();
+
+        return _executePayroll(planId, recipientId, executorFeeBpsOverride, executorPayee);
     }
 
-    /// @notice Execute payroll for multiple recipients in one tx.
-    ///         Individual failures emit no event; the batch event tracks
-    ///         success/fail counts. This lets bots pay the whole roster in
-    ///         one transaction without a single bad recipient reverting all.
-    function executePayrollBatch(
+    /// @notice Batch variant. Individual failures are absorbed (counted in the
+    ///         BatchPayrollExecuted event) so a bad recipient cannot revert the
+    ///         entire roster's payment.
+    function executePayrollBatchFor(
         bytes32   planId,
-        bytes32[] calldata recipientIds
-    ) external nonReentrant {
-        if (!plans[planId].active) revert PlanNotActive(planId);
+        bytes32[] calldata recipientIds,
+        uint16    executorFeeBpsOverride,
+        address   executorPayee
+    )
+        external
+        onlyExecutor
+        nonReentrant
+        returns (
+            uint256 totalExecutorFee,
+            uint256 totalProtocolFee,
+            uint256 successCount,
+            uint256 failCount
+        )
+    {
+        if (executorFeeBpsOverride > MAX_EXECUTOR_FEE_BPS) {
+            revert FeeBpsExceedsMax(executorFeeBpsOverride, MAX_EXECUTOR_FEE_BPS);
+        }
+        if (executorPayee == address(0)) revert ZeroAddress();
+        if (!plans[planId].active)       revert PlanNotActive(planId);
 
-        uint256 len     = recipientIds.length;
-        uint256 success = 0;
-        uint256 fail    = 0;
-
+        uint256 len = recipientIds.length;
         for (uint256 i; i < len; ) {
-            bool ok = _tryExecutePayroll(planId, recipientIds[i]);
-            if (ok) { unchecked { ++success; } }
-            else    { unchecked { ++fail; } }
+            (bool ok, uint256 exec, uint256 proto) = _tryExecutePayroll(
+                planId, recipientIds[i], executorFeeBpsOverride, executorPayee
+            );
+            if (ok) {
+                unchecked { ++successCount; }
+                totalExecutorFee += exec;
+                totalProtocolFee += proto;
+            } else {
+                unchecked { ++failCount; }
+            }
             unchecked { ++i; }
         }
 
-        emit BatchPayrollExecuted(planId, msg.sender, success, fail);
+        emit BatchPayrollExecuted(planId, executorPayee, successCount, failCount);
     }
 
     // ═════════════════════════════════════════════════════════════════════════
@@ -256,14 +282,12 @@ contract PulsePayrollManager is IPulsePayrollManager {
         return recipients[planId][recipientId];
     }
 
-    /// @notice Return all recipient IDs for a plan (for off-chain enumeration).
     function getPlanRecipientIds(bytes32 planId)
         external view returns (bytes32[] memory)
     {
         return _planRecipientIds[planId];
     }
 
-    /// @notice Return the full roster with data (convenience for frontends).
     function getPlanRecipients(bytes32 planId)
         external view returns (Recipient[] memory roster)
     {
@@ -276,14 +300,12 @@ contract PulsePayrollManager is IPulsePayrollManager {
         }
     }
 
-    /// @notice Check which recipients are currently due for payment.
     function getDueRecipients(bytes32 planId)
         external view returns (bytes32[] memory dueIds)
     {
         bytes32[] storage ids = _planRecipientIds[planId];
         uint256 len  = ids.length;
 
-        // First pass: count due
         uint256 count = 0;
         for (uint256 i; i < len; ) {
             Recipient storage r = recipients[planId][ids[i]];
@@ -293,7 +315,6 @@ contract PulsePayrollManager is IPulsePayrollManager {
             unchecked { ++i; }
         }
 
-        // Second pass: fill array
         dueIds = new bytes32[](count);
         uint256 idx = 0;
         for (uint256 i; i < len; ) {
@@ -324,6 +345,10 @@ contract PulsePayrollManager is IPulsePayrollManager {
     function transferOwnership(address newOwner) external onlyOwner {
         if (newOwner == address(0)) revert ZeroAddress();
         owner = newOwner;
+    }
+
+    function setTrustedExecutor(address newExecutor) external onlyOwner {
+        trustedExecutor = newExecutor;
     }
 
     function setExecutorFeeBps(uint16 _bps) external onlyOwner {
@@ -363,20 +388,37 @@ contract PulsePayrollManager is IPulsePayrollManager {
         if (recipients[planId][recipientId].active)
             revert RecipientAlreadyExists(recipientId);
 
+        uint256 nextAt = block.timestamp;
+        uint256 period = plans[planId].period;
+
         recipients[planId][recipientId] = Recipient({
             wallet:    wallet,
             amount:    amount,
-            nextPayAt: block.timestamp,   // immediately payable
+            nextPayAt: nextAt,
             totalPaid: 0,
             spendCap:  spendCap,
             active:    true
         });
 
-        // Track in enumerable list
         _recipientIndex[planId][recipientId] = _planRecipientIds[planId].length;
         _planRecipientIds[planId].push(recipientId);
 
         emit RecipientAdded(planId, recipientId, wallet, amount, spendCap);
+
+        // Best-effort callback into the executor router.
+        if (trustedExecutor != address(0)) {
+            try IPulseExecutor(trustedExecutor).registerPayment(
+                IPulseExecutor.ManagerKind.Payroll,
+                planId,
+                recipientId,
+                uint64(nextAt),
+                uint64(period)
+            ) {
+                // ok
+            } catch (bytes memory reason) {
+                emit RegistrationFailed(recipientId, _hashReason(reason));
+            }
+        }
     }
 
     function _removeRecipient(
@@ -389,7 +431,6 @@ contract PulsePayrollManager is IPulsePayrollManager {
 
         r.active = false;
 
-        // Swap-and-pop from the enumerable list (O(1) removal)
         uint256 idx  = _recipientIndex[planId][recipientId];
         uint256 last = _planRecipientIds[planId].length - 1;
 
@@ -402,53 +443,61 @@ contract PulsePayrollManager is IPulsePayrollManager {
         delete _recipientIndex[planId][recipientId];
 
         emit RecipientRemoved(planId, recipientId, removedBy);
+
+        if (trustedExecutor != address(0)) {
+            try IPulseExecutor(trustedExecutor).deregisterPayment(recipientId) {
+                // ok
+            } catch (bytes memory reason) {
+                emit RegistrationFailed(recipientId, _hashReason(reason));
+            }
+        }
     }
 
-    /// @dev Core payroll execution. Reverts on failure.
-    function _executePayroll(bytes32 planId, bytes32 recipientId) internal {
+    /// @dev Core payroll execution. Reverts on failure (used by single exec path).
+    function _executePayroll(
+        bytes32 planId,
+        bytes32 recipientId,
+        uint16  bpsOverride,
+        address executorPayee
+    ) internal returns (uint256 grossAmount, uint256 executorFeePaid, uint256 protocolFeePaid) {
         Plan storage plan = plans[planId];
         if (!plan.active) revert PlanNotActive(planId);
 
         Recipient storage r = recipients[planId][recipientId];
 
-        // ── CHECKS ──────────────────────────────────────────────────────────
         if (!r.active) revert RecipientNotActive(recipientId);
         if (block.timestamp < r.nextPayAt)
             revert TooEarlyToPay(recipientId, r.nextPayAt);
 
         uint256 amount = r.amount;
 
-        // ── EFFECTS (all state before external calls) ───────────────────────
         uint256 nextPayAt = r.nextPayAt + plan.period;
         r.nextPayAt   = nextPayAt;
         r.totalPaid  += amount;
 
-        // Spend cap: auto-remove instead of revert so the bot's tx succeeds
+        // Spend cap: auto-remove instead of revert.
         if (r.spendCap != 0 && r.totalPaid > r.spendCap) {
             _removeRecipient(planId, recipientId, address(this));
-            return;
+            return (0, 0, 0);
         }
 
-        // Fee math
         address employer = plan.employer;
         address token    = plan.token;
-        address executor = msg.sender;
 
-        uint256 execFee     = (amount * executorFeeBps)  / 10_000;
-        uint256 protocolFee = (amount * protocolFeeBps)  / 10_000 + protocolFlatFee;
+        uint256 execFee     = (amount * bpsOverride)    / 10_000;
+        uint256 protocolFee = (amount * protocolFeeBps) / 10_000 + protocolFlatFee;
 
         if (amount < execFee + protocolFee) revert InvalidAmount();
         uint256 recipientAmt = amount - execFee - protocolFee;
 
-        // ── INTERACTIONS ────────────────────────────────────────────────────
         _safeTransferFrom(token, employer, r.wallet,      recipientAmt);
-        if (execFee     > 0) _safeTransferFrom(token, employer, executor,     execFee);
-        if (protocolFee > 0) _safeTransferFrom(token, employer, feeRecipient, protocolFee);
+        if (execFee     > 0) _safeTransferFrom(token, employer, executorPayee, execFee);
+        if (protocolFee > 0) _safeTransferFrom(token, employer, feeRecipient,  protocolFee);
 
         emit PayrollExecuted(
             planId,
             recipientId,
-            executor,
+            executorPayee,
             r.wallet,
             amount,
             recipientAmt,
@@ -456,61 +505,60 @@ contract PulsePayrollManager is IPulsePayrollManager {
             protocolFee,
             nextPayAt
         );
+
+        return (amount, execFee, protocolFee);
     }
 
-    /// @dev Try-catch wrapper for batch execution. Returns false on failure
+    /// @dev Try-style wrapper for batch execution. Returns false on failure
     ///      instead of reverting, so one bad recipient doesn't block the rest.
-    function _tryExecutePayroll(bytes32 planId, bytes32 recipientId)
-        internal returns (bool)
-    {
-        // Cache plan once — 3 SLOADs → 1.
+    function _tryExecutePayroll(
+        bytes32 planId,
+        bytes32 recipientId,
+        uint16  bpsOverride,
+        address executorPayee
+    ) internal returns (bool ok, uint256 execFee, uint256 protocolFee) {
         Plan storage plan   = plans[planId];
         Recipient storage r = recipients[planId][recipientId];
 
-        // Pre-flight checks (skip silently rather than revert)
-        if (!r.active)                        return false;
-        if (block.timestamp < r.nextPayAt)    return false;
+        if (!r.active)                     return (false, 0, 0);
+        if (block.timestamp < r.nextPayAt) return (false, 0, 0);
 
         uint256 amount = r.amount;
         uint256 period = plan.period;
 
-        // ── EFFECTS ─────────────────────────────────────────────────────────
         uint256 nextPayAt = r.nextPayAt + period;
         r.nextPayAt   = nextPayAt;
         r.totalPaid  += amount;
 
         if (r.spendCap != 0 && r.totalPaid > r.spendCap) {
             _removeRecipient(planId, recipientId, address(this));
-            return true; // state changed, count as "processed"
+            return (true, 0, 0);
         }
 
         address employer = plan.employer;
         address token    = plan.token;
-        address executor = msg.sender;
 
-        uint256 execFee     = (amount * executorFeeBps)  / 10_000;
-        uint256 protocolFee = (amount * protocolFeeBps)  / 10_000 + protocolFlatFee;
+        execFee     = (amount * bpsOverride)    / 10_000;
+        protocolFee = (amount * protocolFeeBps) / 10_000 + protocolFlatFee;
 
-        if (amount < execFee + protocolFee) return false;
+        if (amount < execFee + protocolFee) return (false, 0, 0);
         uint256 recipientAmt = amount - execFee - protocolFee;
 
-        // ── INTERACTIONS (with try-style low-level calls) ───────────────────
-        bool ok1 = _tryTransferFrom(token, employer, r.wallet,      recipientAmt);
+        bool ok1 = _tryTransferFrom(token, employer, r.wallet, recipientAmt);
         if (!ok1) {
-            // Rollback effects — transfer failed (e.g. insufficient allowance)
+            // Rollback effects — recipient transfer failed.
             r.nextPayAt  = nextPayAt - period;
             r.totalPaid -= amount;
-            return false;
+            return (false, 0, 0);
         }
 
-        // Executor + protocol fees — if these fail we still paid the recipient
-        if (execFee     > 0) _tryTransferFrom(token, employer, executor,     execFee);
-        if (protocolFee > 0) _tryTransferFrom(token, employer, feeRecipient, protocolFee);
+        if (execFee     > 0) _tryTransferFrom(token, employer, executorPayee, execFee);
+        if (protocolFee > 0) _tryTransferFrom(token, employer, feeRecipient,  protocolFee);
 
         emit PayrollExecuted(
             planId,
             recipientId,
-            executor,
+            executorPayee,
             r.wallet,
             amount,
             recipientAmt,
@@ -519,12 +567,11 @@ contract PulsePayrollManager is IPulsePayrollManager {
             nextPayAt
         );
 
-        return true;
+        return (true, execFee, protocolFee);
     }
 
     // ─── Safe Transfer Helpers ────────────────────────────────────────────────
 
-    /// @dev Reverts on failure (used in single executePayroll).
     function _safeTransferFrom(
         address token,
         address from,
@@ -540,7 +587,6 @@ contract PulsePayrollManager is IPulsePayrollManager {
         );
     }
 
-    /// @dev Returns false on failure (used in batch to skip gracefully).
     function _tryTransferFrom(
         address token,
         address from,
@@ -551,5 +597,16 @@ contract PulsePayrollManager is IPulsePayrollManager {
             abi.encodeWithSelector(0x23b872dd, from, to, amount)
         );
         return ok && (data.length == 0 || abi.decode(data, (bool)));
+    }
+
+    function _hashReason(bytes memory reason) internal pure returns (bytes32) {
+        if (reason.length == 0) return bytes32(0);
+        uint256 n = reason.length > 32 ? 32 : reason.length;
+        bytes memory trimmed = new bytes(n);
+        for (uint256 i; i < n; ) {
+            trimmed[i] = reason[i];
+            unchecked { ++i; }
+        }
+        return keccak256(trimmed);
     }
 }
