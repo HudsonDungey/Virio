@@ -439,4 +439,63 @@ contract PulsePayrollManagerTest is Test {
         assertEq(due.length, 1);
         assertEq(due[0], rB);
     }
+
+    // ─── Pause + migration ────────────────────────────────────────────────────
+
+    function test_pause_blocksUserMutations() public {
+        vm.prank(OWNER);
+        mgr.pause();
+
+        vm.prank(EMPLOYER);
+        vm.expectRevert(IPulsePayrollManager.PausedError.selector);
+        mgr.createPlan(address(usdc), PERIOD);
+
+        vm.prank(EMPLOYER);
+        vm.expectRevert(IPulsePayrollManager.PausedError.selector);
+        mgr.addRecipient(planId, alice, ALICE_AMOUNT, 0);
+    }
+
+    function test_migratePayroll_copiesPlansAndRecipients() public {
+        // Set up source state: plan with two recipients.
+        vm.prank(EMPLOYER);
+        bytes32 rA = mgr.addRecipient(planId, alice, ALICE_AMOUNT, 0);
+        vm.prank(EMPLOYER);
+        bytes32 rB = mgr.addRecipient(planId, bob, BOB_AMOUNT, 0);
+
+        // Deploy sink + wire pause + migration source whitelist on both.
+        vm.prank(OWNER);
+        PulsePayrollManager sink = new PulsePayrollManager(FEE_REC);
+        vm.startPrank(OWNER);
+        sink.pause();
+        sink.setMigrationSource(address(mgr));
+        mgr.pause();
+        vm.stopPrank();
+
+        // Push.
+        vm.prank(OWNER);
+        mgr.migratePlansTo(address(sink), 0, mgr.planCount());
+        vm.prank(OWNER);
+        mgr.migrateRecipientsTo(address(sink), planId, 0, 2);
+        vm.prank(OWNER);
+        mgr.migratePlanNonceTo(address(sink));
+
+        // Sink has the plan + both recipients with identical fields.
+        IPulsePayrollManager.Plan memory dstPlan = sink.getPlan(planId);
+        assertEq(dstPlan.employer, EMPLOYER);
+        assertEq(dstPlan.period,   PERIOD);
+        assertTrue(dstPlan.active);
+
+        IPulsePayrollManager.Recipient memory srcA = mgr.getRecipient(planId, rA);
+        IPulsePayrollManager.Recipient memory dstA = sink.getRecipient(planId, rA);
+        assertEq(dstA.wallet, srcA.wallet);
+        assertEq(dstA.amount, srcA.amount);
+
+        IPulsePayrollManager.Recipient memory dstB = sink.getRecipient(planId, rB);
+        assertEq(dstB.wallet, bob);
+        assertEq(dstB.amount, BOB_AMOUNT);
+
+        // Enumeration carries over.
+        assertEq(sink.planCount(),                       1);
+        assertEq(sink.getPlanRecipientIds(planId).length, 2);
+    }
 }

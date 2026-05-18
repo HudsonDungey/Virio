@@ -52,9 +52,14 @@ contract PulsePayrollManager is IPulsePayrollManager {
     address public owner;
     address public feeRecipient;
     address public trustedExecutor;
+    address public migrationSource;
 
     uint256 private _planNonce;
     uint256 private _reentrancyStatus;
+
+    /// @dev When true, all user-facing entrypoints revert. Migration / admin
+    ///      still works — pause is the "ready to migrate" state.
+    bool public paused;
 
     mapping(bytes32 => Plan)                          public plans;
 
@@ -66,6 +71,9 @@ contract PulsePayrollManager is IPulsePayrollManager {
 
     /// @dev planId → recipientId → index in _planRecipientIds (for O(1) removal)
     mapping(bytes32 => mapping(bytes32 => uint256))     internal _recipientIndex;
+
+    /// @dev All plan ids ever created — for migration snapshots.
+    bytes32[] internal _allPlanIds;
 
     // ─── Modifiers ────────────────────────────────────────────────────────────
 
@@ -91,6 +99,23 @@ contract PulsePayrollManager is IPulsePayrollManager {
         _;
     }
 
+    modifier whenNotPaused() {
+        if (paused) revert PausedError();
+        _;
+    }
+
+    modifier whenPaused() {
+        if (!paused) revert NotPausedError();
+        _;
+    }
+
+    modifier onlyOwnerOrMigrationSource() {
+        if (msg.sender != owner && msg.sender != migrationSource) {
+            revert NotMigrationSource(msg.sender);
+        }
+        _;
+    }
+
     // ─── View (interface compliance) ──────────────────────────────────────────
 
     function EXECUTOR_FEE_BPS() external view returns (uint16) {
@@ -113,7 +138,7 @@ contract PulsePayrollManager is IPulsePayrollManager {
     function createPlan(
         address token,
         uint256 period
-    ) external returns (bytes32 planId) {
+    ) external whenNotPaused returns (bytes32 planId) {
         if (token  == address(0)) revert ZeroAddress();
         if (period == 0)          revert InvalidPeriod();
 
@@ -127,11 +152,12 @@ contract PulsePayrollManager is IPulsePayrollManager {
             period:   period,
             active:   true
         });
+        _allPlanIds.push(planId);
 
         emit PlanCreated(planId, msg.sender, token, period);
     }
 
-    function deactivatePlan(bytes32 planId) external onlyEmployer(planId) {
+    function deactivatePlan(bytes32 planId) external whenNotPaused onlyEmployer(planId) {
         Plan storage plan = plans[planId];
         if (!plan.active) revert PlanNotActive(planId);
 
@@ -148,7 +174,7 @@ contract PulsePayrollManager is IPulsePayrollManager {
         address wallet,
         uint256 amount,
         uint256 spendCap
-    ) external nonReentrant onlyEmployer(planId) returns (bytes32 recipientId) {
+    ) external nonReentrant whenNotPaused onlyEmployer(planId) returns (bytes32 recipientId) {
         if (!plans[planId].active) revert PlanNotActive(planId);
         recipientId = _addRecipient(planId, wallet, amount, spendCap);
     }
@@ -158,7 +184,7 @@ contract PulsePayrollManager is IPulsePayrollManager {
         address[] calldata wallets,
         uint256[] calldata amounts,
         uint256[] calldata spendCaps
-    ) external nonReentrant onlyEmployer(planId) returns (bytes32[] memory recipientIds) {
+    ) external nonReentrant whenNotPaused onlyEmployer(planId) returns (bytes32[] memory recipientIds) {
         if (!plans[planId].active) revert PlanNotActive(planId);
 
         uint256 len = wallets.length;
@@ -177,7 +203,7 @@ contract PulsePayrollManager is IPulsePayrollManager {
     function removeRecipient(
         bytes32 planId,
         bytes32 recipientId
-    ) external nonReentrant onlyEmployer(planId) {
+    ) external nonReentrant whenNotPaused onlyEmployer(planId) {
         _removeRecipient(planId, recipientId, msg.sender);
     }
 
@@ -186,7 +212,7 @@ contract PulsePayrollManager is IPulsePayrollManager {
         bytes32 recipientId,
         uint256 newAmount,
         uint256 newSpendCap
-    ) external onlyEmployer(planId) {
+    ) external whenNotPaused onlyEmployer(planId) {
         if (newAmount == 0) revert InvalidAmount();
 
         Recipient storage r = recipients[planId][recipientId];
@@ -213,6 +239,7 @@ contract PulsePayrollManager is IPulsePayrollManager {
         external
         onlyExecutor
         nonReentrant
+        whenNotPaused
         returns (uint256 grossAmount, uint256 executorFeePaid, uint256 protocolFeePaid)
     {
         if (executorFeeBpsOverride > MAX_EXECUTOR_FEE_BPS) {
@@ -235,6 +262,7 @@ contract PulsePayrollManager is IPulsePayrollManager {
         external
         onlyExecutor
         nonReentrant
+        whenNotPaused
         returns (
             uint256 totalExecutorFee,
             uint256 totalProtocolFee,
@@ -333,6 +361,24 @@ contract PulsePayrollManager is IPulsePayrollManager {
         return _recipientId(planId, wallet);
     }
 
+    /// @notice Total number of plans ever created (incl. deactivated).
+    function planCount() external view returns (uint256) {
+        return _allPlanIds.length;
+    }
+
+    /// @notice Slice of plan ids in [start, end). For migration snapshots.
+    function planIdsSlice(uint256 start, uint256 end)
+        external view returns (bytes32[] memory ids)
+    {
+        if (end > _allPlanIds.length) end = _allPlanIds.length;
+        if (start >= end) return new bytes32[](0);
+        ids = new bytes32[](end - start);
+        for (uint256 i = start; i < end; ) {
+            ids[i - start] = _allPlanIds[i];
+            unchecked { ++i; }
+        }
+    }
+
     // ═════════════════════════════════════════════════════════════════════════
     //  OWNER ADMIN
     // ═════════════════════════════════════════════════════════════════════════
@@ -351,6 +397,11 @@ contract PulsePayrollManager is IPulsePayrollManager {
         trustedExecutor = newExecutor;
     }
 
+    function setMigrationSource(address newSource) external onlyOwner {
+        migrationSource = newSource;
+        emit MigrationSourceSet(newSource);
+    }
+
     function setExecutorFeeBps(uint16 _bps) external onlyOwner {
         require(_bps <= 10_000, "Pulse: bps > 10000");
         executorFeeBps = _bps;
@@ -363,6 +414,86 @@ contract PulsePayrollManager is IPulsePayrollManager {
 
     function setProtocolFlatFee(uint256 _fee) external onlyOwner {
         protocolFlatFee = _fee;
+    }
+
+    /// @notice Owner pause kill-switch. While paused, all user-facing
+    ///         mutations revert. Owner admin + migration push/ingest still work.
+    function pause() external onlyOwner {
+        paused = true;
+        emit Paused(true);
+    }
+
+    function unpause() external onlyOwner {
+        paused = false;
+        emit Paused(false);
+    }
+
+    // ═════════════════════════════════════════════════════════════════════════
+    //  MIGRATION — push state to a new deployment of the same code.
+    // ═════════════════════════════════════════════════════════════════════════
+
+    function migratePlansTo(address sink, uint256 start, uint256 end)
+        external onlyOwner whenPaused
+    {
+        if (sink == address(0)) revert ZeroAddress();
+        if (end > _allPlanIds.length) end = _allPlanIds.length;
+        for (uint256 i = start; i < end; ) {
+            bytes32 pid = _allPlanIds[i];
+            IPulsePayrollManager(sink).ingestPlan(pid, plans[pid]);
+            unchecked { ++i; }
+        }
+        emit MigratedPlans(sink, start, end);
+    }
+
+    function migrateRecipientsTo(
+        address sink,
+        bytes32 planId,
+        uint256 start,
+        uint256 end
+    ) external onlyOwner whenPaused {
+        if (sink == address(0)) revert ZeroAddress();
+        bytes32[] storage rids = _planRecipientIds[planId];
+        if (end > rids.length) end = rids.length;
+        for (uint256 i = start; i < end; ) {
+            bytes32 rid = rids[i];
+            IPulsePayrollManager(sink).ingestRecipient(planId, rid, recipients[planId][rid]);
+            unchecked { ++i; }
+        }
+        emit MigratedRecipients(sink, planId, start, end);
+    }
+
+    function migratePlanNonceTo(address sink) external onlyOwner whenPaused {
+        if (sink == address(0)) revert ZeroAddress();
+        IPulsePayrollManager(sink).ingestPlanNonce(_planNonce);
+        emit MigratedPlanNonce(sink, _planNonce);
+    }
+
+    function ingestPlan(bytes32 planId, Plan calldata plan)
+        external onlyOwnerOrMigrationSource whenPaused
+    {
+        bool firstTime = plans[planId].employer == address(0);
+        plans[planId] = plan;
+        if (firstTime) _allPlanIds.push(planId);
+        emit IngestedPlan(planId);
+    }
+
+    function ingestRecipient(
+        bytes32 planId,
+        bytes32 recipientId,
+        Recipient calldata r
+    ) external onlyOwnerOrMigrationSource whenPaused {
+        bool firstTime = recipients[planId][recipientId].wallet == address(0);
+        recipients[planId][recipientId] = r;
+        if (firstTime) {
+            _recipientIndex[planId][recipientId] = _planRecipientIds[planId].length;
+            _planRecipientIds[planId].push(recipientId);
+        }
+        emit IngestedRecipient(planId, recipientId);
+    }
+
+    function ingestPlanNonce(uint256 nonce) external onlyOwnerOrMigrationSource whenPaused {
+        if (nonce > _planNonce) _planNonce = nonce;
+        emit IngestedPlanNonce(nonce);
     }
 
     // ═════════════════════════════════════════════════════════════════════════

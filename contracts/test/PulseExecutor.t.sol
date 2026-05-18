@@ -513,4 +513,89 @@ contract PulseExecutorTest is Test {
         IPulseExecutor.Payment memory p = exec.getPayment(subPaymentId);
         assertTrue(p.registered);
     }
+
+    // ═════════════════════════════════════════════════════════════════════════
+    //  ENUMERATION + MIGRATION
+    // ═════════════════════════════════════════════════════════════════════════
+
+    function test_enumeration_recordsPaymentAndExecutor() public {
+        // setUp already created 2 payments (sub + payroll).
+        assertEq(exec.paymentCount(), 2);
+        assertEq(exec.managerCount(), 2);
+
+        // Drive one execution to record KEEPER in _allExecutors.
+        vm.prank(KEEPER);
+        exec.execute(subPaymentId);
+        assertEq(exec.executorCount(), 1);
+
+        address[] memory addrs = exec.executorsSlice(0, 1);
+        assertEq(addrs[0], KEEPER);
+    }
+
+    function test_migrate_revertsWhenNotPaused() public {
+        vm.prank(OWNER);
+        vm.expectRevert(IPulseExecutor.NotPausedError.selector);
+        exec.migratePaymentsTo(address(0xBEEF), 0, 1);
+    }
+
+    function test_migrateAll_roundTrips_paymentsExecutorsManagersConfig() public {
+        // Drive a successful + a failed execute so KEEPER has stats + a bitmap.
+        vm.prank(KEEPER);
+        exec.execute(subPaymentId);
+
+        // Force a failure on subPaymentId: revoke USDC allowance so chargeFor
+        // reverts on transferFrom (captured as failure inside the executor).
+        vm.prank(CUSTOMER);
+        usdc.approve(address(subMgr), 0);
+        // Warp past schedule so it's "due".
+        IPulseExecutor.Payment memory ps = exec.getPayment(subPaymentId);
+        vm.warp(ps.scheduledAt);
+        vm.prank(KEEPER);
+        exec.execute(subPaymentId);
+        vm.prank(CUSTOMER);
+        usdc.approve(address(subMgr), type(uint256).max);
+
+        // Deploy sink, pause both, whitelist source.
+        vm.prank(OWNER);
+        PulseExecutor sink = new PulseExecutor(FEE_RECIP);
+        vm.startPrank(OWNER);
+        sink.pause();
+        sink.setMigrationSource(address(exec));
+        exec.pause();
+        vm.stopPrank();
+
+        // Push state.
+        vm.prank(OWNER);
+        exec.migrateManagersTo(address(sink), 0, exec.managerCount());
+        vm.prank(OWNER);
+        exec.migratePaymentsTo(address(sink), 0, exec.paymentCount());
+        vm.prank(OWNER);
+        exec.migrateExecutorStateTo(address(sink), 0, exec.executorCount());
+        vm.prank(OWNER);
+        exec.migrateConfigTo(address(sink));
+
+        // Verify sink mirrors source.
+        IPulseExecutor.Payment memory srcP = exec.getPayment(subPaymentId);
+        IPulseExecutor.Payment memory dstP = sink.getPayment(subPaymentId);
+        assertEq(dstP.manager,     srcP.manager);
+        assertEq(dstP.scheduledAt, srcP.scheduledAt);
+        assertTrue(dstP.registered);
+
+        IPulseExecutor.ExecutorStats memory srcS = exec.getStats(KEEPER);
+        IPulseExecutor.ExecutorStats memory dstS = sink.getStats(KEEPER);
+        assertEq(dstS.totalExecutions,      srcS.totalExecutions);
+        assertEq(dstS.successfulExecutions, srcS.successfulExecutions);
+        assertEq(dstS.failedExecutions,     srcS.failedExecutions);
+
+        // Bitmap-derived view should be identical post-migration.
+        assertEq(sink.failureRateBps(KEEPER), exec.failureRateBps(KEEPER));
+
+        // Trusted managers carried over.
+        assertEq(sink.managerCount(), exec.managerCount());
+
+        // Config carried over.
+        assertEq(sink.MIN_FEE_BPS(),   exec.MIN_FEE_BPS());
+        assertEq(sink.MAX_FEE_BPS(),   exec.MAX_FEE_BPS());
+        assertEq(sink.RAMP_DURATION(), exec.RAMP_DURATION());
+    }
 }

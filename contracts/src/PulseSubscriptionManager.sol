@@ -55,14 +55,33 @@ contract PulseSubscriptionManager is IPulseSubscriptionManager {
     address public feeRecipient;
     address public trustedExecutor;
 
+    /// @dev Address whitelisted to call ingest*() during a migration. Set by
+    ///      the owner on the SINK before the source pushes state. Typically
+    ///      the source contract's address.
+    address public migrationSource;
+
     /// @dev Monotonic nonce used to make planIds unique per merchant + chain.
     uint256 private _planNonce;
 
     /// @dev Re-entrancy lock: 1 = not entered, 2 = entered.
     uint256 private _reentrancyStatus;
 
+    /// @dev When true, all user-facing entrypoints revert with PausedError.
+    ///      Owner admin and migrate*() functions still work — paused is the
+    ///      "ready to migrate" state.
+    bool public paused;
+
     mapping(bytes32 => Plan)         public plans;
     mapping(bytes32 => Subscription) public subscriptions;
+
+    /// @dev Enumeration arrays so a migration script can snapshot full state
+    ///      without scanning logs. Pushed on createPlan / subscribe / import.
+    bytes32[] internal _allPlanIds;
+    bytes32[] internal _allSubscriptionIds;
+
+    /// @dev Tracks whether a subId has been added to _allSubscriptionIds so
+    ///      that re-subscribe (after cancel) doesn't push a duplicate.
+    mapping(bytes32 => bool) internal _subIdSeen;
 
     // ─── Modifiers ────────────────────────────────────────────────────────────
 
@@ -80,6 +99,26 @@ contract PulseSubscriptionManager is IPulseSubscriptionManager {
 
     modifier onlyExecutor() {
         if (msg.sender != trustedExecutor) revert NotTrustedExecutor(msg.sender);
+        _;
+    }
+
+    modifier whenNotPaused() {
+        if (paused) revert PausedError();
+        _;
+    }
+
+    modifier whenPaused() {
+        if (!paused) revert NotPausedError();
+        _;
+    }
+
+    /// @dev Permits the owner OR the whitelisted migrationSource. Used by
+    ///      ingest*() so the source contract can push state directly without
+    ///      requiring the owner to relay every batch.
+    modifier onlyOwnerOrMigrationSource() {
+        if (msg.sender != owner && msg.sender != migrationSource) {
+            revert NotMigrationSource(msg.sender);
+        }
         _;
     }
 
@@ -105,7 +144,7 @@ contract PulseSubscriptionManager is IPulseSubscriptionManager {
         address token,
         uint256 amount,
         uint256 period
-    ) external returns (bytes32 planId) {
+    ) external whenNotPaused returns (bytes32 planId) {
         if (token  == address(0)) revert ZeroAddress();
         if (amount == 0)          revert InvalidAmount();
         if (period == 0)          revert InvalidPeriod();
@@ -119,11 +158,12 @@ contract PulseSubscriptionManager is IPulseSubscriptionManager {
             period:   period,
             active:   true
         });
+        _allPlanIds.push(planId);
 
         emit PlanCreated(planId, msg.sender, token, amount, period);
     }
 
-    function deactivatePlan(bytes32 planId) external {
+    function deactivatePlan(bytes32 planId) external whenNotPaused {
         Plan storage plan = plans[planId];
         if (plan.merchant != msg.sender) revert UnauthorizedMerchant(planId);
         if (!plan.active)                revert PlanNotActive(planId);
@@ -140,7 +180,7 @@ contract PulseSubscriptionManager is IPulseSubscriptionManager {
     function subscribe(
         bytes32 planId,
         uint256 totalSpendCap
-    ) external nonReentrant returns (bytes32 subscriptionId) {
+    ) external nonReentrant whenNotPaused returns (bytes32 subscriptionId) {
         Plan storage plan = plans[planId];
         if (!plan.active) revert PlanNotActive(planId);
 
@@ -161,6 +201,10 @@ contract PulseSubscriptionManager is IPulseSubscriptionManager {
             totalSpent:    0,
             active:        true
         });
+        if (!_subIdSeen[subscriptionId]) {
+            _subIdSeen[subscriptionId] = true;
+            _allSubscriptionIds.push(subscriptionId);
+        }
 
         emit Subscribed(subscriptionId, planId, msg.sender, totalSpendCap);
 
@@ -181,7 +225,7 @@ contract PulseSubscriptionManager is IPulseSubscriptionManager {
     }
 
     /// @notice Cancel a subscription. Callable by the customer OR merchant.
-    function cancel(bytes32 subscriptionId) external nonReentrant {
+    function cancel(bytes32 subscriptionId) external nonReentrant whenNotPaused {
         Subscription storage sub = subscriptions[subscriptionId];
         if (!sub.active) revert NotSubscribed(subscriptionId);
         if (msg.sender != sub.customer && msg.sender != sub.merchant)
@@ -213,6 +257,7 @@ contract PulseSubscriptionManager is IPulseSubscriptionManager {
         external
         onlyExecutor
         nonReentrant
+        whenNotPaused
         returns (uint256 grossAmount, uint256 executorFeePaid, uint256 protocolFeePaid)
     {
         if (executorFeeBpsOverride > MAX_EXECUTOR_FEE_BPS) {
@@ -289,6 +334,42 @@ contract PulseSubscriptionManager is IPulseSubscriptionManager {
         return _subId(planId, customer);
     }
 
+    /// @notice Total number of plans ever created (incl. deactivated).
+    function planCount() external view returns (uint256) {
+        return _allPlanIds.length;
+    }
+
+    /// @notice Total number of unique subscription ids tracked.
+    function subscriptionCount() external view returns (uint256) {
+        return _allSubscriptionIds.length;
+    }
+
+    /// @notice Slice of plan ids in [start, end). For migration snapshots.
+    function planIdsSlice(uint256 start, uint256 end)
+        external view returns (bytes32[] memory ids)
+    {
+        if (end > _allPlanIds.length) end = _allPlanIds.length;
+        if (start >= end) return new bytes32[](0);
+        ids = new bytes32[](end - start);
+        for (uint256 i = start; i < end; ) {
+            ids[i - start] = _allPlanIds[i];
+            unchecked { ++i; }
+        }
+    }
+
+    /// @notice Slice of subscription ids in [start, end). For migration snapshots.
+    function subscriptionIdsSlice(uint256 start, uint256 end)
+        external view returns (bytes32[] memory ids)
+    {
+        if (end > _allSubscriptionIds.length) end = _allSubscriptionIds.length;
+        if (start >= end) return new bytes32[](0);
+        ids = new bytes32[](end - start);
+        for (uint256 i = start; i < end; ) {
+            ids[i - start] = _allSubscriptionIds[i];
+            unchecked { ++i; }
+        }
+    }
+
     // ─── Owner ────────────────────────────────────────────────────────────────
 
     function setFeeRecipient(address newRecipient) external onlyOwner {
@@ -306,6 +387,13 @@ contract PulseSubscriptionManager is IPulseSubscriptionManager {
         trustedExecutor = newExecutor;
     }
 
+    /// @notice Whitelist a source contract that may call ingest*() during a
+    ///         migration. address(0) to clear. Owner-only.
+    function setMigrationSource(address newSource) external onlyOwner {
+        migrationSource = newSource;
+        emit MigrationSourceSet(newSource);
+    }
+
     function setExecutorFeeBps(uint16 _bps) external onlyOwner {
         // Retained for back-compat; only affects the EXECUTOR_FEE_BPS view.
         // chargeFor uses the override from the router, capped at MAX_EXECUTOR_FEE_BPS.
@@ -321,6 +409,94 @@ contract PulseSubscriptionManager is IPulseSubscriptionManager {
     function setProtocolFlatFee(uint256 _fee) external onlyOwner {
         protocolFlatFee = _fee;
     }
+
+    /// @notice Owner pause kill-switch. While paused, all user-facing
+    ///         mutations (createPlan / subscribe / cancel / chargeFor) revert.
+    ///         Owner admin and migration push/ingest functions still work —
+    ///         pause is the "ready to migrate" state.
+    function pause() external onlyOwner {
+        paused = true;
+        emit Paused(true);
+    }
+
+    function unpause() external onlyOwner {
+        paused = false;
+        emit Paused(false);
+    }
+
+    // ═════════════════════════════════════════════════════════════════════════
+    //  MIGRATION — push to a new deployment of the same code.
+    //
+    //  The OLD contract enumerates its state and PUSHES it to the NEW contract
+    //  via the matching ingest*() functions below. The new contract must be
+    //  deployed paused (or paused via its own owner) and the caller must own
+    //  both contracts.
+    // ═════════════════════════════════════════════════════════════════════════
+
+    /// @notice Push a slice of plans + their full Plan structs to `sink`.
+    ///         Must be paused so plan state can't shift mid-migration.
+    function migratePlansTo(address sink, uint256 start, uint256 end)
+        external onlyOwner whenPaused
+    {
+        if (sink == address(0)) revert ZeroAddress();
+        if (end > _allPlanIds.length) end = _allPlanIds.length;
+        for (uint256 i = start; i < end; ) {
+            bytes32 pid = _allPlanIds[i];
+            IPulseSubscriptionManager(sink).ingestPlan(pid, plans[pid]);
+            unchecked { ++i; }
+        }
+        emit MigratedPlans(sink, start, end);
+    }
+
+    function migrateSubscriptionsTo(address sink, uint256 start, uint256 end)
+        external onlyOwner whenPaused
+    {
+        if (sink == address(0)) revert ZeroAddress();
+        if (end > _allSubscriptionIds.length) end = _allSubscriptionIds.length;
+        for (uint256 i = start; i < end; ) {
+            bytes32 sid = _allSubscriptionIds[i];
+            IPulseSubscriptionManager(sink).ingestSubscription(sid, subscriptions[sid]);
+            unchecked { ++i; }
+        }
+        emit MigratedSubscriptions(sink, start, end);
+    }
+
+    /// @notice Push the current plan nonce so the new contract issues
+    ///         non-colliding planIds for any future merchant.
+    function migratePlanNonceTo(address sink) external onlyOwner whenPaused {
+        if (sink == address(0)) revert ZeroAddress();
+        IPulseSubscriptionManager(sink).ingestPlanNonce(_planNonce);
+        emit MigratedPlanNonce(sink, _planNonce);
+    }
+
+    /// @notice Owner-only intake. Only callable while THIS contract is paused
+    ///         (i.e. the new deployment hasn't gone live yet).
+    function ingestPlan(bytes32 planId, Plan calldata plan)
+        external onlyOwnerOrMigrationSource whenPaused
+    {
+        bool firstTime = plans[planId].merchant == address(0);
+        plans[planId] = plan;
+        if (firstTime) _allPlanIds.push(planId);
+        emit IngestedPlan(planId);
+    }
+
+    function ingestSubscription(bytes32 subscriptionId, Subscription calldata sub)
+        external onlyOwnerOrMigrationSource whenPaused
+    {
+        subscriptions[subscriptionId] = sub;
+        if (!_subIdSeen[subscriptionId]) {
+            _subIdSeen[subscriptionId] = true;
+            _allSubscriptionIds.push(subscriptionId);
+        }
+        emit IngestedSubscription(subscriptionId);
+    }
+
+    function ingestPlanNonce(uint256 nonce) external onlyOwnerOrMigrationSource whenPaused {
+        // Only allow ratcheting forward — never rewind.
+        if (nonce > _planNonce) _planNonce = nonce;
+        emit IngestedPlanNonce(nonce);
+    }
+
 
     // ─── Helpers ─────────────────────────────────────────────────────────────
 

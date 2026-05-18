@@ -75,6 +75,15 @@ interface IPulsePayrollManager {
     /// operation still succeeds; an owner can backfill on the executor.
     event RegistrationFailed(bytes32 indexed recipientId, bytes32 reasonHash);
 
+    event Paused(bool paused);
+    event MigratedPlans(address indexed sink, uint256 start, uint256 end);
+    event MigratedRecipients(address indexed sink, bytes32 indexed planId, uint256 start, uint256 end);
+    event MigratedPlanNonce(address indexed sink, uint256 nonce);
+    event IngestedPlan(bytes32 indexed planId);
+    event IngestedRecipient(bytes32 indexed planId, bytes32 indexed recipientId);
+    event IngestedPlanNonce(uint256 nonce);
+    event MigrationSourceSet(address indexed source);
+
     // ─── Errors ───────────────────────────────────────────────────────────────
 
     error ZeroAddress();
@@ -89,6 +98,9 @@ interface IPulsePayrollManager {
     error ArrayLengthMismatch();
     error NotTrustedExecutor(address caller);
     error FeeBpsExceedsMax(uint16 bps, uint16 max);
+    error PausedError();
+    error NotPausedError();
+    error NotMigrationSource(address caller);
 
     // ─── Functions ────────────────────────────────────────────────────────────
 
@@ -154,4 +166,10 @@ interface IPulsePayrollManager {
 
     function computeRecipientId(bytes32 planId, address wallet)
         external pure returns (bytes32);
+
+    // ─── Migration intake (owner-only, only when paused) ─────────────────────
+
+    function ingestPlan(bytes32 planId, Plan calldata plan) external;
+    function ingestRecipient(bytes32 planId, bytes32 recipientId, Recipient calldata r) external;
+    function ingestPlanNonce(uint256 nonce) external;
 }

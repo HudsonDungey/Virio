@@ -42,6 +42,16 @@ interface IPulseSubscriptionManager {
     /// Override bps exceeds the hard ceiling (30 = 0.30%).
     error FeeBpsExceedsMax(uint16 bps, uint16 max);
 
+    /// Contract is paused — user mutations are disabled.
+    error PausedError();
+
+    /// Migration / ingest can only run while paused.
+    error NotPausedError();
+
+    /// ingest*() called by an address that is neither owner nor the
+    /// whitelisted migrationSource.
+    error NotMigrationSource(address caller);
+
     // ─── Events ──────────────────────────────────────────────────────────────
 
     event PlanCreated(
@@ -86,6 +96,17 @@ interface IPulseSubscriptionManager {
     /// deregisterPayment) reverts. Subscription / cancellation still succeed —
     /// an owner can backfill the registration on the executor.
     event RegistrationFailed(bytes32 indexed subscriptionId, bytes32 reasonHash);
+
+    event Paused(bool paused);
+
+    event MigratedPlans(address indexed sink, uint256 start, uint256 end);
+    event MigratedSubscriptions(address indexed sink, uint256 start, uint256 end);
+    event MigratedPlanNonce(address indexed sink, uint256 nonce);
+
+    event IngestedPlan(bytes32 indexed planId);
+    event IngestedSubscription(bytes32 indexed subscriptionId);
+    event IngestedPlanNonce(uint256 nonce);
+    event MigrationSourceSet(address indexed source);
 
     // ─── Structs ─────────────────────────────────────────────────────────────
 
@@ -154,4 +175,10 @@ interface IPulseSubscriptionManager {
     /// @notice Compute the deterministic subscription id for a (plan, customer) pair.
     function computeSubId(bytes32 planId, address customer)
         external pure returns (bytes32);
+
+    // ─── Migration intake (owner-only, only when paused) ─────────────────────
+
+    function ingestPlan(bytes32 planId, Plan calldata plan) external;
+    function ingestSubscription(bytes32 subscriptionId, Subscription calldata sub) external;
+    function ingestPlanNonce(uint256 nonce) external;
 }

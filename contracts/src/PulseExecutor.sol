@@ -60,6 +60,10 @@ contract PulseExecutor is IPulseExecutor {
     address public feeRecipient;
     bool    public paused;
 
+    /// @dev Address whitelisted to call ingest*() during a migration. Set by
+    ///      owner on the SINK before the source pushes state.
+    address public migrationSource;
+
     uint256 private _reentrancyStatus;
     uint256 public executionCount;
 
@@ -82,6 +86,14 @@ contract PulseExecutor is IPulseExecutor {
     mapping(address => bool)        public trustedManager;
     mapping(address => ManagerKind) public managerKind;
 
+    /// @dev Enumeration arrays so a migration script can snapshot full state.
+    bytes32[] internal _allPaymentIds;
+    address[] internal _allExecutors;
+    address[] internal _allManagers;
+    mapping(bytes32 => bool) internal _paymentSeen;
+    mapping(address => bool) internal _executorSeen;
+    mapping(address => bool) internal _managerSeen;
+
     // ─── Modifiers ────────────────────────────────────────────────────────────
 
     modifier nonReentrant() {
@@ -98,6 +110,18 @@ contract PulseExecutor is IPulseExecutor {
 
     modifier whenNotPaused() {
         if (paused) revert PausedError();
+        _;
+    }
+
+    modifier whenPaused() {
+        if (!paused) revert NotPausedError();
+        _;
+    }
+
+    modifier onlyOwnerOrMigrationSource() {
+        if (msg.sender != owner && msg.sender != migrationSource) {
+            revert NotMigrationSource(msg.sender);
+        }
         _;
     }
 
@@ -136,6 +160,10 @@ contract PulseExecutor is IPulseExecutor {
             period:      period,
             registered:  true
         });
+        if (!_paymentSeen[paymentId]) {
+            _paymentSeen[paymentId] = true;
+            _allPaymentIds.push(paymentId);
+        }
 
         emit PaymentRegistered(paymentId, msg.sender, kind, planId, innerId, scheduledAt, period);
     }
@@ -408,6 +436,7 @@ contract PulseExecutor is IPulseExecutor {
         uint256 reward,
         uint256 delay
     ) internal {
+        _seeExecutor(e);
         ExecutorStats storage s = stats[e];
         unchecked {
             s.totalExecutions      += 1;
@@ -420,12 +449,20 @@ contract PulseExecutor is IPulseExecutor {
     }
 
     function _updateStatsFailure(address e) internal {
+        _seeExecutor(e);
         ExecutorStats storage s = stats[e];
         unchecked {
             s.totalExecutions  += 1;
             s.failedExecutions += 1;
         }
         s.lastExecutionTimestamp = uint64(block.timestamp);
+    }
+
+    function _seeExecutor(address e) internal {
+        if (!_executorSeen[e]) {
+            _executorSeen[e] = true;
+            _allExecutors.push(e);
+        }
     }
 
     function _emaUpdate(uint64 prev, uint64 sample) internal pure returns (uint64) {
@@ -561,6 +598,183 @@ contract PulseExecutor is IPulseExecutor {
         return _dynamicFeeBpsInternal(delaySeconds);
     }
 
+    // ─── Enumeration (for migration snapshots) ────────────────────────────────
+
+    function paymentCount() external view returns (uint256) {
+        return _allPaymentIds.length;
+    }
+    function executorCount() external view returns (uint256) {
+        return _allExecutors.length;
+    }
+    function managerCount() external view returns (uint256) {
+        return _allManagers.length;
+    }
+
+    function paymentIdsSlice(uint256 start, uint256 end)
+        external view returns (bytes32[] memory ids)
+    {
+        if (end > _allPaymentIds.length) end = _allPaymentIds.length;
+        if (start >= end) return new bytes32[](0);
+        ids = new bytes32[](end - start);
+        for (uint256 i = start; i < end; ) {
+            ids[i - start] = _allPaymentIds[i];
+            unchecked { ++i; }
+        }
+    }
+
+    function executorsSlice(uint256 start, uint256 end)
+        external view returns (address[] memory addrs)
+    {
+        if (end > _allExecutors.length) end = _allExecutors.length;
+        if (start >= end) return new address[](0);
+        addrs = new address[](end - start);
+        for (uint256 i = start; i < end; ) {
+            addrs[i - start] = _allExecutors[i];
+            unchecked { ++i; }
+        }
+    }
+
+    function managersSlice(uint256 start, uint256 end)
+        external view returns (address[] memory addrs)
+    {
+        if (end > _allManagers.length) end = _allManagers.length;
+        if (start >= end) return new address[](0);
+        addrs = new address[](end - start);
+        for (uint256 i = start; i < end; ) {
+            addrs[i - start] = _allManagers[i];
+            unchecked { ++i; }
+        }
+    }
+
+    // ═════════════════════════════════════════════════════════════════════════
+    //  MIGRATION — push state to a new deployment of the same code.
+    //
+    //  Every push function reads from THIS contract's storage and calls the
+    //  matching ingest*() on `sink`. Sink must be paused; this contract should
+    //  also be paused to prevent state shifting mid-migration.
+    // ═════════════════════════════════════════════════════════════════════════
+
+    function migratePaymentsTo(address sink, uint256 start, uint256 end)
+        external onlyOwner whenPaused
+    {
+        if (sink == address(0)) revert ZeroAddress();
+        if (end > _allPaymentIds.length) end = _allPaymentIds.length;
+        for (uint256 i = start; i < end; ) {
+            bytes32 pid = _allPaymentIds[i];
+            IPulseExecutor(sink).ingestPayment(pid, payments[pid]);
+            unchecked { ++i; }
+        }
+        emit MigratedPayments(sink, start, end);
+    }
+
+    function migrateExecutorStateTo(address sink, uint256 start, uint256 end)
+        external onlyOwner whenPaused
+    {
+        if (sink == address(0)) revert ZeroAddress();
+        if (end > _allExecutors.length) end = _allExecutors.length;
+        for (uint256 i = start; i < end; ) {
+            address e = _allExecutors[i];
+            IPulseExecutor(sink).ingestExecutorState(
+                e,
+                stats[e],
+                outcomeBitmap[e],
+                bufferHead[e],
+                bufferFill[e],
+                healCount[e],
+                restricted[e],
+                restrictedAt[e]
+            );
+            unchecked { ++i; }
+        }
+        emit MigratedExecutors(sink, start, end);
+    }
+
+    function migrateManagersTo(address sink, uint256 start, uint256 end)
+        external onlyOwner whenPaused
+    {
+        if (sink == address(0)) revert ZeroAddress();
+        if (end > _allManagers.length) end = _allManagers.length;
+        for (uint256 i = start; i < end; ) {
+            address m = _allManagers[i];
+            IPulseExecutor(sink).ingestManager(m, managerKind[m], trustedManager[m]);
+            unchecked { ++i; }
+        }
+        emit MigratedManagers(sink, start, end);
+    }
+
+    function migrateConfigTo(address sink) external onlyOwner whenPaused {
+        if (sink == address(0)) revert ZeroAddress();
+        IPulseExecutor(sink).ingestConfig(
+            MIN_FEE_BPS,
+            MAX_FEE_BPS,
+            RAMP_DURATION,
+            HEAL_COOLDOWN,
+            executionCount
+        );
+        emit MigratedConfig(sink);
+    }
+
+    // ─── Ingest (sink) ────────────────────────────────────────────────────────
+
+    function ingestPayment(bytes32 paymentId, Payment calldata p)
+        external onlyOwnerOrMigrationSource whenPaused
+    {
+        payments[paymentId] = p;
+        if (!_paymentSeen[paymentId]) {
+            _paymentSeen[paymentId] = true;
+            _allPaymentIds.push(paymentId);
+        }
+        emit IngestedPayment(paymentId);
+    }
+
+    function ingestExecutorState(
+        address executor,
+        ExecutorStats calldata s,
+        uint256 bitmap,
+        uint8   head,
+        uint8   fill,
+        uint8   heals,
+        bool    isRestricted_,
+        uint64  restrictedAtTs
+    ) external onlyOwnerOrMigrationSource whenPaused {
+        stats[executor]         = s;
+        outcomeBitmap[executor] = bitmap;
+        bufferHead[executor]    = head;
+        bufferFill[executor]    = fill;
+        healCount[executor]     = heals;
+        restricted[executor]    = isRestricted_;
+        restrictedAt[executor]  = restrictedAtTs;
+        _seeExecutor(executor);
+        emit IngestedExecutorState(executor);
+    }
+
+    function ingestManager(address manager, ManagerKind kind, bool isTrusted)
+        external onlyOwnerOrMigrationSource whenPaused
+    {
+        trustedManager[manager] = isTrusted;
+        managerKind[manager]    = kind;
+        if (!_managerSeen[manager]) {
+            _managerSeen[manager] = true;
+            _allManagers.push(manager);
+        }
+        emit IngestedManager(manager);
+    }
+
+    function ingestConfig(
+        uint16 minBps,
+        uint16 maxBps,
+        uint64 rampDuration,
+        uint64 healCooldown,
+        uint256 newExecutionCount
+    ) external onlyOwnerOrMigrationSource whenPaused {
+        MIN_FEE_BPS   = minBps;
+        MAX_FEE_BPS   = maxBps;
+        RAMP_DURATION = rampDuration;
+        HEAL_COOLDOWN = healCooldown;
+        if (newExecutionCount > executionCount) executionCount = newExecutionCount;
+        emit IngestedConfig();
+    }
+
     // ═════════════════════════════════════════════════════════════════════════
     //  OWNER ADMIN
     // ═════════════════════════════════════════════════════════════════════════
@@ -569,6 +783,10 @@ contract PulseExecutor is IPulseExecutor {
         if (manager == address(0)) revert ZeroAddress();
         trustedManager[manager] = true;
         managerKind[manager]    = kind;
+        if (!_managerSeen[manager]) {
+            _managerSeen[manager] = true;
+            _allManagers.push(manager);
+        }
         emit ManagerRegistered(manager, kind);
     }
 
@@ -581,6 +799,11 @@ contract PulseExecutor is IPulseExecutor {
         if (newRecipient == address(0)) revert ZeroAddress();
         feeRecipient = newRecipient;
         emit FeeRecipientUpdated(newRecipient);
+    }
+
+    function setMigrationSource(address newSource) external onlyOwner {
+        migrationSource = newSource;
+        emit MigrationSourceSet(newSource);
     }
 
     function transferOwnership(address newOwner) external onlyOwner {
@@ -602,6 +825,7 @@ contract PulseExecutor is IPulseExecutor {
         restricted[executor] = isRestricted_;
         if (isRestricted_) {
             restrictedAt[executor] = uint64(block.timestamp);
+            _seeExecutor(executor);
         }
         emit ExecutorRestrictedSet(executor, isRestricted_);
     }

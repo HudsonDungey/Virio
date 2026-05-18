@@ -402,4 +402,106 @@ contract PulseSubscriptionManagerTest is Test {
         vm.expectRevert();
         _charge();
     }
+
+    // ─── Pause ────────────────────────────────────────────────────────────────
+
+    function test_pause_blocksUserMutations() public {
+        vm.prank(OWNER);
+        mgr.pause();
+
+        vm.prank(MERCHANT);
+        vm.expectRevert(IPulseSubscriptionManager.PausedError.selector);
+        mgr.createPlan(address(usdc), AMOUNT, PERIOD);
+
+        vm.prank(CUSTOMER);
+        vm.expectRevert(IPulseSubscriptionManager.PausedError.selector);
+        mgr.subscribe(planId, 0);
+
+        vm.expectRevert(IPulseSubscriptionManager.PausedError.selector);
+        mgr.chargeFor(subId, FEE_BPS, KEEPER);
+    }
+
+    function test_unpause_restoresUserMutations() public {
+        vm.prank(OWNER);
+        mgr.pause();
+        vm.prank(OWNER);
+        mgr.unpause();
+
+        vm.prank(CUSTOMER);
+        mgr.subscribe(planId, 0);
+        assertTrue(mgr.getSubscription(subId).active);
+    }
+
+    function test_pause_revertsForNonOwner() public {
+        vm.prank(STRANGER);
+        vm.expectRevert("Pulse: not owner");
+        mgr.pause();
+    }
+
+    // ─── Migration push / ingest ─────────────────────────────────────────────
+
+    function test_migratePlansTo_copiesStateToSink() public {
+        // Set up some state on the source.
+        vm.prank(CUSTOMER);
+        mgr.subscribe(planId, 0);
+
+        // Deploy a fresh sink contract.
+        vm.prank(OWNER);
+        PulseSubscriptionManager sink = new PulseSubscriptionManager(FEE_RECIP);
+
+        // Both need to be paused, and the sink must whitelist the source's
+        // address so the cross-contract ingest calls pass auth.
+        vm.startPrank(OWNER);
+        sink.pause();
+        sink.setMigrationSource(address(mgr));
+        mgr.pause();
+        vm.stopPrank();
+
+        // Push plans, subscriptions, and the nonce.
+        vm.prank(OWNER);
+        mgr.migratePlansTo(address(sink), 0, mgr.planCount());
+        vm.prank(OWNER);
+        mgr.migrateSubscriptionsTo(address(sink), 0, mgr.subscriptionCount());
+        vm.prank(OWNER);
+        mgr.migratePlanNonceTo(address(sink));
+
+        // Sink should now have the plan + subscription with identical fields.
+        IPulseSubscriptionManager.Plan memory srcPlan  = mgr.getPlan(planId);
+        IPulseSubscriptionManager.Plan memory dstPlan  = sink.getPlan(planId);
+        assertEq(dstPlan.merchant, srcPlan.merchant);
+        assertEq(dstPlan.amount,   srcPlan.amount);
+        assertEq(dstPlan.period,   srcPlan.period);
+        assertEq(dstPlan.active,   srcPlan.active);
+
+        IPulseSubscriptionManager.Subscription memory srcSub = mgr.getSubscription(subId);
+        IPulseSubscriptionManager.Subscription memory dstSub = sink.getSubscription(subId);
+        assertEq(dstSub.customer,  srcSub.customer);
+        assertEq(dstSub.amount,    srcSub.amount);
+        assertEq(dstSub.totalSpent, srcSub.totalSpent);
+        assertTrue(dstSub.active);
+
+        // Enumeration carries over.
+        assertEq(sink.planCount(),         1);
+        assertEq(sink.subscriptionCount(), 1);
+    }
+
+    function test_migrate_revertsWhenNotPaused() public {
+        vm.prank(OWNER);
+        vm.expectRevert(IPulseSubscriptionManager.NotPausedError.selector);
+        mgr.migratePlansTo(address(0xBEEF), 0, 1);
+    }
+
+    function test_ingestPlan_revertsForRandomCaller() public {
+        vm.prank(OWNER);
+        mgr.pause();
+
+        IPulseSubscriptionManager.Plan memory p = IPulseSubscriptionManager.Plan({
+            merchant: MERCHANT, token: address(usdc), amount: AMOUNT, period: PERIOD, active: true
+        });
+        vm.prank(STRANGER);
+        vm.expectRevert(
+            abi.encodeWithSelector(IPulseSubscriptionManager.NotMigrationSource.selector, STRANGER)
+        );
+        mgr.ingestPlan(keccak256("fresh"), p);
+    }
 }

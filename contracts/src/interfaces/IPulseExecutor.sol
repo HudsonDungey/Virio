@@ -63,11 +63,13 @@ interface IPulseExecutor {
     error NotTrustedManager(address sender);
     error FeeBpsExceedsMax(uint16 bps, uint16 max);
     error PausedError();
+    error NotPausedError();
     error ZeroAddress();
     error NotOwner();
     error BatchEmpty();
     error InvalidRampParams();
     error AlreadyHealMaxedOut(address executor);
+    error NotMigrationSource(address caller);
 
     // ─── Events ───────────────────────────────────────────────────────────────
 
@@ -117,6 +119,17 @@ interface IPulseExecutor {
     event FeeRecipientUpdated(address indexed newRecipient);
     event Paused(bool paused);
 
+    event MigratedPayments(address indexed sink, uint256 start, uint256 end);
+    event MigratedExecutors(address indexed sink, uint256 start, uint256 end);
+    event MigratedManagers(address indexed sink, uint256 start, uint256 end);
+    event MigratedConfig(address indexed sink);
+
+    event IngestedPayment(bytes32 indexed paymentId);
+    event IngestedExecutorState(address indexed executor);
+    event IngestedManager(address indexed manager);
+    event IngestedConfig();
+    event MigrationSourceSet(address indexed source);
+
     // ─── Functions (Manager → Executor) ──────────────────────────────────────
 
     /// @notice Called by a trusted manager when a new chargeable item is created
@@ -157,4 +170,26 @@ interface IPulseExecutor {
     function isRestricted(address executor) external view returns (bool);
 
     function dynamicFeeBps(uint256 delaySeconds) external view returns (uint16);
+
+    // ─── Migration intake (owner-only, only when paused) ─────────────────────
+
+    function ingestPayment(bytes32 paymentId, Payment calldata p) external;
+    function ingestExecutorState(
+        address executor,
+        ExecutorStats calldata s,
+        uint256 bitmap,
+        uint8   head,
+        uint8   fill,
+        uint8   heals,
+        bool    isRestricted_,
+        uint64  restrictedAtTs
+    ) external;
+    function ingestManager(address manager, ManagerKind kind, bool isTrusted) external;
+    function ingestConfig(
+        uint16 minBps,
+        uint16 maxBps,
+        uint64 rampDuration,
+        uint64 healCooldown,
+        uint256 newExecutionCount
+    ) external;
 }
