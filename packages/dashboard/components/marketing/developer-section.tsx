@@ -144,7 +144,7 @@ export function DeveloperSection() {
             </Link>
           </div>
 
-          <Reveal delay={120}>
+          <Reveal delay={120} className="min-w-0 w-full">
             <CodeWindow tabs={TABS} />
           </Reveal>
         </div>
