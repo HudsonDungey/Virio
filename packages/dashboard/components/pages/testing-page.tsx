@@ -16,7 +16,7 @@ export function TestingPage({ testMode }: { testMode: boolean }) {
   const cfg = usePulseConfig();
 
   return (
-    <section className="animate-page-in mx-auto w-full max-w-[1180px] px-8 pb-20 pt-9 lg:px-12">
+    <section className="animate-page-in mx-auto w-full max-w-[1180px] px-4 pb-20 pt-8 sm:px-6 sm:pt-9 lg:px-12">
       <PageHeader
         title="Testing Suite"
         subtitle="Live state of the connected wallet and the configured Pulse manager"

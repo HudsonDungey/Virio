@@ -89,7 +89,7 @@ export function Footer() {
           <p className="text-[12.5px] text-muted-foreground">
             © {new Date().getFullYear()} Pulse Labs. All rights reserved.
           </p>
-          <div className="flex items-center gap-5 text-[12.5px] text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[12.5px] text-muted-foreground">
             <span className="inline-flex items-center gap-1.5">
               <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
               Audited by Spearbit &amp; OpenZeppelin

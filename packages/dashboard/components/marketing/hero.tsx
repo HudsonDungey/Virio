@@ -7,7 +7,7 @@ import { DashboardPreview } from "./dashboard-preview";
 
 export function Hero() {
   return (
-    <section className="relative overflow-hidden pt-32 sm:pt-40">
+    <section className="relative overflow-hidden pt-24 sm:pt-32 lg:pt-40">
       {/* backdrop */}
       <div className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute inset-0 grid-fade opacity-70" />

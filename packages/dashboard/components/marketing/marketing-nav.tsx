@@ -30,12 +30,12 @@ export function MarketingNav() {
     <header className="fixed inset-x-0 top-0 z-[120]">
       <div
         className={cn(
-          "mx-auto flex h-16 max-w-[1200px] items-center justify-between px-5 transition-all duration-300 ease-soft sm:px-8",
+          "mx-auto flex h-16 max-w-[1200px] items-center justify-between gap-2 px-4 transition-all duration-300 ease-soft sm:gap-3 sm:px-8",
           scrolled &&
-            "mt-2 h-14 max-w-[1120px] rounded-2xl border border-border/70 bg-background/80 px-4 shadow-lift backdrop-blur-xl sm:px-5",
+            "mt-2 h-14 max-w-[1120px] rounded-2xl border border-border/70 bg-background/80 px-3 shadow-lift backdrop-blur-xl sm:px-5",
         )}
       >
-        <Link href="/" className="transition-opacity hover:opacity-80">
+        <Link href="/" className="flex-shrink-0 transition-opacity hover:opacity-80">
           <Logo size={30} />
         </Link>
 
@@ -51,7 +51,7 @@ export function MarketingNav() {
           ))}
         </nav>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-shrink-0 items-center gap-2">
           <ThemeToggle variant="pill" className="hidden sm:grid" />
           <Link
             href="/dashboard"
@@ -61,7 +61,7 @@ export function MarketingNav() {
           </Link>
           <Link
             href="/dashboard"
-            className="btn-sheen group relative inline-flex h-9 items-center gap-1.5 overflow-hidden rounded-lg bg-brand-gradient px-4 text-[13.5px] font-semibold text-white shadow-brand transition-all duration-200 ease-soft hover:-translate-y-px hover:shadow-brand-lg"
+            className="btn-sheen group relative hidden h-9 items-center gap-1.5 overflow-hidden rounded-lg bg-brand-gradient px-4 text-[13.5px] font-semibold text-white shadow-brand transition-all duration-200 ease-soft hover:-translate-y-px hover:shadow-brand-lg sm:inline-flex"
           >
             <span className="relative z-[2]">Start Building</span>
             <ArrowRight className="relative z-[2] h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />

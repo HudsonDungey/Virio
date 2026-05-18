@@ -69,7 +69,7 @@ export function SubscriptionsPage({ subscriptions, refresh, onCreate }: Props) {
   }
 
   return (
-    <section className="animate-page-in mx-auto w-full max-w-[1180px] px-8 pb-20 pt-9 lg:px-12">
+    <section className="animate-page-in mx-auto w-full max-w-[1180px] px-4 pb-20 pt-8 sm:px-6 sm:pt-9 lg:px-12">
       <PageHeader
         title="Subscriptions"
         subtitle="Active and historical customer subscriptions"
@@ -82,17 +82,17 @@ export function SubscriptionsPage({ subscriptions, refresh, onCreate }: Props) {
       />
 
       <Card>
-        <div className="flex items-center gap-2.5 border-b border-border bg-secondary/40 px-5 py-3.5">
+        <div className="flex flex-col gap-2.5 border-b border-border bg-secondary/40 px-4 py-3.5 sm:flex-row sm:items-center sm:px-5">
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Filter by customer…"
-            className="h-9 w-60"
+            className="h-9 w-full sm:w-60"
           />
           <Select
             value={statusF}
             onChange={(e) => setStatusF(e.target.value)}
-            className="h-9 w-44"
+            className="h-9 w-full sm:w-44"
           >
             <option value="">All statuses</option>
             <option value="active">Active</option>

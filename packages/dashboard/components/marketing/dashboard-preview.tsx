@@ -88,7 +88,7 @@ export function DashboardPreview() {
         </span>
       </div>
 
-      <div className="grid grid-cols-[150px_1fr] gap-0">
+      <div className="grid grid-cols-1 gap-0 sm:grid-cols-[150px_1fr]">
         {/* mini sidebar */}
         <div className="hidden flex-col gap-1 border-r border-border bg-secondary/40 p-3 sm:flex">
           {["Overview", "Payroll", "Products", "Subscriptions", "Testing"].map(

@@ -154,7 +154,7 @@ export function PayrollPage({ testIntervals, productionIntervals }: PayrollPageP
       initial="initial"
       animate="enter"
       exit="exit"
-      className="mx-auto w-full max-w-[1180px] px-8 pb-16 pt-12"
+      className="mx-auto w-full max-w-[1180px] px-4 pb-16 pt-8 sm:px-6 sm:pt-10 lg:px-8 lg:pt-12"
     >
       <PageHeader
         title="Payroll"

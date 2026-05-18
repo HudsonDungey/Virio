@@ -103,14 +103,14 @@ export function IncomeChart() {
   return (
     <Card className="mb-8">
       <CardHeader>
-        <div className="flex items-end justify-between gap-4">
-          <div>
+        <div className="flex w-full flex-wrap items-end justify-between gap-3 sm:gap-4">
+          <div className="min-w-0">
             <CardTitle>Income</CardTitle>
             <div className="mt-1 text-[12px] text-muted-foreground">
               Merchant net per {bucketLabel(range)} · last {rangeLabel(range)}
             </div>
-            <div className="mt-2 flex items-baseline gap-4">
-              <div className="font-display text-[26px] font-semibold tabular-nums text-foreground">{fmt$(total)}</div>
+            <div className="mt-2 flex flex-wrap items-baseline gap-x-4 gap-y-1">
+              <div className="font-display text-[22px] font-semibold tabular-nums text-foreground sm:text-[26px]">{fmt$(total)}</div>
               {peak && peak.income > 0 && (
                 <div className="text-[12px] text-muted-foreground">
                   peak <span className="font-medium text-foreground">{fmt$(peak.income)}</span> @ {fmtBucketTime(peak.t, range)}

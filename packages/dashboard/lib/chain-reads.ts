@@ -146,7 +146,7 @@ export async function listPlans(): Promise<Plan[]> {
     const deactivated = planDeactivations.has(p.planId.toLowerCase());
     out.push({
       id: p.planId,
-      name: meta?.name ?? `Plan ${p.planId.slice(0, 10)}`,
+      name: meta?.name ?? `${p.planId.slice(0, 10)}`,
       description: meta?.description ?? "",
       price: usdcDisplay(p.amount),
       intervalLabel: meta?.intervalLabel ?? `${p.period}s`,

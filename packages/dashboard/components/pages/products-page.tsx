@@ -51,7 +51,7 @@ export function ProductsPage({ plans, refresh, onCreate }: Props) {
   }
 
   return (
-    <section className="animate-page-in mx-auto w-full max-w-[1180px] px-8 pb-20 pt-9 lg:px-12">
+    <section className="animate-page-in mx-auto w-full max-w-[1180px] px-4 pb-20 pt-8 sm:px-6 sm:pt-9 lg:px-12">
       <PageHeader
         title="Products"
         subtitle="Subscription products created on the Pulse manager"

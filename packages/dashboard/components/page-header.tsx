@@ -8,7 +8,7 @@ interface Props {
 
 export function PageHeader({ title, subtitle, action }: Props) {
   return (
-    <div className="mb-8 flex items-end justify-between gap-6">
+    <div className="mb-8 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-end sm:gap-6">
       <div className="min-w-0">
         <h1 className="font-display text-2xl font-semibold text-foreground">
           {title}
@@ -20,7 +20,7 @@ export function PageHeader({ title, subtitle, action }: Props) {
         )}
       </div>
       {action && (
-        <div className="flex shrink-0 items-center gap-2">{action}</div>
+        <div className="flex shrink-0 flex-wrap items-center gap-2">{action}</div>
       )}
     </div>
   );

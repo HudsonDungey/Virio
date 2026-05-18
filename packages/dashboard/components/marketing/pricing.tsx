@@ -45,7 +45,7 @@ export function Pricing() {
         <div className="mx-auto mt-14 grid max-w-[940px] gap-5 lg:grid-cols-[1.4fr_1fr]">
           {/* Primary plan */}
           <Reveal>
-            <div className="ring-gradient relative h-full overflow-hidden rounded-3xl border border-border bg-card p-8 shadow-lift">
+            <div className="ring-gradient relative h-full overflow-hidden rounded-3xl border border-border bg-card p-6 shadow-lift sm:p-8">
               <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(99,91,255,0.22),transparent_70%)] blur-2xl" />
               <div className="relative">
                 <div className="flex items-center justify-between">
@@ -62,7 +62,7 @@ export function Pricing() {
                   </span>
                 </div>
 
-                <div className="mt-6 grid grid-cols-3 gap-2.5">
+                <div className="mt-6 grid grid-cols-1 gap-2.5 sm:grid-cols-3">
                   {FEE_LINES.map((f) => (
                     <div
                       key={f.label}
@@ -108,7 +108,7 @@ export function Pricing() {
 
           {/* Enterprise */}
           <Reveal delay={100}>
-            <div className="flex h-full flex-col rounded-3xl border border-border bg-secondary/40 p-8">
+            <div className="flex h-full flex-col rounded-3xl border border-border bg-secondary/40 p-6 sm:p-8">
               <h3 className="font-display text-xl font-bold text-foreground">
                 Enterprise
               </h3>

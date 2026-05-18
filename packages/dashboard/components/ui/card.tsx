@@ -19,7 +19,7 @@ const CardHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDiv
   ({ className, ...props }, ref) => (
     <div
       ref={ref}
-      className={cn("flex items-center justify-between border-b border-border px-5 py-4", className)}
+      className={cn("flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-4 sm:px-5", className)}
       {...props}
     />
   ),

@@ -52,6 +52,7 @@ export function DashboardShell() {
   const { toggle: toggleTheme } = useTheme();
   const [page, setPage] = React.useState<PageKey>("dashboard");
   const [cmdOpen, setCmdOpen] = React.useState(false);
+  const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const [createPlanOpen, setCreatePlanOpen] = React.useState(false);
   const [createSubOpen, setCreateSubOpen] = React.useState(false);
   const [config, setConfig] = React.useState<ConfigState>({
@@ -168,15 +169,18 @@ export function DashboardShell() {
         testMode={config.testMode}
         onTestModeChange={setTestMode}
         onOpenCommand={() => setCmdOpen(true)}
+        open={sidebarOpen}
+        onOpenChange={setSidebarOpen}
       />
       <CommandPalette open={cmdOpen} onOpenChange={setCmdOpen} commands={commands} />
 
-      <div className="relative z-[1] ml-[248px] flex min-h-screen flex-col">
+      <div className="relative z-[1] flex min-h-screen flex-col lg:ml-[248px]">
         <Topbar
           title={PAGE_TITLES[page]}
           onOpenCommand={() => setCmdOpen(true)}
+          onOpenSidebar={() => setSidebarOpen(true)}
         />
-        <main className="flex-1 bg-background">
+        <main className="min-w-0 flex-1 overflow-x-hidden bg-background">
           {page === "dashboard" && (
             <DashboardPage
               stats={stats}
