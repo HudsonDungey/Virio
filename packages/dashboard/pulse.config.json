@@ -21,7 +21,6 @@
   },
 
   "defaults": {
-    "feeBps": 100,
     "merchant": "0x225b791581185B73Eb52156942369843E8B0Eec7",
     "feeRecipient": "0x2cA6c628E6Fd6F7a7A4Cfb48daF3dF6f079783A4"
   },

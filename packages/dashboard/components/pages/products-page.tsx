@@ -83,7 +83,6 @@ export function ProductsPage({ plans, refresh, onCreate }: Props) {
                 <TableHead>Name</TableHead>
                 <TableHead>Price</TableHead>
                 <TableHead>Interval</TableHead>
-                <TableHead>Fee (bps)</TableHead>
                 <TableHead>Created</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead />
@@ -113,9 +112,6 @@ export function ProductsPage({ plans, refresh, onCreate }: Props) {
                       {p.intervalLabel}
                       {p.isTestInterval && <Badge variant="test">test</Badge>}
                     </span>
-                  </TableCell>
-                  <TableCell className="tabular-nums text-muted-foreground">
-                    {p.feeBps}
                   </TableCell>
                   <TableCell className="text-muted-foreground">
                     {new Date(p.createdAt).toLocaleDateString()}

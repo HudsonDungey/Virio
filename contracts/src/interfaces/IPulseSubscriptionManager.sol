@@ -36,9 +36,6 @@ interface IPulseSubscriptionManager {
     /// period must be > 0.
     error InvalidPeriod();
 
-    /// feeBps must be ≤ 10 000 (100 %).
-    error InvalidFeeBps();
-
     // ─── Events ──────────────────────────────────────────────────────────────
 
     event PlanCreated(
@@ -46,8 +43,7 @@ interface IPulseSubscriptionManager {
         address indexed merchant,
         address token,
         uint256 amount,
-        uint256 period,
-        uint16  feeBps
+        uint256 period
     );
 
     event PlanDeactivated(bytes32 indexed planId, address indexed merchant);
@@ -87,7 +83,6 @@ interface IPulseSubscriptionManager {
         address token;
         uint256 amount;   // gross amount (includes fees) per charge
         uint256 period;   // min seconds between charges
-        uint16  feeBps;   // protocol fee in basis points (e.g. 90 = 0.9%)
         bool    active;
     }
 
@@ -100,7 +95,6 @@ interface IPulseSubscriptionManager {
         uint256 nextChargeAt;   // unix timestamp of next allowed charge
         uint256 totalSpendCap;  // 0 = unlimited; set by customer at subscribe time
         uint256 totalSpent;     // cumulative gross amount charged so far
-        uint16  feeBps;         // denormalized from plan at subscribe time
         bool    active;
     }
 
@@ -112,8 +106,7 @@ interface IPulseSubscriptionManager {
     function createPlan(
         address token,
         uint256 amount,
-        uint256 period,
-        uint16  feeBps
+        uint256 period
     ) external returns (bytes32 planId);
 
     function subscribe(

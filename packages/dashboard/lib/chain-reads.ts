@@ -15,7 +15,7 @@ import type { Plan, Subscription, Transaction } from "./types";
 // avoid scanning ~7M blocks of pre-deployment history. On anvil we start from 0.
 let lastSyncedBlock: bigint = DEPLOYMENT_BLOCK > 0n ? DEPLOYMENT_BLOCK - 1n : 0n;
 const INITIAL_FROM_BLOCK = lastSyncedBlock;
-const planEvents: { planId: Hex; merchant: Hex; token: Hex; amount: bigint; period: bigint; feeBps: number; blockNumber: bigint }[] = [];
+const planEvents: { planId: Hex; merchant: Hex; token: Hex; amount: bigint; period: bigint; blockNumber: bigint }[] = [];
 const planDeactivations = new Set<string>();
 const subEvents: { subId: Hex; planId: Hex; customer: Hex; totalSpendCap: bigint; blockNumber: bigint }[] = [];
 const cancelledSubs = new Set<string>();
@@ -86,7 +86,6 @@ async function ingestLogs(logs: unknown[]) {
         token: a.token as Hex,
         amount: a.amount as bigint,
         period: a.period as bigint,
-        feeBps: Number(a.feeBps),
         blockNumber: log.blockNumber!,
       });
     } else if (name === "PlanDeactivated") {
@@ -152,7 +151,6 @@ export async function listPlans(): Promise<Plan[]> {
       price: usdcDisplay(p.amount),
       intervalLabel: meta?.intervalLabel ?? `${p.period}s`,
       intervalSeconds: Number(p.period),
-      feeBps: p.feeBps,
       cancelAfterCharges: meta?.cancelAfterCharges ?? null,
       active: !deactivated,
       createdAt: meta?.createdAt ?? new Date(0).toISOString(),

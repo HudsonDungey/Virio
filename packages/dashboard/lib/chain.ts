@@ -13,7 +13,7 @@ import {
 import { privateKeyToAccount } from "viem/accounts";
 import { sepolia, foundry } from "viem/chains";
 import { getLocalConfig, buildRpcUrl } from "./local-config";
-import { managerAbi, erc20Abi } from "./abis";
+import { managerAbi, payrollAbi, erc20Abi } from "./abis";
 
 const cfg = getLocalConfig();
 const rpcUrl = buildRpcUrl(cfg);
@@ -38,8 +38,10 @@ export const CHAIN = chain;
 export const MANAGER_ADDRESS = cfg.contracts.manager as Address;
 export const USDC_ADDRESS = cfg.contracts.usdc as Address;
 export const FEE_RECIPIENT = cfg.contracts.feeRecipient as Address;
+export const PAYROLL_ADDRESS = cfg.contracts.payrollManager as Address;
 export const MERCHANT_ADDRESS = cfg.merchant.address as Address;
 export const DEPLOYMENT_BLOCK = cfg.deploymentBlock;
+export const PAYROLL_DEPLOYMENT_BLOCK = cfg.payrollDeploymentBlock;
 
 /// Addresses surfaced to the UI for dropdowns ("My Merchant", "My Customer Wallet").
 /// These are *view-only* — clients sign with their own connected wallet via wagmi.
@@ -69,7 +71,7 @@ export function findDisplayAccount(address: string): DisplayAccount | undefined 
   return displayAccounts.find((a) => a.address.toLowerCase() === address.toLowerCase());
 }
 
-export { managerAbi, erc20Abi };
+export { managerAbi, payrollAbi, erc20Abi };
 
 /// Convert a USDC display amount (e.g. 9.99) to base units (6 decimals).
 export function usdcUnits(display: number): bigint {

@@ -14,8 +14,14 @@ interface RawLocal {
   network?: Network;
   rpc?: { alchemyKey?: string | null; fullUrlOverride?: string | null };
   walletConnectProjectId?: string | null;
-  contracts?: { manager?: string; usdc?: string; feeRecipient?: string };
+  contracts?: {
+    manager?: string;
+    usdc?: string;
+    feeRecipient?: string;
+    payrollManager?: string;
+  };
   deploymentBlock?: number | string | null;
+  payrollDeploymentBlock?: number | string | null;
   merchant?: { address?: string; label?: string };
   executor?: { privateKey?: string | null };
   testAddresses?: Array<{ label?: string; address?: string }>;
@@ -67,8 +73,11 @@ export function getLocalConfig(): PulseLocalConfig {
       manager: asHex(raw.contracts?.manager, ZERO),
       usdc: asHex(raw.contracts?.usdc, ZERO),
       feeRecipient: asHex(raw.contracts?.feeRecipient, ZERO),
+      payrollManager: asHex(raw.contracts?.payrollManager, ZERO),
     },
     deploymentBlock: raw.deploymentBlock != null ? BigInt(raw.deploymentBlock) : 0n,
+    payrollDeploymentBlock:
+      raw.payrollDeploymentBlock != null ? BigInt(raw.payrollDeploymentBlock) : 0n,
     merchant: {
       address: asHex(raw.merchant?.address, ZERO),
       label: raw.merchant?.label ?? "My Merchant",
@@ -90,9 +99,15 @@ export interface PublicLocalConfig {
   network: Network;
   rpcUrl: string | null;
   walletConnectProjectId: string | null;
-  contracts: { manager: `0x${string}`; usdc: `0x${string}`; feeRecipient: `0x${string}` };
+  contracts: {
+    manager: `0x${string}`;
+    usdc: `0x${string}`;
+    feeRecipient: `0x${string}`;
+    payrollManager: `0x${string}`;
+  };
   /// Carried as string for serialization through Next.js RSC — clients parse as needed.
   deploymentBlock: string;
+  payrollDeploymentBlock: string;
   merchant: { address: `0x${string}`; label: string };
   testAddresses: Array<{ label: string; address: `0x${string}` }>;
 }
@@ -112,6 +127,7 @@ export function publicView(cfg: PulseLocalConfig): PublicLocalConfig {
     walletConnectProjectId: cfg.walletConnectProjectId,
     contracts: cfg.contracts,
     deploymentBlock: cfg.deploymentBlock.toString(),
+    payrollDeploymentBlock: cfg.payrollDeploymentBlock.toString(),
     merchant: cfg.merchant,
     testAddresses: cfg.testAddresses,
   };

@@ -36,12 +36,6 @@ export function TransactionsPage({ visible }: Props) {
     if (visible) fetchTx();
   }, [visible, fetchTx]);
 
-  React.useEffect(() => {
-    if (!visible) return;
-    const id = window.setInterval(fetchTx, 4000);
-    return () => window.clearInterval(id);
-  }, [visible, fetchTx]);
-
   return (
     <section className="animate-page-in mx-auto w-full max-w-[1180px] px-8 pb-20 pt-9 lg:px-12">
       <PageHeader title="Transactions" subtitle="Full payment history across products and payroll" />

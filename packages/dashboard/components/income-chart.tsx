@@ -45,10 +45,9 @@ export function IncomeChart() {
     }
   }, []);
 
+  // Fetch once when the range changes; no polling.
   React.useEffect(() => {
     fetchSeries(range);
-    const id = window.setInterval(() => fetchSeries(range), 5000);
-    return () => window.clearInterval(id);
   }, [range, fetchSeries]);
 
   // Geometry

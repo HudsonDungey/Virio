@@ -31,9 +31,7 @@ export function CreatePlanDialog({
   const [name, setName] = React.useState("");
   const [desc, setDesc] = React.useState("");
   const [price, setPrice] = React.useState("");
-  const [feeBps, setFeeBps] = React.useState("100");
   const [interval, setIntervalVal] = React.useState("");
-  const [cancelAfter, setCancelAfter] = React.useState("");
   const [submitting, setSubmitting] = React.useState(false);
 
   React.useEffect(() => {
@@ -41,8 +39,6 @@ export function CreatePlanDialog({
       setName("");
       setDesc("");
       setPrice("");
-      setFeeBps("100");
-      setCancelAfter("");
       setIntervalVal("");
     }
   }, [open]);
@@ -51,12 +47,15 @@ export function CreatePlanDialog({
     if (!name.trim()) return toast("Name is required", "error");
     const priceNum = parseFloat(price);
     if (!priceNum || priceNum <= 0) return toast("Price must be greater than 0", "error");
+    // Contract has a 1 USDC flat fee + ~0.35% combined fees; charges below
+    // ~1.01 USDC revert at settle time. Guard the merchant up front.
+    if (priceNum < 1.01)
+      return toast("Price must be at least 1.01 USDC to cover protocol fees", "error");
     const intervalSeconds = parseInt(interval, 10);
     if (!intervalSeconds) return toast("Please select a billing interval", "error");
 
     const all = [...testIntervals, ...productionIntervals];
     const intervalLabel = all.find((i) => i.seconds === intervalSeconds)?.label ?? `${intervalSeconds}s`;
-    const cancelAfterCharges = cancelAfter.trim() ? parseInt(cancelAfter, 10) : null;
 
     setSubmitting(true);
     try {
@@ -64,17 +63,15 @@ export function CreatePlanDialog({
       const { planId } = await actions.createPlan({
         priceUsdc: priceNum,
         periodSeconds: intervalSeconds,
-        feeBps: parseInt(feeBps, 10),
       });
-      // Persist off-chain metadata (name, description, interval label, cancel-after)
-      // so the UI can show "Pro Plan" instead of "Plan 0x12345…".
+      // Persist off-chain metadata (name, description, interval label) so the UI
+      // can show "Pro Plan" instead of "Plan 0x12345…".
       await api("POST", "/api/plans", {
         planId,
         name: name.trim(),
         description: desc.trim(),
         intervalLabel,
         intervalSeconds,
-        cancelAfterCharges,
       });
       toast(`Product "${name.trim()}" created`, "success");
       onCreated();
@@ -103,42 +100,33 @@ export function CreatePlanDialog({
               placeholder="Full access to all features"
             />
           </div>
-          <div className="grid grid-cols-2 gap-3.5">
-            <div>
-              <Label>Price (USDC)</Label>
-              <Input
-                type="number"
-                min="0.01"
-                step="0.01"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                placeholder="9.99"
-              />
-            </div>
-            <div>
-              <Label>Fee (basis points)</Label>
-              <Input
-                type="number"
-                min="0"
-                max="10000"
-                value={feeBps}
-                onChange={(e) => setFeeBps(e.target.value)}
-              />
-              <div className="mt-1 text-[11.5px] text-muted-foreground">100 bps = 1%</div>
+          <div>
+            <Label>Price (USDC)</Label>
+            <Input
+              type="number"
+              min="1.01"
+              step="0.01"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              placeholder="9.99"
+            />
+            <div className="mt-1 text-xs text-muted-foreground">
+              Minimum 1.01 USDC — must cover the 1 USDC protocol flat fee plus
+              executor and protocol percentages.
             </div>
           </div>
           <div>
-            <Label>Billing Interval</Label>
+            <Label>Billing interval</Label>
             <Select value={interval} onChange={(e) => setIntervalVal(e.target.value)}>
               <option value="">Select an interval…</option>
-              <optgroup label="— Test Intervals —">
+              <optgroup label="— Test intervals —">
                 {testIntervals.map((iv) => (
                   <option key={iv.seconds} value={iv.seconds}>
-                    {iv.label} ⚡ test
+                    {iv.label}
                   </option>
                 ))}
               </optgroup>
-              <optgroup label="— Production Intervals —">
+              <optgroup label="— Production intervals —">
                 {productionIntervals.map((iv) => (
                   <option key={iv.seconds} value={iv.seconds}>
                     {iv.label}
@@ -146,19 +134,9 @@ export function CreatePlanDialog({
                 ))}
               </optgroup>
             </Select>
-          </div>
-          <div>
-            <Label>Auto-cancel after charges (optional)</Label>
-            <Input
-              type="number"
-              min="1"
-              step="1"
-              value={cancelAfter}
-              onChange={(e) => setCancelAfter(e.target.value)}
-              placeholder="Leave blank for unlimited"
-            />
-            <div className="mt-1 text-[11.5px] text-muted-foreground">
-              e.g. 12 to auto-cancel after 12 charges (1 year monthly)
+            <div className="mt-2 rounded-md border border-border bg-secondary/40 px-3 py-2 text-xs text-muted-foreground">
+              Protocol fee and flat fee are set on the manager by the contract
+              owner — they aren't configurable per plan.
             </div>
           </div>
         </DialogBody>

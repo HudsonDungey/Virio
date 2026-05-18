@@ -17,7 +17,6 @@ import {
 } from "lucide-react";
 import { Sidebar, type PageKey } from "@/components/sidebar";
 import { Topbar } from "@/components/topbar";
-import { TestBanner } from "@/components/test-banner";
 import { CommandPalette, type Command } from "@/components/command-palette";
 import { WalletGate } from "@/components/wallet-gate";
 import { DashboardPage } from "@/components/pages/dashboard-page";
@@ -126,11 +125,8 @@ export function DashboardShell() {
     }
   }, [page, fetchPlans, fetchSubs]);
 
-  React.useEffect(() => {
-    const interval = config.testMode ? 2000 : 10000;
-    const id = window.setInterval(refreshAll, interval);
-    return () => window.clearInterval(id);
-  }, [config.testMode, refreshAll]);
+  // No timed polling — initial fetch on mount, refreshAll is called by mutations
+  // (createPlan, subscribe, cancel, deactivate) so the UI stays consistent.
 
   async function setTestMode(v: boolean) {
     try {
@@ -173,13 +169,9 @@ export function DashboardShell() {
         onTestModeChange={setTestMode}
         onOpenCommand={() => setCmdOpen(true)}
       />
-      <TestBanner show={config.testMode} />
       <CommandPalette open={cmdOpen} onOpenChange={setCmdOpen} commands={commands} />
 
-      <div
-        className="relative z-[1] ml-[248px] flex min-h-screen flex-col"
-        style={{ paddingTop: config.testMode ? 33 : 0 }}
-      >
+      <div className="relative z-[1] ml-[248px] flex min-h-screen flex-col">
         <Topbar
           title={PAGE_TITLES[page]}
           onOpenCommand={() => setCmdOpen(true)}
@@ -200,7 +192,13 @@ export function DashboardShell() {
               }}
             />
           )}
-          {page === "payroll" && <PayrollPage testMode={config.testMode} />}
+          {page === "payroll" && (
+            <PayrollPage
+              testMode={config.testMode}
+              testIntervals={config.testIntervals}
+              productionIntervals={config.productionIntervals}
+            />
+          )}
           {page === "products" && (
             <ProductsPage
               plans={plans}

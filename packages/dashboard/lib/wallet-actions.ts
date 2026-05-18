@@ -24,7 +24,6 @@ function chainIdFor(network: "sepolia" | "anvil"): number {
 interface CreatePlanInput {
   priceUsdc: number;
   periodSeconds: number;
-  feeBps: number;
 }
 
 interface SubscribeInput {
@@ -65,7 +64,7 @@ export function usePulseActions() {
       address: publicCfg.contracts.manager,
       abi: managerAbi,
       functionName: "createPlan",
-      args: [publicCfg.contracts.usdc, amount, period, input.feeBps],
+      args: [publicCfg.contracts.usdc, amount, period],
       chainId: help.expectedChainId,
     });
     const receipt = await waitForTransactionReceipt(config, { hash });
