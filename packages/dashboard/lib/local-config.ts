@@ -19,6 +19,7 @@ interface RawLocal {
     usdc?: string;
     feeRecipient?: string;
     payrollManager?: string;
+    executor?: string;
   };
   deploymentBlock?: number | string | null;
   payrollDeploymentBlock?: number | string | null;
@@ -74,6 +75,7 @@ export function getLocalConfig(): PulseLocalConfig {
       usdc: asHex(raw.contracts?.usdc, ZERO),
       feeRecipient: asHex(raw.contracts?.feeRecipient, ZERO),
       payrollManager: asHex(raw.contracts?.payrollManager, ZERO),
+      executor: asHex(raw.contracts?.executor, ZERO),
     },
     deploymentBlock: raw.deploymentBlock != null ? BigInt(raw.deploymentBlock) : 0n,
     payrollDeploymentBlock:
@@ -104,6 +106,7 @@ export interface PublicLocalConfig {
     usdc: `0x${string}`;
     feeRecipient: `0x${string}`;
     payrollManager: `0x${string}`;
+    executor: `0x${string}`;
   };
   /// Carried as string for serialization through Next.js RSC — clients parse as needed.
   deploymentBlock: string;

@@ -12,8 +12,10 @@
   "walletConnectProjectId": "REPLACE_WITH_YOUR_WALLETCONNECT_PROJECT_ID",
 
   "contracts": {
-    "_comment": "Fill these in after `forge script script/Deploy.s.sol --rpc-url $SEPOLIA_RPC --broadcast` prints them.",
+    "_comment": "Fill these in after deploying. `manager` and `payrollManager` use the subscribe/addRecipient + cancel flows; `executor` is the PulseExecutor router that the off-chain bot calls (executor.execute(paymentId)). The manager's trustedExecutor must be set to this executor address — DeployExecutorSepolia.s.sol wires that up.",
     "manager": "0x0000000000000000000000000000000000000000",
+    "payrollManager": "0x0000000000000000000000000000000000000000",
+    "executor": "0x0000000000000000000000000000000000000000",
     "usdc": "0x0000000000000000000000000000000000000000",
     "feeRecipient": "0x0000000000000000000000000000000000000000"
   },
@@ -28,7 +30,7 @@
   },
 
   "executor": {
-    "_comment": "Server-side private key used by the off-chain scheduler to call manager.charge() on Sepolia. Should be a dedicated EOA funded with a small amount of Sepolia ETH for gas — NEVER a key with real funds. You can also put this in .env.local as EXECUTOR_PRIVATE_KEY (preferred — keeps secrets out of JSON).",
+    "_comment": "Server-side private key used by the off-chain bot to call PulseExecutor.execute(paymentId) on Sepolia. Should be a dedicated EOA funded with a small amount of Sepolia ETH for gas — NEVER a key with real funds. Prefer setting it in .env.local as EXECUTOR_PRIVATE_KEY to keep it out of JSON. The bot wallet receives the executor fee (minus any penalty) for each successful call.",
     "privateKey": null
   },
 

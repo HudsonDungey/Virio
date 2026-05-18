@@ -1,8 +1,12 @@
 import type { Hex, Log } from "viem";
+import { keccak256, encodePacked } from "viem";
 import {
   publicClient,
   MANAGER_ADDRESS,
+  EXECUTOR_ADDRESS,
+  CHAIN,
   managerAbi,
+  executorAbi,
   usdcDisplay,
   executorWallet,
   DEPLOYMENT_BLOCK,
@@ -244,14 +248,36 @@ export async function listTransactions(): Promise<Transaction[]> {
   return out.reverse();
 }
 
+/// paymentId = keccak256(manager, innerId, chainid). Matches PulseExecutor.sol.
+export function computePaymentId(manager: Hex, innerId: Hex): Hex {
+  return keccak256(
+    encodePacked(
+      ["address", "bytes32", "uint256"],
+      [manager as `0x${string}`, innerId, BigInt(CHAIN.id)],
+    ),
+  );
+}
+
+/// A subscription that's currently due, with the age (how overdue) in seconds.
+/// The scheduler uses `ageSeconds` for observability and to prioritize the
+/// oldest items first — older items pay more (linear ramp up to 0.30%).
+export interface DuePayment {
+  subId:       Hex;
+  paymentId:   Hex;
+  merchant:    Hex;
+  scheduledAt: number; // unix seconds
+  ageSeconds:  number; // now - scheduledAt
+}
+
 /// Compute subscriptions that are due for charging right now (nextChargeAt <= now).
-export async function dueSubscriptions(): Promise<{ subId: Hex; merchant: Hex }[]> {
+/// Returns items SORTED by age descending so the executor processes the oldest
+/// (highest-paying) payments first.
+export async function duePayments(): Promise<DuePayment[]> {
   await syncEvents();
-  const now = BigInt(Math.floor(Date.now() / 1000));
-  const out: { subId: Hex; merchant: Hex }[] = [];
+  const nowSec = Math.floor(Date.now() / 1000);
+  const out: DuePayment[] = [];
   for (const s of subEvents) {
     if (cancelledSubs.has(s.subId.toLowerCase())) continue;
-    // Read current sub state from chain — cheap on anvil.
     const sub = await publicClient.readContract({
       address: MANAGER_ADDRESS,
       abi: managerAbi,
@@ -259,27 +285,50 @@ export async function dueSubscriptions(): Promise<{ subId: Hex; merchant: Hex }[
       args: [s.subId],
     });
     if (!sub.active) continue;
-    if (sub.nextChargeAt > now) continue;
-    out.push({ subId: s.subId, merchant: sub.merchant });
+    const scheduledAt = Number(sub.nextChargeAt);
+    if (scheduledAt > nowSec) continue;
+    out.push({
+      subId:       s.subId,
+      paymentId:   computePaymentId(MANAGER_ADDRESS, s.subId),
+      merchant:    sub.merchant,
+      scheduledAt,
+      ageSeconds:  nowSec - scheduledAt,
+    });
   }
+  // Oldest first — they pay the highest dynamic fee.
+  out.sort((a, b) => b.ageSeconds - a.ageSeconds);
   return out;
 }
 
-/// Trigger a single charge from the executor wallet (env-configured Sepolia EOA).
-/// Throws a clear error if EXECUTOR_PRIVATE_KEY isn't configured.
-export async function chargeOnce(subId: Hex): Promise<Hex> {
+/// Back-compat alias kept for any older callers that still want
+/// { subId, merchant } pairs. Prefer `duePayments` for new code.
+export async function dueSubscriptions(): Promise<{ subId: Hex; merchant: Hex }[]> {
+  const due = await duePayments();
+  return due.map(({ subId, merchant }) => ({ subId, merchant }));
+}
+
+/// Trigger a single execution via the executor router. The bot's wallet must
+/// match the trusted executor and be funded with ETH for gas. The fee from
+/// the underlying charge is paid to the bot (minus any penalty applied by
+/// the executor contract).
+export async function executePayment(paymentId: Hex): Promise<Hex> {
   const wallet = executorWallet();
   if (!wallet) {
     throw new Error(
       "executor wallet not configured — set EXECUTOR_PRIVATE_KEY in .env.local " +
-        "(a dedicated Sepolia EOA funded with a small amount of ETH for gas).",
+        "(a dedicated EOA funded with a small amount of ETH for gas).",
+    );
+  }
+  if (!EXECUTOR_ADDRESS || /^0x0+$/.test(EXECUTOR_ADDRESS)) {
+    throw new Error(
+      "executor contract address not configured — set contracts.executor in pulse.local.json.",
     );
   }
   const hash = await wallet.writeContract({
-    address: MANAGER_ADDRESS,
-    abi: managerAbi,
-    functionName: "charge",
-    args: [subId],
+    address: EXECUTOR_ADDRESS,
+    abi: executorAbi,
+    functionName: "execute",
+    args: [paymentId],
     account: wallet.account!,
     chain: wallet.chain,
   });
@@ -287,6 +336,41 @@ export async function chargeOnce(subId: Hex): Promise<Hex> {
   // Force-sync new events so reads reflect the charge.
   await syncEvents();
   return hash;
+}
+
+/// Batch execute. Cheaper per-item gas and lets the bot process the whole
+/// "due" set in one tx. Per-payment failures are absorbed inside the executor
+/// contract and reflected via ExecutionFailed events — the tx itself succeeds.
+export async function executePaymentsBatch(paymentIds: Hex[]): Promise<Hex> {
+  if (paymentIds.length === 0) throw new Error("executePaymentsBatch: empty batch");
+  const wallet = executorWallet();
+  if (!wallet) {
+    throw new Error(
+      "executor wallet not configured — set EXECUTOR_PRIVATE_KEY in .env.local.",
+    );
+  }
+  if (!EXECUTOR_ADDRESS || /^0x0+$/.test(EXECUTOR_ADDRESS)) {
+    throw new Error(
+      "executor contract address not configured — set contracts.executor in pulse.local.json.",
+    );
+  }
+  const hash = await wallet.writeContract({
+    address: EXECUTOR_ADDRESS,
+    abi: executorAbi,
+    functionName: "executeBatch",
+    args: [paymentIds],
+    account: wallet.account!,
+    chain: wallet.chain,
+  });
+  await publicClient.waitForTransactionReceipt({ hash });
+  await syncEvents();
+  return hash;
+}
+
+/// Back-compat shim — the legacy `chargeOnce(subId)` route now resolves the
+/// subId to a paymentId and dispatches via the executor router.
+export async function chargeOnce(subId: Hex): Promise<Hex> {
+  return executePayment(computePaymentId(MANAGER_ADDRESS, subId));
 }
 
 // ─── Income time series ─────────────────────────────────────────────────────

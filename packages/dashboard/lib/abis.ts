@@ -99,8 +99,30 @@ export const managerAbi = [
   },
   {
     type: "function",
-    name: "charge",
-    inputs: [{ name: "subscriptionId", type: "bytes32" }],
+    name: "chargeFor",
+    inputs: [
+      { name: "subscriptionId", type: "bytes32" },
+      { name: "executorFeeBpsOverride", type: "uint16" },
+      { name: "executorPayee", type: "address" },
+    ],
+    outputs: [
+      { name: "grossAmount", type: "uint256" },
+      { name: "executorFeePaid", type: "uint256" },
+      { name: "protocolFeePaid", type: "uint256" },
+    ],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "trustedExecutor",
+    inputs: [],
+    outputs: [{ type: "address" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "setTrustedExecutor",
+    inputs: [{ name: "newExecutor", type: "address" }],
     outputs: [],
     stateMutability: "nonpayable",
   },
@@ -278,21 +300,48 @@ export const payrollAbi = [
   },
   {
     type: "function",
-    name: "executePayroll",
+    name: "executePayrollFor",
     inputs: [
       { name: "planId", type: "bytes32" },
       { name: "recipientId", type: "bytes32" },
+      { name: "executorFeeBpsOverride", type: "uint16" },
+      { name: "executorPayee", type: "address" },
     ],
-    outputs: [],
+    outputs: [
+      { name: "grossAmount", type: "uint256" },
+      { name: "executorFeePaid", type: "uint256" },
+      { name: "protocolFeePaid", type: "uint256" },
+    ],
     stateMutability: "nonpayable",
   },
   {
     type: "function",
-    name: "executePayrollBatch",
+    name: "executePayrollBatchFor",
     inputs: [
       { name: "planId", type: "bytes32" },
       { name: "recipientIds", type: "bytes32[]" },
+      { name: "executorFeeBpsOverride", type: "uint16" },
+      { name: "executorPayee", type: "address" },
     ],
+    outputs: [
+      { name: "totalExecutorFee", type: "uint256" },
+      { name: "totalProtocolFee", type: "uint256" },
+      { name: "successCount", type: "uint256" },
+      { name: "failCount", type: "uint256" },
+    ],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "trustedExecutor",
+    inputs: [],
+    outputs: [{ type: "address" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "setTrustedExecutor",
+    inputs: [{ name: "newExecutor", type: "address" }],
     outputs: [],
     stateMutability: "nonpayable",
   },
@@ -416,6 +465,188 @@ export const payrollAbi = [
       { name: "executor", type: "address", indexed: true },
       { name: "successCount", type: "uint256", indexed: false },
       { name: "failCount", type: "uint256", indexed: false },
+    ],
+    anonymous: false,
+  },
+] as const;
+
+// ─── PulseExecutor ABI ───────────────────────────────────────────────────────
+// Keep this in lockstep with /contracts/src/PulseExecutor.sol.
+
+export const executorAbi = [
+  // Keeper entrypoints
+  {
+    type: "function",
+    name: "execute",
+    inputs: [{ name: "paymentId", type: "bytes32" }],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "executeBatch",
+    inputs: [{ name: "paymentIds", type: "bytes32[]" }],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+
+  // Views
+  {
+    type: "function",
+    name: "computePaymentId",
+    inputs: [
+      { name: "manager", type: "address" },
+      { name: "innerId", type: "bytes32" },
+    ],
+    outputs: [{ type: "bytes32" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "getPayment",
+    inputs: [{ name: "paymentId", type: "bytes32" }],
+    outputs: [
+      {
+        type: "tuple",
+        components: [
+          { name: "kind",        type: "uint8"   }, // 0=Subscription, 1=Payroll
+          { name: "manager",     type: "address" },
+          { name: "planId",      type: "bytes32" },
+          { name: "innerId",     type: "bytes32" },
+          { name: "scheduledAt", type: "uint64"  },
+          { name: "period",      type: "uint64"  },
+          { name: "registered",  type: "bool"    },
+        ],
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "getStats",
+    inputs: [{ name: "executor", type: "address" }],
+    outputs: [
+      {
+        type: "tuple",
+        components: [
+          { name: "totalExecutions",        type: "uint128" },
+          { name: "successfulExecutions",   type: "uint128" },
+          { name: "failedExecutions",       type: "uint128" },
+          { name: "totalVolumeProcessed",   type: "uint128" },
+          { name: "totalFeesEarned",        type: "uint128" },
+          { name: "averageExecutionDelay",  type: "uint64"  },
+          { name: "lastExecutionTimestamp", type: "uint64"  },
+        ],
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "dynamicFeeBps",
+    inputs: [{ name: "delaySeconds", type: "uint256" }],
+    outputs: [{ type: "uint16" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "isRestricted",
+    inputs: [{ name: "executor", type: "address" }],
+    outputs: [{ type: "bool" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "failureRateBps",
+    inputs: [{ name: "executor", type: "address" }],
+    outputs: [{ type: "uint256" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "MIN_FEE_BPS",
+    inputs: [],
+    outputs: [{ type: "uint16" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "MAX_FEE_BPS",
+    inputs: [],
+    outputs: [{ type: "uint16" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "RAMP_DURATION",
+    inputs: [],
+    outputs: [{ type: "uint64" }],
+    stateMutability: "view",
+  },
+
+  // Errors
+  { type: "error", name: "PaymentNotRegistered", inputs: [{ name: "paymentId",   type: "bytes32" }] },
+  { type: "error", name: "PaymentNotDue",        inputs: [{ name: "paymentId",   type: "bytes32" }, { name: "scheduledAt", type: "uint256" }] },
+  { type: "error", name: "ExecutorRestricted",   inputs: [{ name: "executor",    type: "address" }] },
+  { type: "error", name: "BatchEmpty",           inputs: [] },
+  { type: "error", name: "PausedError",          inputs: [] },
+
+  // Events
+  {
+    type: "event",
+    name: "PaymentRegistered",
+    inputs: [
+      { name: "paymentId",   type: "bytes32", indexed: true },
+      { name: "manager",     type: "address", indexed: true },
+      { name: "kind",        type: "uint8",   indexed: false },
+      { name: "planId",      type: "bytes32", indexed: false },
+      { name: "innerId",     type: "bytes32", indexed: false },
+      { name: "scheduledAt", type: "uint64",  indexed: false },
+      { name: "period",      type: "uint64",  indexed: false },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "PaymentDeregistered",
+    inputs: [
+      { name: "paymentId", type: "bytes32", indexed: true },
+      { name: "manager",   type: "address", indexed: true },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "ExecutionSucceeded",
+    inputs: [
+      { name: "paymentId",       type: "bytes32", indexed: true },
+      { name: "executor",        type: "address", indexed: true },
+      { name: "grossAmount",     type: "uint256", indexed: false },
+      { name: "executorReward",  type: "uint256", indexed: false },
+      { name: "withheld",        type: "uint256", indexed: false },
+      { name: "bpsApplied",      type: "uint16",  indexed: false },
+      { name: "delaySeconds",    type: "uint64",  indexed: false },
+      { name: "nextScheduledAt", type: "uint64",  indexed: false },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "ExecutionFailed",
+    inputs: [
+      { name: "paymentId",  type: "bytes32", indexed: true },
+      { name: "executor",   type: "address", indexed: true },
+      { name: "reasonHash", type: "bytes32", indexed: false },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "BatchExecuted",
+    inputs: [
+      { name: "executor",     type: "address", indexed: true },
+      { name: "successCount", type: "uint256", indexed: false },
+      { name: "failCount",    type: "uint256", indexed: false },
     ],
     anonymous: false,
   },

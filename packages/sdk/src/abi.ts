@@ -176,6 +176,109 @@ export const PULSE_ABI = [
 
 export type PulseAbi = typeof PULSE_ABI;
 
+// ─── PulseExecutor ABI ───────────────────────────────────────────────────────
+// Keep this in lockstep with /contracts/src/PulseExecutor.sol. Only the
+// surface the off-chain bot uses — keeper entrypoints + key views/events.
+
+export const EXECUTOR_ABI = [
+  // Keeper entrypoints
+  {
+    type: "function", name: "execute",
+    stateMutability: "nonpayable",
+    inputs: [{ name: "paymentId", type: "bytes32" }],
+    outputs: [],
+  },
+  {
+    type: "function", name: "executeBatch",
+    stateMutability: "nonpayable",
+    inputs: [{ name: "paymentIds", type: "bytes32[]" }],
+    outputs: [],
+  },
+
+  // Views the bot uses to inspect state
+  {
+    type: "function", name: "computePaymentId",
+    stateMutability: "view",
+    inputs: [{ name: "manager", type: "address" }, { name: "innerId", type: "bytes32" }],
+    outputs: [{ type: "bytes32" }],
+  },
+  {
+    type: "function", name: "getPayment",
+    stateMutability: "view",
+    inputs: [{ name: "paymentId", type: "bytes32" }],
+    outputs: [
+      {
+        type: "tuple",
+        components: [
+          { name: "kind",        type: "uint8"   },
+          { name: "manager",     type: "address" },
+          { name: "planId",      type: "bytes32" },
+          { name: "innerId",     type: "bytes32" },
+          { name: "scheduledAt", type: "uint64"  },
+          { name: "period",      type: "uint64"  },
+          { name: "registered",  type: "bool"    },
+        ],
+      },
+    ],
+  },
+  {
+    type: "function", name: "dynamicFeeBps",
+    stateMutability: "view",
+    inputs: [{ name: "delaySeconds", type: "uint256" }],
+    outputs: [{ type: "uint16" }],
+  },
+  {
+    type: "function", name: "isRestricted",
+    stateMutability: "view",
+    inputs: [{ name: "executor", type: "address" }],
+    outputs: [{ type: "bool" }],
+  },
+
+  // Events the bot subscribes to
+  {
+    type: "event", name: "PaymentRegistered",
+    inputs: [
+      { name: "paymentId",   type: "bytes32", indexed: true },
+      { name: "manager",     type: "address", indexed: true },
+      { name: "kind",        type: "uint8",   indexed: false },
+      { name: "planId",      type: "bytes32", indexed: false },
+      { name: "innerId",     type: "bytes32", indexed: false },
+      { name: "scheduledAt", type: "uint64",  indexed: false },
+      { name: "period",      type: "uint64",  indexed: false },
+    ],
+  },
+  {
+    type: "event", name: "PaymentDeregistered",
+    inputs: [
+      { name: "paymentId", type: "bytes32", indexed: true },
+      { name: "manager",   type: "address", indexed: true },
+    ],
+  },
+  {
+    type: "event", name: "ExecutionSucceeded",
+    inputs: [
+      { name: "paymentId",       type: "bytes32", indexed: true },
+      { name: "executor",        type: "address", indexed: true },
+      { name: "grossAmount",     type: "uint256", indexed: false },
+      { name: "executorReward",  type: "uint256", indexed: false },
+      { name: "withheld",        type: "uint256", indexed: false },
+      { name: "bpsApplied",      type: "uint16",  indexed: false },
+      { name: "delaySeconds",    type: "uint64",  indexed: false },
+      { name: "nextScheduledAt", type: "uint64",  indexed: false },
+    ],
+  },
+  {
+    type: "event", name: "ExecutionFailed",
+    inputs: [
+      { name: "paymentId",  type: "bytes32", indexed: true },
+      { name: "executor",   type: "address", indexed: true },
+      { name: "reasonHash", type: "bytes32", indexed: false },
+    ],
+  },
+] as const;
+
+export type ExecutorAbi = typeof EXECUTOR_ABI;
+
 // ─── Minimal ERC-20 ABI ───────────────────────────────────────────────────────
 
 export const ERC20_ABI = [

@@ -4,6 +4,16 @@ import type { Hex } from "viem";
 
 export interface StoredSubscription {
   subscriptionId: Hex;
+  /**
+   * Deterministic PulseExecutor payment id for this subscription:
+   *   keccak256(managerAddress, subscriptionId, chainId)
+   * The bot dispatches via `executor.execute(paymentId)` rather than the old
+   * `manager.charge(subId)`. Computed once at upsert time and cached so the
+   * scheduler doesn't recompute it every tick.
+   */
+  paymentId: Hex;
+  /** Subscription manager contract address this sub lives on. */
+  manager: `0x${string}`;
   planId: Hex;
   /** Address of the subscriber. */
   customer: `0x${string}`;
@@ -19,7 +29,10 @@ export interface StoredSubscription {
   webhookUrl: string;
   /** Shared HMAC secret for this merchant's webhooks. */
   webhookSecret: string;
-  /** Unix timestamp (seconds) of the next allowed charge. */
+  /**
+   * Unix timestamp (seconds) of the next allowed charge. Field name kept for
+   * back-compat — it's the same value as PulseExecutor's `scheduledAt`.
+   */
   nextChargeAt: number;
   /** Whether this subscription is still active. */
   active: boolean;

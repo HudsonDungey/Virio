@@ -26,3 +26,23 @@ export const PERIOD = {
 export function computeSubscriptionId(planId: Hex, customer: Address): Hex {
   return keccak256(encodePacked(["bytes32", "address"], [planId, customer]));
 }
+
+/**
+ * Compute the deterministic paymentId used by PulseExecutor.
+ * Mirrors: keccak256(abi.encodePacked(manager, innerId, block.chainid))
+ *
+ * `innerId` is the subscriptionId (for the subscription manager) or the
+ * recipientId (for the payroll manager).
+ */
+export function computePaymentId(
+  manager: Address,
+  innerId: Hex,
+  chainId: number | bigint,
+): Hex {
+  return keccak256(
+    encodePacked(
+      ["address", "bytes32", "uint256"],
+      [manager, innerId, BigInt(chainId)],
+    ),
+  );
+}

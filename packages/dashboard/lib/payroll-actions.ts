@@ -3,8 +3,8 @@
 import * as React from "react";
 import { useAccount, useConfig } from "wagmi";
 import { writeContract, waitForTransactionReceipt, readContract } from "wagmi/actions";
-import { decodeEventLog, maxUint256, type Hex } from "viem";
-import { payrollAbi, erc20Abi } from "./abis";
+import { decodeEventLog, encodePacked, keccak256, maxUint256, type Hex } from "viem";
+import { payrollAbi, erc20Abi, executorAbi } from "./abis";
 import { usePulseConfig } from "@/app/providers";
 
 export function usdcUnits(display: number): bigint {
@@ -34,6 +34,22 @@ export function usePayrollActions() {
   const publicCfg = usePulseConfig();
   const expectedChainId = chainIdFor(publicCfg.network);
   const payrollAddress = publicCfg.contracts.payrollManager;
+  const executorAddress = publicCfg.contracts.executor;
+
+  /// paymentId = keccak256(manager, innerId, chainid). Mirrors PulseExecutor.sol.
+  function computePaymentId(manager: Hex, innerId: Hex): Hex {
+    return keccak256(
+      encodePacked(["address", "bytes32", "uint256"], [manager, innerId, BigInt(expectedChainId)]),
+    );
+  }
+
+  function assertExecutorReady() {
+    if (!executorAddress || executorAddress === "0x0000000000000000000000000000000000000000") {
+      throw new Error(
+        "executor contract not configured — set contracts.executor in pulse.local.json",
+      );
+    }
+  }
 
   function assertReady() {
     if (!account.address) throw new Error("connect your wallet first");
@@ -153,26 +169,34 @@ export function usePayrollActions() {
     return hash;
   }
 
-  async function executePayroll(planId: Hex, recipientId: Hex): Promise<Hex> {
+  /// Trigger a single payroll execution via PulseExecutor. The caller pays gas
+  /// and earns the executor fee (minus any penalty per the router's rules).
+  /// planId is unused in the call but kept in the signature for callsite parity
+  /// with the older payrollManager.executePayroll(planId, recipientId).
+  async function executePayroll(_planId: Hex, recipientId: Hex): Promise<Hex> {
     assertReady();
+    assertExecutorReady();
+    const paymentId = computePaymentId(payrollAddress, recipientId);
     const hash = await writeContract(config, {
-      address: payrollAddress,
-      abi: payrollAbi,
-      functionName: "executePayroll",
-      args: [planId, recipientId],
+      address: executorAddress,
+      abi: executorAbi,
+      functionName: "execute",
+      args: [paymentId],
       chainId: expectedChainId,
     });
     await waitForTransactionReceipt(config, { hash });
     return hash;
   }
 
-  async function executePayrollBatch(planId: Hex, recipientIds: Hex[]): Promise<Hex> {
+  async function executePayrollBatch(_planId: Hex, recipientIds: Hex[]): Promise<Hex> {
     assertReady();
+    assertExecutorReady();
+    const paymentIds = recipientIds.map((rid) => computePaymentId(payrollAddress, rid));
     const hash = await writeContract(config, {
-      address: payrollAddress,
-      abi: payrollAbi,
-      functionName: "executePayrollBatch",
-      args: [planId, recipientIds],
+      address: executorAddress,
+      abi: executorAbi,
+      functionName: "executeBatch",
+      args: [paymentIds],
       chainId: expectedChainId,
     });
     await waitForTransactionReceipt(config, { hash });

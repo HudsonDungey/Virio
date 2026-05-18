@@ -13,7 +13,7 @@ import {
 import { privateKeyToAccount } from "viem/accounts";
 import { sepolia, foundry } from "viem/chains";
 import { getLocalConfig, buildRpcUrl } from "./local-config";
-import { managerAbi, payrollAbi, erc20Abi } from "./abis";
+import { managerAbi, payrollAbi, erc20Abi, executorAbi } from "./abis";
 
 const cfg = getLocalConfig();
 const rpcUrl = buildRpcUrl(cfg);
@@ -39,6 +39,7 @@ export const MANAGER_ADDRESS = cfg.contracts.manager as Address;
 export const USDC_ADDRESS = cfg.contracts.usdc as Address;
 export const FEE_RECIPIENT = cfg.contracts.feeRecipient as Address;
 export const PAYROLL_ADDRESS = cfg.contracts.payrollManager as Address;
+export const EXECUTOR_ADDRESS = cfg.contracts.executor as Address;
 export const MERCHANT_ADDRESS = cfg.merchant.address as Address;
 export const DEPLOYMENT_BLOCK = cfg.deploymentBlock;
 export const PAYROLL_DEPLOYMENT_BLOCK = cfg.payrollDeploymentBlock;
@@ -55,7 +56,9 @@ export const displayAccounts: DisplayAccount[] = [
   ...cfg.testAddresses.map((a) => ({ name: a.label, address: a.address })),
 ];
 
-/// Server-side wallet for the off-chain scheduler that calls `manager.charge(subId)`.
+/// Server-side wallet for the off-chain executor bot that calls
+/// `PulseExecutor.execute(paymentId)`. The wallet ALSO acts as the on-chain
+/// "payee" address — it earns the executor fee (minus any penalty) per call.
 /// Returns null when no key is configured — callers should fall back gracefully.
 export function executorWallet() {
   if (!cfg.executor.privateKey) return null;
@@ -71,7 +74,7 @@ export function findDisplayAccount(address: string): DisplayAccount | undefined 
   return displayAccounts.find((a) => a.address.toLowerCase() === address.toLowerCase());
 }
 
-export { managerAbi, payrollAbi, erc20Abi };
+export { managerAbi, payrollAbi, erc20Abi, executorAbi };
 
 /// Convert a USDC display amount (e.g. 9.99) to base units (6 decimals).
 export function usdcUnits(display: number): bigint {

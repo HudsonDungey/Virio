@@ -12,7 +12,7 @@ import {
   type Transport,
 } from "viem";
 
-import { PULSE_ABI, ERC20_ABI } from "./abi.js";
+import { PULSE_ABI, ERC20_ABI, EXECUTOR_ABI } from "./abi.js";
 import type {
   Plan,
   Subscription,
@@ -182,16 +182,61 @@ export class PulseClient {
     return txHash;
   }
 
-  /** Charge a subscription.  Caller is typically the Scheduler, not the customer. */
-  async charge(subscriptionId: Hex): Promise<Hash> {
+  /**
+   * @deprecated The on-chain permissionless `charge()` entrypoint was removed
+   * when PulseExecutor became the sole caller of `chargeFor`. Use
+   * `executePayment(executorAddress, paymentId)` instead, where
+   * `paymentId = computePaymentId(managerAddress, subscriptionId, chainId)`.
+   */
+  async charge(_subscriptionId: Hex): Promise<Hash> {
+    throw new Error(
+      "PulseClient.charge() is removed — use executePayment(executorAddress, paymentId). " +
+        "Compute paymentId via computePaymentId(managerAddress, subscriptionId, chainId).",
+    );
+  }
+
+  /**
+   * Execute a due payment via PulseExecutor. The wallet acts as both the
+   * keeper (msg.sender) and the on-chain payee — it earns the executor fee
+   * (minus any penalty per the router's failure-rate ladder).
+   *
+   * `executorAddress` is the deployed PulseExecutor contract on this chain.
+   * Pass the same address for every call; we keep it out of the constructor
+   * so callers can construct a single PulseClient and reuse it across
+   * subscription + payroll dispatch.
+   */
+  async executePayment(executorAddress: Address, paymentId: Hex): Promise<Hash> {
     const wal = this.requireWallet();
     const [account] = await wal.getAddresses();
 
     const txHash = await wal.writeContract({
-      address: this.contractAddress,
-      abi: PULSE_ABI,
-      functionName: "charge",
-      args: [subscriptionId],
+      address: executorAddress,
+      abi: EXECUTOR_ABI,
+      functionName: "execute",
+      args: [paymentId],
+      account,
+      chain: this.chain,
+    });
+
+    await this.pub.waitForTransactionReceipt({ hash: txHash });
+    return txHash;
+  }
+
+  /**
+   * Batch variant. Per-payment failures are absorbed inside the executor
+   * contract and reflected via ExecutionFailed events — the tx itself
+   * succeeds even with partial failures.
+   */
+  async executePaymentsBatch(executorAddress: Address, paymentIds: Hex[]): Promise<Hash> {
+    if (paymentIds.length === 0) throw new Error("executePaymentsBatch: empty batch");
+    const wal = this.requireWallet();
+    const [account] = await wal.getAddresses();
+
+    const txHash = await wal.writeContract({
+      address: executorAddress,
+      abi: EXECUTOR_ABI,
+      functionName: "executeBatch",
+      args: [paymentIds],
       account,
       chain: this.chain,
     });
