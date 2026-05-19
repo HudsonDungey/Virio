@@ -51,12 +51,12 @@ const BUCKETS: Bucket[] = [
     Icon: Users,
   },
   {
-    label: "Treasury (DAO)",
+    label: "Treasury",
     pct: 25,
     tokens: "250M",
-    vesting: "Multisig at TGE → DAO at month 12",
+    vesting: "Held in a Vultisig with a 48-hour timelock",
     group: "community",
-    blurb: "Long-term war chest. Starts in a 4-of-7 Safe with a 48-hour timelock, then hands control to token holders.",
+    blurb: "Long-term war chest. Sits in a Vultisig with a 48-hour timelock on every spend.",
     Icon: Building2,
   },
   {
@@ -160,11 +160,12 @@ const EMISSION = [
 ];
 
 const FEE_DISCOUNTS = [
-  { stake: "0",          stakeLabel: "No stake",      bps: 25, flat: "$1.00" },
-  { stake: "10k",        stakeLabel: "10,000 PULSE",   bps: 22, flat: "$1.00" },
-  { stake: "50k",        stakeLabel: "50,000 PULSE",   bps: 20, flat: "$0.50" },
-  { stake: "250k",       stakeLabel: "250,000 PULSE",  bps: 17, flat: "$0.25" },
-  { stake: "1M",         stakeLabel: "1,000,000 PULSE",bps: 13, flat: "waived" },
+  { stake: "0",          stakeLabel: "No stake",       bps: 25, flat: "$1.00" },
+  { stake: "10k",        stakeLabel: "10,000 PULSE",   bps: 20, flat: "$1.00" },
+  { stake: "50k",        stakeLabel: "50,000 PULSE",   bps: 16, flat: "$0.50" },
+  { stake: "250k",       stakeLabel: "250,000 PULSE",  bps: 12, flat: "$0.25" },
+  { stake: "1M",         stakeLabel: "1,000,000 PULSE",bps: 10, flat: "$0.10"  },
+  { stake: "5M",         stakeLabel: "5,000,000 PULSE",bps: 5,  flat: "waived" },
 ];
 
 const REVENUE = [
@@ -202,13 +203,13 @@ const RISKS = [
   },
   {
     Icon: Shield,
-    title: "Treasury sits in a 4-of-7 multisig",
-    body: "A 48-hour timelock sits in front of every spend until governance fully hands over to the DAO at month 12.",
+    title: "The treasury sits in a Vultisig",
+    body: "A 48-hour timelock sits in front of every spend.",
   },
   {
     Icon: CheckCircle2,
-    title: "Two audits before launch",
-    body: "Spearbit and Trail of Bits review every contract pre-TGE. Reports published.",
+    title: "Audits before launch",
+    body: "Code4rena and Once review every contract pre-TGE. Reports published.",
   },
   {
     Icon: Users,
@@ -289,7 +290,7 @@ function Hero() {
         <div className="absolute left-1/2 top-[-180px] h-[460px] w-[820px] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(99,91,255,0.28),transparent_65%)] blur-3xl" />
       </div>
 
-      <div className="mx-auto max-w-[1200px] px-5 sm:px-8">
+      <div className="mx-auto max-w-[1200px] px-6 sm:px-8">
         <div className="flex justify-center">
           <span className="inline-flex animate-fade-up items-center gap-2 rounded-full border border-border bg-card/80 py-1.5 pl-1.5 pr-3.5 text-[12.5px] font-medium text-muted-foreground shadow-soft backdrop-blur">
             <span className="inline-flex items-center gap-1 rounded-full bg-brand-gradient px-2 py-0.5 text-[11px] font-semibold text-white">
@@ -356,7 +357,7 @@ function TLDR() {
     {
       Icon: Globe,
       title: "Stake on any chain",
-      body: "PULSE lives on Ethereum, Base, and Arbitrum at launch. Stake on the chain you're on and earn that chain's fees — no bridging.",
+      body: "PULSE lives on Ethereum, Base, Arbitrum, Optimism, and Polygon at launch. Stake on the chain you're on and earn that chain's fees — no bridging.",
     },
     {
       Icon: Flame,
@@ -367,7 +368,7 @@ function TLDR() {
 
   return (
     <section className="py-20">
-      <div className="mx-auto max-w-[1100px] px-5 sm:px-8">
+      <div className="mx-auto max-w-[1100px] px-6 sm:px-8">
         <SectionHeading
           eyebrow="The 30-second version"
           title={<>Four things to <span className="text-gradient">remember</span>.</>}
@@ -405,7 +406,7 @@ function Allocation() {
 
   return (
     <section id="allocation" className="scroll-mt-24 py-20">
-      <div className="mx-auto max-w-[1200px] px-5 sm:px-8">
+      <div className="mx-auto max-w-[1200px] px-6 sm:px-8">
         <SectionHeading
           eyebrow="Allocation"
           title={<>Where every <span className="text-gradient">$PULSE</span> goes.</>}
@@ -517,12 +518,14 @@ const CHAINS: ChainInfo[] = [
   { name: "Ethereum",  role: "Home",   blurb: "Initial 1B minted here. Governance + vesting + airdrop live here." },
   { name: "Base",      role: "Native", blurb: "Same contract address. Local staking, local fees, local buyback." },
   { name: "Arbitrum",  role: "Native", blurb: "Same contract address. Local staking, local fees, local buyback." },
+  { name: "Optimism",  role: "Native", blurb: "Same contract address. Local staking, local fees, local buyback." },
+  { name: "Polygon",   role: "Native", blurb: "Same contract address. Local staking, local fees, local buyback." },
 ];
 
 function MultiChain() {
   return (
     <section id="multichain" className="scroll-mt-24 py-20">
-      <div className="mx-auto max-w-[1200px] px-5 sm:px-8">
+      <div className="mx-auto max-w-[1200px] px-6 sm:px-8">
         <SectionHeading
           eyebrow="Multichain"
           title={<>One token, <span className="text-gradient">every chain</span>.</>}
@@ -530,7 +533,7 @@ function MultiChain() {
         />
 
         {/* chain strip */}
-        <div className="mt-12 grid gap-4 md:grid-cols-3">
+        <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           {CHAINS.map((c, i) => (
             <Reveal key={c.name} delay={i * 80}>
               <div className="flex h-full flex-col gap-2 rounded-2xl border border-border bg-card p-5 shadow-soft">
@@ -636,7 +639,7 @@ function MultiChain() {
               </ul>
               <div className="mt-5 rounded-xl border border-border bg-secondary/40 p-4 text-[12.5px] leading-relaxed text-muted-foreground">
                 Day-one bridge is <strong className="text-foreground">LayerZero V2</strong>. xERC20 lets
-                the DAO plug in more bridges (Hyperlane, Across, CCIP) later under per-bridge rate limits
+                more bridges (Hyperlane, Across, CCIP) be added later under per-bridge rate limits
                 — no token migration, no redeploy.
               </div>
             </div>
@@ -652,7 +655,7 @@ function MultiChain() {
 function Emission() {
   return (
     <section className="py-20">
-      <div className="mx-auto max-w-[1100px] px-5 sm:px-8">
+      <div className="mx-auto max-w-[1100px] px-6 sm:px-8">
         <SectionHeading
           eyebrow="Unlock schedule"
           title={<>How many tokens are actually <span className="text-gradient">in the wild</span>.</>}
@@ -701,7 +704,7 @@ function Emission() {
 function ValueAccrual() {
   return (
     <section className="py-20">
-      <div className="mx-auto max-w-[1200px] px-5 sm:px-8">
+      <div className="mx-auto max-w-[1200px] px-6 sm:px-8">
         <SectionHeading
           eyebrow="How $PULSE makes money"
           title={<>Stake it. <span className="text-gradient">Earn real fees.</span></>}
@@ -748,7 +751,7 @@ function ValueAccrual() {
                     <span className="mt-0.5 grid h-4 w-4 flex-shrink-0 place-items-center rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
                       <CheckCircle2 className="h-3 w-3" />
                     </span>
-                    Unstake any time (DAO can add a short cooldown later if needed)
+                    Unstake any time (a short cooldown can be added later if needed)
                   </li>
                 </ul>
 
@@ -834,7 +837,7 @@ function FeeRow({
 function MerchantDiscounts() {
   return (
     <section className="py-20">
-      <div className="mx-auto max-w-[1100px] px-5 sm:px-8">
+      <div className="mx-auto max-w-[1100px] px-6 sm:px-8">
         <SectionHeading
           eyebrow="For merchants"
           title={<>Stake $PULSE, <span className="text-gradient">pay less in fees</span>.</>}
@@ -880,8 +883,8 @@ function MerchantDiscounts() {
         </Reveal>
 
         <PlainEnglish>
-          A merchant doing $1M/month in volume saves ~$1,200/month by staking 50k $PULSE — and earns
-          USDC yield on top.
+          A merchant doing $1M/month in volume saves ~$900/month on protocol fees by staking 50k
+          $PULSE — plus a per-charge flat-fee discount, and earns USDC yield on top.
         </PlainEnglish>
       </div>
     </section>
@@ -893,7 +896,7 @@ function MerchantDiscounts() {
 function Revenue() {
   return (
     <section className="py-20">
-      <div className="mx-auto max-w-[1100px] px-5 sm:px-8">
+      <div className="mx-auto max-w-[1100px] px-6 sm:px-8">
         <SectionHeading
           eyebrow="What Pulse will earn"
           title={<>The revenue <span className="text-gradient">that gets shared</span>.</>}
@@ -953,7 +956,7 @@ function Revenue() {
 function HolderEarnings() {
   return (
     <section className="py-20">
-      <div className="mx-auto max-w-[1200px] px-5 sm:px-8">
+      <div className="mx-auto max-w-[1200px] px-6 sm:px-8">
         <SectionHeading
           eyebrow="What you could earn"
           title={<>Two ways $PULSE <span className="text-gradient">pays you</span>.</>}
@@ -1102,7 +1105,7 @@ function Launch() {
     },
     {
       label: "DEX liquidity",
-      body: "Uniswap V3 pools on Ethereum, Base, and Arbitrum at TGE. Every LP token from the launch bucket is burnt the instant it is minted — liquidity grows but can never be removed.",
+      body: "Uniswap V3 pools on Ethereum, Base, Arbitrum, Optimism, and Polygon at TGE. Every LP token from the launch bucket is burnt the instant it is minted — liquidity grows but can never be removed.",
     },
     {
       label: "Listings",
@@ -1115,7 +1118,7 @@ function Launch() {
   ];
   return (
     <section id="launch" className="scroll-mt-24 py-20">
-      <div className="mx-auto max-w-[1100px] px-5 sm:px-8">
+      <div className="mx-auto max-w-[1100px] px-6 sm:px-8">
         <SectionHeading
           eyebrow="Launch"
           title={<>How $PULSE goes <span className="text-gradient">live</span>.</>}
@@ -1146,7 +1149,7 @@ function Launch() {
 function Risks() {
   return (
     <section className="py-20">
-      <div className="mx-auto max-w-[1100px] px-5 sm:px-8">
+      <div className="mx-auto max-w-[1100px] px-6 sm:px-8">
         <SectionHeading
           eyebrow="Safeguards"
           title={<>Why this is built to <span className="text-gradient">not blow up</span>.</>}
@@ -1185,7 +1188,7 @@ const FAQ = [
   },
   {
     q: "Is there a lockup?",
-    a: "No fixed lockup. Stake and unstake whenever you want. The DAO can add a short cooldown (≤7 days) later if it becomes necessary to prevent flash-yield-sniping, but at launch the cooldown is zero.",
+    a: "No fixed lockup. Stake and unstake whenever you want. A short cooldown (≤7 days) can be added later if it becomes necessary to prevent flash-yield-sniping, but at launch the cooldown is zero.",
   },
   {
     q: "How does the same token exist on multiple chains?",
@@ -1201,7 +1204,7 @@ const FAQ = [
   },
   {
     q: "Can the team rug-pull?",
-    a: "No. Every LP token from the launch liquidity bucket is burnt on deposit — the moment liquidity is added, the LP token goes to a dead address, so nobody can ever withdraw it. The team allocation is locked for 12 months with a 36-month linear vest after that, and the treasury sits behind a 4-of-7 multisig and a 48-hour timelock until the DAO takes over at month 12.",
+    a: "No. Every LP token from the launch liquidity bucket is burnt on deposit — the moment liquidity is added, the LP token goes to a dead address, so nobody can ever withdraw it. The team allocation is locked for 12 months with a 36-month linear vest after that, and the treasury sits in a Vultisig with a 48-hour timelock on every spend.",
   },
   {
     q: "What's a 'real yield' token?",
@@ -1209,7 +1212,7 @@ const FAQ = [
   },
   {
     q: "Where can I buy it?",
-    a: "At launch via the open public sale (no allowlist, same price for everyone), then on Uniswap V3 pools on Ethereum, Base, and Arbitrum. A tier-2 CEX listing follows at month 1.",
+    a: "At launch via the open public sale (no allowlist, same price for everyone), then on Uniswap V3 pools on Ethereum, Base, Arbitrum, Optimism, and Polygon. A tier-2 CEX listing follows at month 1.",
   },
 ];
 
@@ -1242,7 +1245,7 @@ function FaqItem({ q, a }: { q: string; a: string }) {
 function Faq() {
   return (
     <section className="py-20">
-      <div className="mx-auto max-w-[900px] px-5 sm:px-8">
+      <div className="mx-auto max-w-[900px] px-6 sm:px-8">
         <SectionHeading
           eyebrow="Frequently asked"
           title={<>Still <span className="text-gradient">have questions?</span></>}
@@ -1262,7 +1265,7 @@ function Faq() {
 function CtaFooter() {
   return (
     <section className="pb-24 pt-10">
-      <div className="mx-auto max-w-[1100px] px-5 sm:px-8">
+      <div className="mx-auto max-w-[1100px] px-6 sm:px-8">
         <Reveal>
           <div className="ring-gradient relative overflow-hidden rounded-3xl border border-border bg-card p-8 text-center shadow-lift sm:p-12">
             <div className="pointer-events-none absolute -inset-x-10 -top-20 h-[260px] bg-[radial-gradient(ellipse_at_top,rgba(99,91,255,0.30),transparent_65%)] blur-3xl" />
