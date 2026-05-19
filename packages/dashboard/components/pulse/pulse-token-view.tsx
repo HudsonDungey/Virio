@@ -290,7 +290,7 @@ function Hero() {
         <div className="absolute left-1/2 top-[-180px] h-[460px] w-[820px] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(99,91,255,0.28),transparent_65%)] blur-3xl" />
       </div>
 
-      <div className="mx-auto max-w-[1200px] px-5 sm:px-8">
+      <div className="mx-auto max-w-[1200px] px-6 sm:px-8">
         <div className="flex justify-center">
           <span className="inline-flex animate-fade-up items-center gap-2 rounded-full border border-border bg-card/80 py-1.5 pl-1.5 pr-3.5 text-[12.5px] font-medium text-muted-foreground shadow-soft backdrop-blur">
             <span className="inline-flex items-center gap-1 rounded-full bg-brand-gradient px-2 py-0.5 text-[11px] font-semibold text-white">
@@ -368,7 +368,7 @@ function TLDR() {
 
   return (
     <section className="py-20">
-      <div className="mx-auto max-w-[1100px] px-5 sm:px-8">
+      <div className="mx-auto max-w-[1100px] px-6 sm:px-8">
         <SectionHeading
           eyebrow="The 30-second version"
           title={<>Four things to <span className="text-gradient">remember</span>.</>}
@@ -406,7 +406,7 @@ function Allocation() {
 
   return (
     <section id="allocation" className="scroll-mt-24 py-20">
-      <div className="mx-auto max-w-[1200px] px-5 sm:px-8">
+      <div className="mx-auto max-w-[1200px] px-6 sm:px-8">
         <SectionHeading
           eyebrow="Allocation"
           title={<>Where every <span className="text-gradient">$PULSE</span> goes.</>}
@@ -525,7 +525,7 @@ const CHAINS: ChainInfo[] = [
 function MultiChain() {
   return (
     <section id="multichain" className="scroll-mt-24 py-20">
-      <div className="mx-auto max-w-[1200px] px-5 sm:px-8">
+      <div className="mx-auto max-w-[1200px] px-6 sm:px-8">
         <SectionHeading
           eyebrow="Multichain"
           title={<>One token, <span className="text-gradient">every chain</span>.</>}
@@ -655,7 +655,7 @@ function MultiChain() {
 function Emission() {
   return (
     <section className="py-20">
-      <div className="mx-auto max-w-[1100px] px-5 sm:px-8">
+      <div className="mx-auto max-w-[1100px] px-6 sm:px-8">
         <SectionHeading
           eyebrow="Unlock schedule"
           title={<>How many tokens are actually <span className="text-gradient">in the wild</span>.</>}
@@ -704,7 +704,7 @@ function Emission() {
 function ValueAccrual() {
   return (
     <section className="py-20">
-      <div className="mx-auto max-w-[1200px] px-5 sm:px-8">
+      <div className="mx-auto max-w-[1200px] px-6 sm:px-8">
         <SectionHeading
           eyebrow="How $PULSE makes money"
           title={<>Stake it. <span className="text-gradient">Earn real fees.</span></>}
@@ -837,7 +837,7 @@ function FeeRow({
 function MerchantDiscounts() {
   return (
     <section className="py-20">
-      <div className="mx-auto max-w-[1100px] px-5 sm:px-8">
+      <div className="mx-auto max-w-[1100px] px-6 sm:px-8">
         <SectionHeading
           eyebrow="For merchants"
           title={<>Stake $PULSE, <span className="text-gradient">pay less in fees</span>.</>}
@@ -896,7 +896,7 @@ function MerchantDiscounts() {
 function Revenue() {
   return (
     <section className="py-20">
-      <div className="mx-auto max-w-[1100px] px-5 sm:px-8">
+      <div className="mx-auto max-w-[1100px] px-6 sm:px-8">
         <SectionHeading
           eyebrow="What Pulse will earn"
           title={<>The revenue <span className="text-gradient">that gets shared</span>.</>}
@@ -956,7 +956,7 @@ function Revenue() {
 function HolderEarnings() {
   return (
     <section className="py-20">
-      <div className="mx-auto max-w-[1200px] px-5 sm:px-8">
+      <div className="mx-auto max-w-[1200px] px-6 sm:px-8">
         <SectionHeading
           eyebrow="What you could earn"
           title={<>Two ways $PULSE <span className="text-gradient">pays you</span>.</>}
@@ -1118,7 +1118,7 @@ function Launch() {
   ];
   return (
     <section id="launch" className="scroll-mt-24 py-20">
-      <div className="mx-auto max-w-[1100px] px-5 sm:px-8">
+      <div className="mx-auto max-w-[1100px] px-6 sm:px-8">
         <SectionHeading
           eyebrow="Launch"
           title={<>How $PULSE goes <span className="text-gradient">live</span>.</>}
@@ -1149,7 +1149,7 @@ function Launch() {
 function Risks() {
   return (
     <section className="py-20">
-      <div className="mx-auto max-w-[1100px] px-5 sm:px-8">
+      <div className="mx-auto max-w-[1100px] px-6 sm:px-8">
         <SectionHeading
           eyebrow="Safeguards"
           title={<>Why this is built to <span className="text-gradient">not blow up</span>.</>}
@@ -1245,7 +1245,7 @@ function FaqItem({ q, a }: { q: string; a: string }) {
 function Faq() {
   return (
     <section className="py-20">
-      <div className="mx-auto max-w-[900px] px-5 sm:px-8">
+      <div className="mx-auto max-w-[900px] px-6 sm:px-8">
         <SectionHeading
           eyebrow="Frequently asked"
           title={<>Still <span className="text-gradient">have questions?</span></>}
@@ -1265,7 +1265,7 @@ function Faq() {
 function CtaFooter() {
   return (
     <section className="pb-24 pt-10">
-      <div className="mx-auto max-w-[1100px] px-5 sm:px-8">
+      <div className="mx-auto max-w-[1100px] px-6 sm:px-8">
         <Reveal>
           <div className="ring-gradient relative overflow-hidden rounded-3xl border border-border bg-card p-8 text-center shadow-lift sm:p-12">
             <div className="pointer-events-none absolute -inset-x-10 -top-20 h-[260px] bg-[radial-gradient(ellipse_at_top,rgba(99,91,255,0.30),transparent_65%)] blur-3xl" />
