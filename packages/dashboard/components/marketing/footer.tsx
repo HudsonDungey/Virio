@@ -12,6 +12,7 @@ const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
       { label: "Payroll", href: "/dashboard" },
       { label: "Programmable billing", href: "/#features" },
       { label: "Pricing", href: "/#pricing" },
+      { label: "$PULSE token", href: "/pulse" },
     ],
   },
   {
