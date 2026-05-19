@@ -102,21 +102,21 @@ const BUCKETS: Bucket[] = [
     Icon: Shield,
   },
   {
-    label: "LP (burned)",
+    label: "LP (burned on deposit)",
     pct: 5,
     tokens: "50M",
-    vesting: "LP tokens sent to 0x…dead",
+    vesting: "LP tokens burnt the moment they're minted",
     group: "community",
-    blurb: "Locks the initial Uniswap liquidity forever. Nobody — including the team — can pull the rug.",
+    blurb: "Every LP token minted from this bucket is sent straight to a dead address on deposit. Anyone can add liquidity later — but nobody can ever remove it.",
     Icon: Flame,
   },
   {
-    label: "Public Sale (Fjord LBP)",
+    label: "Public Sale",
     pct: 5,
     tokens: "50M",
-    vesting: "25% at launch, 9-mo linear",
+    vesting: "25% at TGE, 9-mo linear",
     group: "public",
-    blurb: "Everyone gets a fair shot to buy on Fjord. No private allocations, no VC sweetheart pricing.",
+    blurb: "Open public sale on Pulse. No allowlists, no VC sweetheart pricing, no private rounds — same terms for everyone.",
     Icon: Coins,
   },
   {
@@ -189,8 +189,8 @@ const FDV_TABLE = [
 const RISKS = [
   {
     Icon: Flame,
-    title: "LP burn → permanent price floor",
-    body: "The initial Uniswap liquidity is sent to a dead address. Nobody can drain it. There is no rug surface.",
+    title: "LP tokens burn on deposit → no rug surface",
+    body: "Every LP token created from the launch bucket is sent to a dead address the moment it's minted. The pool can grow forever, but no one — team included — can ever pull liquidity out.",
   },
   {
     Icon: Lock,
@@ -303,8 +303,8 @@ function Hero() {
 
         <p className="mx-auto mt-6 max-w-[680px] animate-fade-up text-balance text-center text-[16.5px] leading-relaxed text-muted-foreground animation-delay-200">
           $PULSE captures every fee the protocol earns and pays real USDC yield to people who lock it.
-          No VC round, no inflation, and the launch liquidity is burned forever. Here&apos;s the whole
-          picture — in plain English.
+          No VC round, no inflation, and every LP token burns the moment it&apos;s minted. Here&apos;s
+          the whole picture — in plain English.
         </p>
 
         <div className="mt-9 flex animate-fade-up flex-col items-center justify-center gap-3 animation-delay-300 sm:flex-row">
@@ -329,7 +329,7 @@ function Hero() {
           <Stat value="1B" label="Total supply" sub="Fixed forever — no inflation" />
           <Stat value="75%" label="To the community" sub="Ecosystem, treasury, airdrop, LP, insurance" tone="brand" />
           <Stat value="20%" label="Insiders" sub="Team, creator, advisors, investors" />
-          <Stat value="5%" label="Public sale" sub="Anyone can buy on Fjord" tone="emerald" />
+          <Stat value="5%" label="Public sale" sub="Open to everyone, no allowlist" tone="emerald" />
         </div>
       </div>
     </section>
@@ -352,8 +352,8 @@ function TLDR() {
     },
     {
       Icon: Flame,
-      title: "Burned liquidity",
-      body: "The Uniswap LP token is sent to a dead address at launch. No team can ever pull the rug.",
+      title: "Burn-on-deposit LP",
+      body: "Every LP token from the launch bucket is sent to a dead address the moment it's minted. Liquidity can grow, but nobody can ever pull it out.",
     },
     {
       Icon: Percent,
@@ -943,12 +943,12 @@ function Launch() {
       body: "Investor reserve (5%) is only drawn for strategic partners. Anything unsold returns to the community at month 24.",
     },
     {
-      label: "Fjord LBP",
-      body: "72-hour liquidity bootstrap, weights 96/4 → 50/50. 50M PULSE on offer. Expected clear $0.10–$0.30. Raise $5–15M.",
+      label: "Public sale",
+      body: "50M PULSE offered openly — no allowlist, no private pricing. 25% unlocks at TGE; the rest streams linearly over 9 months. Expected clear $0.10–$0.30, raising $5–15M.",
     },
     {
       label: "DEX liquidity",
-      body: "Uniswap V3 on Base. LP token permanently burned at launch.",
+      body: "Uniswap V3 on Base. Every LP token from the launch bucket is burnt the instant it is minted — liquidity grows but can never be removed.",
     },
     {
       label: "Listings",
@@ -1031,7 +1031,7 @@ const FAQ = [
   },
   {
     q: "Can the team rug-pull?",
-    a: "No. The launch liquidity LP token is sent to a burn address — nobody can remove it. The team allocation is locked for 12 months with a 36-month linear vest after that, and the treasury sits behind a 4-of-7 multisig and a 48-hour timelock until the DAO takes over at month 12.",
+    a: "No. Every LP token from the launch liquidity bucket is burnt on deposit — the moment liquidity is added, the LP token goes to a dead address, so nobody can ever withdraw it. The team allocation is locked for 12 months with a 36-month linear vest after that, and the treasury sits behind a 4-of-7 multisig and a 48-hour timelock until the DAO takes over at month 12.",
   },
   {
     q: "Do I have to lock my tokens to benefit?",
@@ -1043,7 +1043,7 @@ const FAQ = [
   },
   {
     q: "Where can I buy it?",
-    a: "At launch via the Fjord LBP, then on Uniswap V3 on Base. A tier-2 CEX listing follows at month 1.",
+    a: "At launch via the open public sale (no allowlist, same price for everyone), then on Uniswap V3 on Base. A tier-2 CEX listing follows at month 1.",
   },
 ];
 
@@ -1105,8 +1105,8 @@ function CtaFooter() {
                 Be there at <span className="text-gradient">launch</span>.
               </h2>
               <p className="mx-auto mt-3 max-w-[520px] text-[14.5px] leading-relaxed text-muted-foreground">
-                Watch the docs for the LBP date. No allowlist — anyone can participate on Fjord when
-                the sale opens.
+                Watch the docs for the sale date. No allowlist, no private rounds — anyone can
+                participate when the public sale opens.
               </p>
               <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
                 <Link

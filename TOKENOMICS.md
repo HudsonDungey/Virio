@@ -6,7 +6,7 @@ Pulse is a permissionless subscription + payroll protocol on EVM. Every charge p
 
 - Total supply: **1,000,000,000 PULSE** (fixed, no inflation)
 - Community-aligned: **75%** · Insiders: **20%** · Public: **5%**
-- Initial DEX liquidity is permanently burned
+- LP tokens are burnt **on deposit** — liquidity can grow but never be removed
 
 ## 1. Allocation (1,000,000,000 PULSE)
 
@@ -19,8 +19,8 @@ Pulse is a permissionless subscription + payroll protocol on EVM. Every charge p
 | Creator | 5% | 50M | 6-mo cliff, 24-mo linear |
 | Investor Reserve | 5% | 50M | 12-mo cliff, 24-mo linear |
 | Insurance / Safety Module | 5% | 50M | Held by contract |
-| LP (burned) | 5% | 50M | LP token sent to 0x…dead |
-| Public Sale (Fjord LBP) | 5% | 50M | 25% TGE, 9-mo linear |
+| LP (burnt on deposit) | 5% | 50M | LP token sent to 0x…dead at mint |
+| Public Sale | 5% | 50M | 25% TGE, 9-mo linear |
 | Advisors | 2% | 20M | 6-mo cliff, 24-mo linear |
 
 ## 2. Emission Schedule
@@ -88,7 +88,7 @@ Assumptions: avg charge $50, 1.5 charges/relationship/month. `rev = TPV × 0.25%
 | Y3 Bull $122M | $2.44B ($2.44) | $4.88B ($4.88) | $9.76B ($9.76) |
 | Y5 Bull $488M | $9.76B ($9.76) | $19.5B ($19.5) | $39B ($39) |
 
-**Example position** — buy 100k PULSE at LBP $0.30 = $30k cost, lock 4yr:
+**Example position** — buy 100k PULSE at public sale $0.30 = $30k cost, lock 4yr:
 
 - Y3 Base @ 40× P/F → token value $96k + ~$12k USDC yield = **~3.6× / $108k**
 - Y3 Bull @ 40× P/F → token value $488k + ~$61k USDC yield = **~18× / $549k**
@@ -98,14 +98,14 @@ Assumptions: avg charge $50, 1.5 charges/relationship/month. `rev = TPV × 0.25%
 ## 6. Fundraise & Launch
 
 - No VC round. Investor Reserve (5%) drawn only for strategic partners; unsold portion → Community at M24.
-- **LBP** (Fjord, 72hr, 96/4 → 50/50): 50M PULSE, clears $0.10–$0.30, raises $5–15M.
-- **DEX liquidity**: Uniswap V3 on Base, LP token burned permanently.
+- **Public sale**: 50M PULSE offered openly — no allowlist, no private rounds. Expected clear $0.10–$0.30, raises $5–15M. 25% unlocks at TGE; 9-mo linear thereafter.
+- **DEX liquidity**: Uniswap V3 on Base. Every LP token from the launch bucket is burnt the instant it is minted — liquidity grows but is never withdrawable.
 - **Listings**: tier-2 CEX at M1; tier-1 conditional on volume.
 - **Launch FDV**: $50–300M. Initial circ MC: $16–96M.
 
 ## 7. Risks & Mitigations
 
-- LP burn → permanent floor, no rug surface
+- LP burnt on deposit → liquidity is one-way, no rug surface
 - Insider footprint 20%, no unlocks before M6
 - Treasury 25% in 4-of-7 Safe + 48h timelock until DAO at M12
 - Audits: Spearbit + Trail of Bits pre-TGE
