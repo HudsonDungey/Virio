@@ -965,11 +965,11 @@ function HolderEarnings() {
 
         <div className="mt-12 grid gap-5 lg:grid-cols-2">
           {/* USDC yield */}
-          <Reveal>
-            <div className="h-full rounded-2xl border border-border bg-card p-6 shadow-soft sm:p-7">
+          <Reveal className="min-w-0">
+            <div className="h-full rounded-2xl border border-border bg-card p-5 shadow-soft sm:p-7">
               <div className="flex items-center gap-2">
-                <Wallet className="h-4 w-4 text-brand-500" />
-                <h3 className="font-display text-[16px] font-bold text-foreground">
+                <Wallet className="h-4 w-4 flex-shrink-0 text-brand-500" />
+                <h3 className="font-display text-[15px] font-bold leading-tight text-foreground sm:text-[16px]">
                   USDC yield per 10,000 stPULSE / year
                 </h3>
               </div>
@@ -999,11 +999,11 @@ function HolderEarnings() {
           </Reveal>
 
           {/* Token price */}
-          <Reveal delay={120}>
-            <div className="h-full rounded-2xl border border-border bg-card p-6 shadow-soft sm:p-7">
+          <Reveal delay={120} className="min-w-0">
+            <div className="h-full rounded-2xl border border-border bg-card p-5 shadow-soft sm:p-7">
               <div className="flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-brand-500" />
-                <h3 className="font-display text-[16px] font-bold text-foreground">
+                <TrendingUp className="h-4 w-4 flex-shrink-0 text-brand-500" />
+                <h3 className="font-display text-[15px] font-bold leading-tight text-foreground sm:text-[16px]">
                   Token price at price-to-fees multiples
                 </h3>
               </div>
@@ -1012,31 +1012,29 @@ function HolderEarnings() {
               </p>
 
               <div className="mt-5 overflow-x-auto rounded-xl border border-border">
-                <div className="min-w-[440px]">
-                  <div className="grid grid-cols-4 bg-secondary/40 px-3 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    <span>Scenario</span>
-                    <span className="text-right">20×</span>
-                    <span className="text-right">40×</span>
-                    <span className="text-right">80×</span>
-                  </div>
-                  {FDV_TABLE.map((row, i) => (
-                    <div
-                      key={row.yr}
-                      className={cn(
-                        "grid grid-cols-4 items-center px-3 py-3 text-[13px]",
-                        i !== FDV_TABLE.length - 1 && "border-b border-border",
-                      )}
-                    >
-                      <span>
-                        <div className="font-semibold text-foreground">{row.yr}</div>
-                        <div className="text-[11px] text-muted-foreground">rev {row.rev}</div>
-                      </span>
-                      <span className="text-right tabular-nums text-foreground">{row.px20}</span>
-                      <span className="text-right tabular-nums font-semibold text-foreground">{row.px40}</span>
-                      <span className="text-right tabular-nums text-brand-600 dark:text-brand-300">{row.px80}</span>
-                    </div>
-                  ))}
+                <div className="grid grid-cols-[1fr_auto_auto_auto] gap-x-2 bg-secondary/40 px-3 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  <span>Scenario</span>
+                  <span className="text-right">20×</span>
+                  <span className="text-right">40×</span>
+                  <span className="text-right">80×</span>
                 </div>
+                {FDV_TABLE.map((row, i) => (
+                  <div
+                    key={row.yr}
+                    className={cn(
+                      "grid grid-cols-[1fr_auto_auto_auto] items-center gap-x-2 px-3 py-3 text-[12.5px] sm:text-[13px]",
+                      i !== FDV_TABLE.length - 1 && "border-b border-border",
+                    )}
+                  >
+                    <span className="min-w-0">
+                      <div className="truncate font-semibold text-foreground">{row.yr}</div>
+                      <div className="truncate text-[11px] text-muted-foreground">rev {row.rev}</div>
+                    </span>
+                    <span className="text-right tabular-nums text-foreground">{row.px20}</span>
+                    <span className="text-right tabular-nums font-semibold text-foreground">{row.px40}</span>
+                    <span className="text-right tabular-nums text-brand-600 dark:text-brand-300">{row.px80}</span>
+                  </div>
+                ))}
               </div>
             </div>
           </Reveal>
