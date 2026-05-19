@@ -21,7 +21,7 @@ export const themeInitScript = `
 (function(){
   try {
     var t = localStorage.getItem('${STORAGE_KEY}');
-    if (!t) t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    if (t !== 'dark' && t !== 'light') t = 'light';
     document.documentElement.classList.toggle('dark', t === 'dark');
     document.documentElement.style.colorScheme = t;
   } catch (e) {}
@@ -39,9 +39,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     } catch {
       /* ignore */
     }
-    const initial: Theme =
-      stored ??
-      (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    const initial: Theme = stored ?? "light";
     setThemeState(initial);
   }, []);
 
