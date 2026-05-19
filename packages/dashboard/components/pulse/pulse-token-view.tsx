@@ -20,6 +20,9 @@ import {
   CheckCircle2,
   AlertTriangle,
   ChevronDown,
+  Globe,
+  Repeat,
+  ArrowLeftRight,
 } from "lucide-react";
 import { Reveal } from "@/components/marketing/reveal";
 import { SectionHeading } from "@/components/marketing/section-heading";
@@ -302,9 +305,9 @@ function Hero() {
         </h1>
 
         <p className="mx-auto mt-6 max-w-[680px] animate-fade-up text-balance text-center text-[16.5px] leading-relaxed text-muted-foreground animation-delay-200">
-          $PULSE captures every fee the protocol earns and pays real USDC yield to people who lock it.
-          No VC round, no inflation, and every LP token burns the moment it&apos;s minted. Here&apos;s
-          the whole picture — in plain English.
+          $PULSE is one token across every EVM chain Pulse runs on. Stake it on your chain of choice,
+          earn real fee-token yield where you staked. No VC round, no inflation, no NFTs, and every LP
+          token burns the moment it&apos;s minted.
         </p>
 
         <div className="mt-9 flex animate-fade-up flex-col items-center justify-center gap-3 animation-delay-300 sm:flex-row">
@@ -341,24 +344,24 @@ function Hero() {
 function TLDR() {
   const cards = [
     {
-      Icon: Lock,
-      title: "Lock to earn",
-      body: "Lock $PULSE for 1 week to 4 years and you get vePULSE. The longer you lock, the more you get.",
+      Icon: Repeat,
+      title: "Stake 1:1",
+      body: "Stake N PULSE, get N stPULSE — a regular token. Burn it any time to get your PULSE back. No NFTs, no lockup, no decay math.",
     },
     {
       Icon: TrendingUp,
-      title: "Real USDC yield",
-      body: "60% of every fee Pulse earns goes straight to vePULSE holders as USDC — not more tokens.",
+      title: "Real fee yield",
+      body: "60% of every protocol fee streams to stPULSE holders in the original fee token (USDC etc.) — not minted, not diluted.",
+    },
+    {
+      Icon: Globe,
+      title: "Stake on any chain",
+      body: "PULSE lives on Ethereum, Base, and Arbitrum at launch. Stake on the chain you're on and earn that chain's fees — no bridging.",
     },
     {
       Icon: Flame,
       title: "Burn-on-deposit LP",
-      body: "Every LP token from the launch bucket is sent to a dead address the moment it's minted. Liquidity can grow, but nobody can ever pull it out.",
-    },
-    {
-      Icon: Percent,
-      title: "Cheaper for stakers",
-      body: "Merchants who stake $PULSE pay lower protocol fees — up to a waived flat fee at 1M staked.",
+      body: "Every LP token from the launch bucket is sent to a dead address the moment it's minted. Liquidity grows, but never withdraws.",
     },
   ];
 
@@ -502,6 +505,148 @@ function Allocation() {
   );
 }
 
+/* ─────────────────────────  MULTICHAIN  ───────────────────────── */
+
+interface ChainInfo {
+  name: string;
+  role: "Home" | "Native";
+  blurb: string;
+}
+
+const CHAINS: ChainInfo[] = [
+  { name: "Ethereum",  role: "Home",   blurb: "Initial 1B minted here. Governance + vesting + airdrop live here." },
+  { name: "Base",      role: "Native", blurb: "Same contract address. Local staking, local fees, local buyback." },
+  { name: "Arbitrum",  role: "Native", blurb: "Same contract address. Local staking, local fees, local buyback." },
+];
+
+function MultiChain() {
+  return (
+    <section id="multichain" className="scroll-mt-24 py-20">
+      <div className="mx-auto max-w-[1200px] px-5 sm:px-8">
+        <SectionHeading
+          eyebrow="Multichain"
+          title={<>One token, <span className="text-gradient">every chain</span>.</>}
+          description="$PULSE follows the xERC20 standard. There's no 'wrapped' or 'bridged' version — every PULSE is the canonical PULSE, just temporarily resident on whichever chain you're on. Bridging burns on the source and mints on the destination, so total supply across every chain is always exactly 1,000,000,000."
+        />
+
+        {/* chain strip */}
+        <div className="mt-12 grid gap-4 md:grid-cols-3">
+          {CHAINS.map((c, i) => (
+            <Reveal key={c.name} delay={i * 80}>
+              <div className="flex h-full flex-col gap-2 rounded-2xl border border-border bg-card p-5 shadow-soft">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="inline-flex items-center gap-2">
+                    <div className="grid h-9 w-9 place-items-center rounded-xl bg-brand-gradient text-white shadow-brand">
+                      <Globe className="h-4 w-4" />
+                    </div>
+                    <div className="font-display text-[16px] font-bold text-foreground">{c.name}</div>
+                  </div>
+                  <span
+                    className={cn(
+                      "rounded-full px-2 py-0.5 text-[10.5px] font-semibold uppercase tracking-wider",
+                      c.role === "Home"
+                        ? "bg-brand-500/15 text-brand-600 dark:text-brand-300"
+                        : "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
+                    )}
+                  >
+                    {c.role}
+                  </span>
+                </div>
+                <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground">{c.blurb}</p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+
+        {/* burn-and-mint flow */}
+        <Reveal>
+          <div className="mt-8 grid gap-5 lg:grid-cols-[1.2fr_1fr]">
+            <div className="rounded-3xl border border-border bg-card p-6 shadow-soft sm:p-8">
+              <div className="inline-flex items-center gap-2 rounded-full bg-electric-500/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-electric-600 dark:text-electric-300">
+                <ArrowLeftRight className="h-3 w-3" />
+                Bridging = burn + mint
+              </div>
+              <h3 className="mt-4 font-display text-[20px] font-bold text-foreground">
+                How PULSE moves between chains
+              </h3>
+
+              <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto_1fr]">
+                <div className="rounded-xl border border-border bg-secondary/40 p-4">
+                  <div className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Source chain
+                  </div>
+                  <div className="mt-1 font-display text-[15px] font-bold text-foreground">Burn 1,000 PULSE</div>
+                  <div className="mt-1 text-[12px] text-muted-foreground tabular-nums">total supply −1,000</div>
+                </div>
+                <div className="hidden items-center justify-center sm:flex">
+                  <ArrowRight className="h-5 w-5 text-brand-500" />
+                </div>
+                <div className="rounded-xl border border-border bg-secondary/40 p-4">
+                  <div className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Destination chain
+                  </div>
+                  <div className="mt-1 font-display text-[15px] font-bold text-foreground">Mint 1,000 PULSE</div>
+                  <div className="mt-1 text-[12px] text-muted-foreground tabular-nums">total supply +1,000</div>
+                </div>
+              </div>
+
+              <div className="mt-5 rounded-xl border border-border bg-secondary/40 p-4 font-mono text-[12px] text-foreground">
+                Σ totalSupply across every chain = <span className="text-brand-600 dark:text-brand-300">1,000,000,000</span>
+                <span className="ml-2 text-muted-foreground">(always)</span>
+              </div>
+
+              <PlainEnglish>
+                You can&apos;t accidentally end up with two different PULSEs. There&apos;s one token. It
+                just moves — like sending USDC between exchanges.
+              </PlainEnglish>
+            </div>
+
+            <div className="flex h-full flex-col rounded-3xl border border-border bg-card p-6 shadow-soft sm:p-8">
+              <div className="inline-flex items-center gap-2 rounded-full bg-brand-500/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-brand-600 dark:text-brand-300">
+                <Wallet className="h-3 w-3" />
+                Stake locally
+              </div>
+              <h3 className="mt-4 font-display text-[20px] font-bold text-foreground">
+                Earn where you stake
+              </h3>
+              <p className="mt-2 text-[13.5px] leading-relaxed text-muted-foreground">
+                Each chain has its own self-contained loop: a Pulse manager collects fees, a fee
+                distributor splits them 60/25/15, and 60% streams to stPULSE holders on that same chain
+                in the same token the fee was paid in.
+              </p>
+              <ul className="mt-5 space-y-2.5 text-[13px] text-foreground">
+                <li className="flex items-start gap-2.5">
+                  <span className="mt-0.5 grid h-4 w-4 flex-shrink-0 place-items-center rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+                    <CheckCircle2 className="h-3 w-3" />
+                  </span>
+                  Stake on Base → earn Base&apos;s USDC
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <span className="mt-0.5 grid h-4 w-4 flex-shrink-0 place-items-center rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+                    <CheckCircle2 className="h-3 w-3" />
+                  </span>
+                  Stake on Arbitrum → earn Arbitrum&apos;s USDC
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <span className="mt-0.5 grid h-4 w-4 flex-shrink-0 place-items-center rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+                    <CheckCircle2 className="h-3 w-3" />
+                  </span>
+                  Split across chains for diversified yield
+                </li>
+              </ul>
+              <div className="mt-5 rounded-xl border border-border bg-secondary/40 p-4 text-[12.5px] leading-relaxed text-muted-foreground">
+                Day-one bridge is <strong className="text-foreground">LayerZero V2</strong>. xERC20 lets
+                the DAO plug in more bridges (Hyperlane, Across, CCIP) later under per-bridge rate limits
+                — no token migration, no redeploy.
+              </div>
+            </div>
+          </div>
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
 /* ─────────────────────────  EMISSION TIMELINE  ───────────────────────── */
 
 function Emission() {
@@ -551,7 +696,7 @@ function Emission() {
   );
 }
 
-/* ─────────────────────────  VALUE ACCRUAL (vePULSE)  ───────────────────────── */
+/* ─────────────────────────  VALUE ACCRUAL (stPULSE)  ───────────────────────── */
 
 function ValueAccrual() {
   return (
@@ -559,28 +704,31 @@ function ValueAccrual() {
       <div className="mx-auto max-w-[1200px] px-5 sm:px-8">
         <SectionHeading
           eyebrow="How $PULSE makes money"
-          title={<>Lock it. <span className="text-gradient">Earn real USDC.</span></>}
-          description="$PULSE captures fees through a ve-model. Lock your tokens for up to four years and a slice of every payment on Pulse comes back to you — in USDC, not inflation."
+          title={<>Stake it. <span className="text-gradient">Earn real fees.</span></>}
+          description="Staking is a simple 1:1 swap. Drop in PULSE, get back stPULSE — a regular ERC-20 you can hold, trade, or use as collateral. While you hold it, you earn a pro-rata share of every fee Pulse collects on that chain."
         />
 
         <div className="mt-12 grid gap-5 lg:grid-cols-[1.1fr_1fr]">
-          {/* vePULSE explainer */}
+          {/* stPULSE explainer */}
           <Reveal>
             <div className="ring-gradient relative h-full overflow-hidden rounded-3xl border border-border bg-card p-6 shadow-lift sm:p-8">
               <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(99,91,255,0.22),transparent_70%)] blur-2xl" />
               <div className="relative">
                 <div className="inline-flex items-center gap-2 rounded-full bg-brand-500/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-brand-600 dark:text-brand-300">
-                  <Lock className="h-3 w-3" />
-                  vePULSE
+                  <Repeat className="h-3 w-3" />
+                  stPULSE
                 </div>
-                <h3 className="mt-4 font-display text-[22px] font-bold text-foreground">Vote-escrowed PULSE</h3>
+                <h3 className="mt-4 font-display text-[22px] font-bold text-foreground">The 1:1 stake receipt</h3>
                 <p className="mt-2 text-[14px] leading-relaxed text-muted-foreground">
-                  Lock $PULSE anywhere from 1 week to 4 years. The longer your lock, the more vePULSE you
-                  get. vePULSE decays linearly over time and is not transferable.
+                  Stake PULSE → mint stPULSE 1:1. Burn stPULSE → redeem PULSE 1:1. That&apos;s the whole
+                  thing. stPULSE is a transferable ERC-20 with voting power, so you can stack it on top of
+                  other DeFi while it earns.
                 </p>
 
                 <div className="mt-5 rounded-xl border border-border bg-secondary/40 p-4 font-mono text-[12.5px] text-foreground">
-                  vePULSE = PULSE × <span className="text-brand-600 dark:text-brand-300">(lock_remaining / 4yr)</span>
+                  stake(<span className="text-brand-600 dark:text-brand-300">10,000 PULSE</span>) → <span className="text-emerald-600 dark:text-emerald-400">10,000 stPULSE</span>
+                  <br />
+                  unstake(<span className="text-emerald-600 dark:text-emerald-400">10,000 stPULSE</span>) → <span className="text-brand-600 dark:text-brand-300">10,000 PULSE</span>
                 </div>
 
                 <ul className="mt-5 space-y-3 text-[13.5px] text-foreground">
@@ -588,19 +736,25 @@ function ValueAccrual() {
                     <span className="mt-0.5 grid h-4 w-4 flex-shrink-0 place-items-center rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
                       <CheckCircle2 className="h-3 w-3" />
                     </span>
-                    Pro-rata <strong>USDC yield</strong> from every protocol fee
+                    Pro-rata <strong>fee-token yield</strong> (USDC and any other token Pulse collects)
                   </li>
                   <li className="flex items-start gap-2.5">
                     <span className="mt-0.5 grid h-4 w-4 flex-shrink-0 place-items-center rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
                       <CheckCircle2 className="h-3 w-3" />
                     </span>
-                    <strong>Governance + gauge votes</strong> on where ecosystem emissions go
+                    <strong>Governance votes</strong> via ERC20Votes on stPULSE
+                  </li>
+                  <li className="flex items-start gap-2.5">
+                    <span className="mt-0.5 grid h-4 w-4 flex-shrink-0 place-items-center rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+                      <CheckCircle2 className="h-3 w-3" />
+                    </span>
+                    Unstake any time (DAO can add a short cooldown later if needed)
                   </li>
                 </ul>
 
                 <PlainEnglish>
-                  Think of vePULSE like locking a CD at a bank — except instead of earning interest, you
-                  earn a share of every fee the protocol collects, paid in stablecoins.
+                  Think of stPULSE like an LP token. You drop PULSE in, get a receipt out. Your receipt
+                  earns yield automatically. When you want your PULSE back, you hand the receipt in.
                 </PlainEnglish>
               </div>
             </div>
@@ -621,15 +775,15 @@ function ValueAccrual() {
               </p>
 
               <div className="mt-5 space-y-3">
-                <FeeRow pct={60} label="vePULSE stakers" sub="paid in USDC" tone="brand" />
-                <FeeRow pct={25} label="Treasury" sub="paid in USDC" tone="electric" />
-                <FeeRow pct={15} label="PULSE buyback → Safety Module" sub="constant on-market bid" tone="emerald" />
+                <FeeRow pct={60} label="stPULSE stakers" sub="paid in the fee token, on the same chain" tone="brand" />
+                <FeeRow pct={25} label="Chain-local treasury" sub="held in the fee token" tone="electric" />
+                <FeeRow pct={15} label="PULSE buyback → Safety Module" sub="on-market bid on the local DEX" tone="emerald" />
               </div>
 
               <div className="mt-6 rounded-xl border border-border bg-secondary/40 p-4 text-[12.5px] leading-relaxed text-muted-foreground">
                 <strong className="text-foreground">Buyback floor:</strong> 15% of every fee becomes a
-                permanent on-market bid for $PULSE. At year-3 base revenue that&apos;s ~$3.6M/year in
-                automatic buy pressure.
+                permanent on-market bid for PULSE on the chain that collected it. At year-3 base revenue
+                that&apos;s ~$3.6M/year of automatic buy pressure across chains.
               </div>
             </div>
           </Reveal>
@@ -813,11 +967,11 @@ function HolderEarnings() {
               <div className="flex items-center gap-2">
                 <Wallet className="h-4 w-4 text-brand-500" />
                 <h3 className="font-display text-[16px] font-bold text-foreground">
-                  USDC yield per 10,000 vePULSE / year
+                  USDC yield per 10,000 stPULSE / year
                 </h3>
               </div>
               <p className="mt-1.5 text-[12.5px] text-muted-foreground">
-                Assumes 125M effective vePULSE outstanding, 60% of fees → stakers.
+                Assumes 125M stPULSE outstanding across all chains, 60% of fees → stakers.
               </p>
 
               <div className="mt-5 divide-y divide-border rounded-xl border border-border">
@@ -835,7 +989,7 @@ function HolderEarnings() {
               </div>
 
               <PlainEnglish>
-                If you held 10,000 vePULSE through a year-3 base-case scenario, you&apos;d earn ~$1,152
+                If you held 10,000 stPULSE through a year-3 base-case scenario, you&apos;d earn ~$1,152
                 in USDC — without selling a single token.
               </PlainEnglish>
             </div>
@@ -891,7 +1045,7 @@ function HolderEarnings() {
             <div className="flex flex-wrap items-center gap-2">
               <Pill tone="brand">Worked example</Pill>
               <h3 className="font-display text-[18px] font-bold text-foreground">
-                Buy 100k $PULSE at $0.30 → lock for 4 years
+                Buy 100k $PULSE at $0.30 → stake all of it
               </h3>
             </div>
             <p className="mt-2 text-[13.5px] text-muted-foreground">
@@ -948,7 +1102,7 @@ function Launch() {
     },
     {
       label: "DEX liquidity",
-      body: "Uniswap V3 on Base. Every LP token from the launch bucket is burnt the instant it is minted — liquidity grows but can never be removed.",
+      body: "Uniswap V3 pools on Ethereum, Base, and Arbitrum at TGE. Every LP token from the launch bucket is burnt the instant it is minted — liquidity grows but can never be removed.",
     },
     {
       label: "Listings",
@@ -1023,27 +1177,39 @@ function Risks() {
 const FAQ = [
   {
     q: "What is $PULSE actually for?",
-    a: "Two things. First, locking it earns you a share of every fee Pulse collects, paid in USDC. Second, merchants who stake it pay lower protocol fees.",
+    a: "Two things. First, staking it earns you a share of every fee Pulse collects on the same chain, paid in the original fee token (USDC etc.). Second, merchants who stake it pay lower protocol fees.",
+  },
+  {
+    q: "What's stPULSE and can I sell it?",
+    a: "stPULSE is the receipt token you get when you stake. Stake N PULSE, mint N stPULSE — strict 1:1. It's a regular ERC-20, so yes: you can sell it, send it, LP it, or use it as collateral. To get your PULSE back, you burn the stPULSE you hold.",
+  },
+  {
+    q: "Is there a lockup?",
+    a: "No fixed lockup. Stake and unstake whenever you want. The DAO can add a short cooldown (≤7 days) later if it becomes necessary to prevent flash-yield-sniping, but at launch the cooldown is zero.",
+  },
+  {
+    q: "How does the same token exist on multiple chains?",
+    a: "$PULSE follows the xERC20 (ERC-7281) standard. Bridging is burn-and-mint: when you move PULSE from Base to Arbitrum, the source contract burns your tokens and the destination contract mints the same amount, gated by a per-bridge rate limit. Total supply across every chain is always exactly 1,000,000,000. Arbitrageurs keep the price aligned across chains, just like USDC.",
+  },
+  {
+    q: "If I stake on Base, do I get fees from Arbitrum too?",
+    a: "No — fee distribution is chain-local. Stake on Base, earn from Base fees. Stake on Arbitrum, earn from Arbitrum fees. You can split a position across chains if you want exposure to multiple revenue streams. Bridging PULSE between chains is free of yield consequence — yield accrues only while you hold stPULSE on a given chain.",
   },
   {
     q: "Is the supply inflationary?",
-    a: "No. The total supply is fixed at 1,000,000,000 PULSE forever. No new tokens will ever be minted. The only motion is the existing supply unlocking over time.",
+    a: "No. The total supply is fixed at 1,000,000,000 PULSE forever. No new tokens will ever be minted beyond the genesis 1B. The only motion is the existing supply unlocking over time and moving between chains.",
   },
   {
     q: "Can the team rug-pull?",
     a: "No. Every LP token from the launch liquidity bucket is burnt on deposit — the moment liquidity is added, the LP token goes to a dead address, so nobody can ever withdraw it. The team allocation is locked for 12 months with a 36-month linear vest after that, and the treasury sits behind a 4-of-7 multisig and a 48-hour timelock until the DAO takes over at month 12.",
   },
   {
-    q: "Do I have to lock my tokens to benefit?",
-    a: "You only earn USDC yield and governance votes if you lock for vePULSE. You can hold un-locked PULSE for price exposure and unlock-on-demand, but you won't earn yield on it.",
-  },
-  {
     q: "What's a 'real yield' token?",
-    a: "It means yield is paid in actual revenue (USDC here), not by minting more of the same token. Inflationary 'yield' just dilutes you. Real yield is genuine cash flow.",
+    a: "It means yield is paid in actual revenue (USDC and other fee tokens), not by minting more of the same token. Inflationary 'yield' just dilutes you. Real yield is genuine cash flow.",
   },
   {
     q: "Where can I buy it?",
-    a: "At launch via the open public sale (no allowlist, same price for everyone), then on Uniswap V3 on Base. A tier-2 CEX listing follows at month 1.",
+    a: "At launch via the open public sale (no allowlist, same price for everyone), then on Uniswap V3 pools on Ethereum, Base, and Arbitrum. A tier-2 CEX listing follows at month 1.",
   },
 ];
 
@@ -1144,6 +1310,7 @@ export function PulseTokenView() {
       <TLDR />
       <Allocation />
       <Emission />
+      <MultiChain />
       <ValueAccrual />
       <MerchantDiscounts />
       <Revenue />
