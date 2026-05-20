@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ArrowRight, BookOpen, Sparkles, ShieldCheck, Zap } from "lucide-react";
+import { ArrowRight, BookOpen, Sparkles, ShieldCheck } from "lucide-react";
 import { DashboardPreview } from "./dashboard-preview";
 
 export function Hero() {
@@ -66,10 +66,6 @@ export function Hero() {
           <span className="inline-flex items-center gap-1.5">
             <ShieldCheck className="h-4 w-4 text-emerald-500" />
             Audited contracts
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <Zap className="h-4 w-4 text-brand-500" />
-            Sub-second settlement
           </span>
           <span className="inline-flex items-center gap-1.5">
             <Sparkles className="h-4 w-4 text-electric-500" />

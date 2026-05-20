@@ -12,7 +12,6 @@ interface Metric {
 }
 
 const METRICS: Metric[] = [
-  { value: 2.4, prefix: "$", suffix: "B", decimals: 1, label: "Settled onchain" },
   { value: 18, suffix: "k+", label: "Active businesses" },
   { value: 99.99, suffix: "%", decimals: 2, label: "Executor uptime" },
   { value: 0.8, suffix: "s", decimals: 1, label: "Avg settlement" },
@@ -67,7 +66,7 @@ export function Metrics() {
     <section className="py-20">
       <div className="mx-auto max-w-[1100px] px-5 sm:px-8">
         <Reveal>
-          <div className="grid grid-cols-2 gap-6 rounded-3xl border border-border bg-card p-8 shadow-soft sm:p-10 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-6 rounded-3xl border border-border bg-card p-8 shadow-soft sm:grid-cols-3 sm:p-10">
             {METRICS.map((m) => (
               <Counter key={m.label} metric={m} />
             ))}

@@ -1,6 +1,5 @@
 import { MarketingNav } from "@/components/marketing/marketing-nav";
 import { Hero } from "@/components/marketing/hero";
-import { LogoStrip } from "@/components/marketing/logo-strip";
 import { Metrics } from "@/components/marketing/metrics";
 import { Features } from "@/components/marketing/features";
 import { HowItWorks } from "@/components/marketing/how-it-works";
@@ -15,7 +14,6 @@ export default function LandingPage() {
       <MarketingNav />
       <main>
         <Hero />
-        <LogoStrip />
         <Metrics />
         <Features />
         <HowItWorks />
