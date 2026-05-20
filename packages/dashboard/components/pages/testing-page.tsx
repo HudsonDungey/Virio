@@ -7,19 +7,19 @@ import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/page-header";
-import { usePulseConfig } from "@/app/providers";
+import { useVirioConfig } from "@/app/providers";
 import { fmtAddr } from "@/lib/format";
 
 export function TestingPage({ testMode }: { testMode: boolean }) {
   const { address } = useAccount();
   const chainId = useChainId();
-  const cfg = usePulseConfig();
+  const cfg = useVirioConfig();
 
   return (
     <section className="animate-page-in mx-auto w-full max-w-[1180px] px-4 pb-20 pt-8 sm:px-6 sm:pt-9 lg:px-12">
       <PageHeader
         title="Testing Suite"
-        subtitle="Live state of the connected wallet and the configured Pulse manager"
+        subtitle="Live state of the connected wallet and the configured Virio manager"
         action={
           <Badge variant={testMode ? "active" : "inactive"}>
             {testMode ? "test mode on" : "test mode off"}
@@ -39,7 +39,7 @@ export function TestingPage({ testMode }: { testMode: boolean }) {
             value={address ? fmtAddr(address) : "not connected"}
             mono
           />
-          <Row label="Pulse manager" value={fmtAddr(cfg.contracts.manager)} mono />
+          <Row label="Virio manager" value={fmtAddr(cfg.contracts.manager)} mono />
           <Row label="USDC" value={fmtAddr(cfg.contracts.usdc)} mono />
           <Row
             label="Fee recipient"

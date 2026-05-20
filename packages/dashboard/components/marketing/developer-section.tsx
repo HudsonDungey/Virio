@@ -10,12 +10,12 @@ const TABS: CodeTab[] = [
     label: "TypeScript",
     language: "ts",
     filename: "billing.ts",
-    code: `import { Pulse } from "@pulse/sdk";
+    code: `import { Virio } from "@virio/sdk";
 
-const pulse = new Pulse({ apiKey: process.env.PULSE_KEY });
+const virio = new Virio({ apiKey: process.env.VIRIO_KEY });
 
 // Create a recurring product
-const plan = await pulse.products.create({
+const plan = await virio.products.create({
   name: "Pro plan",
   price: 49,
   token: "USDC",
@@ -23,7 +23,7 @@ const plan = await pulse.products.create({
 });
 
 // Subscribe a customer — they sign once
-const sub = await pulse.subscriptions.subscribe({
+const sub = await virio.subscriptions.subscribe({
   planId: plan.id,
   customer: "0x8f3c...2a4c",
 });`,
@@ -32,10 +32,10 @@ const sub = await pulse.subscriptions.subscribe({
     label: "React",
     language: "tsx",
     filename: "Checkout.tsx",
-    code: `import { usePulseCheckout } from "@pulse/react";
+    code: `import { useVirioCheckout } from "@virio/react";
 
 export function Checkout({ planId }: { planId: string }) {
-  const { subscribe, status } = usePulseCheckout(planId);
+  const { subscribe, status } = useVirioCheckout(planId);
 
   return (
     <button onClick={subscribe} disabled={status === "pending"}>
@@ -49,7 +49,7 @@ export function Checkout({ planId }: { planId: string }) {
     language: "sol",
     filename: "Payroll.sol",
     code: `// Recurring payroll reuses the subscription execution model
-contract PulsePayroll {
+contract VirioPayroll {
     mapping(address => address[]) public payerStoredAddresses;
 
     function schedule(address[] calldata recipients, uint256 interval)
@@ -84,7 +84,7 @@ const POINTS = [
   {
     icon: Terminal,
     title: "One-line install",
-    body: "npm install @pulse/sdk — typed end to end, zero config.",
+    body: "npm install @virio/sdk — typed end to end, zero config.",
   },
   {
     icon: Boxes,

@@ -12,7 +12,7 @@ const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
       { label: "Payroll", href: "/dashboard" },
       { label: "Programmable billing", href: "/#features" },
       { label: "Pricing", href: "/#pricing" },
-      { label: "$PULSE token", href: "/pulse" },
+      { label: "$VIRIO token", href: "/virio" },
     ],
   },
   {
@@ -88,7 +88,7 @@ export function Footer() {
 
         <div className="mt-14 flex flex-col items-start justify-between gap-4 border-t border-border pt-6 sm:flex-row sm:items-center">
           <p className="text-[12.5px] text-muted-foreground">
-            © {new Date().getFullYear()} Pulse Labs. All rights reserved.
+            © {new Date().getFullYear()} Virio Labs. All rights reserved.
           </p>
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[12.5px] text-muted-foreground">
             <span className="inline-flex items-center gap-1.5">

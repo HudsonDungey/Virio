@@ -26,7 +26,7 @@ const jetbrains = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Pulse — Onchain Subscriptions & Payroll Infrastructure",
+  title: "Virio — Onchain Subscriptions & Payroll Infrastructure",
   description:
     "Recurring crypto payments, automated payroll, and programmable billing for modern internet businesses. Stripe for onchain subscriptions & payroll.",
 };

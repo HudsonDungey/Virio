@@ -2,9 +2,9 @@
 pragma solidity ^0.8.24;
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SafetyModule — chain-local on-chain insurance fund for Pulse.
+// SafetyModule — chain-local on-chain insurance fund for Virio.
 //
-// Receives PULSE bought back from the 15% protocol-fee slice (executed by the
+// Receives VIRIO bought back from the 15% protocol-fee slice (executed by the
 // buybackOperator) and holds it as a reserve. The DAO can vote to deploy
 // reserves under defined conditions (audit / governance / emergency).
 //

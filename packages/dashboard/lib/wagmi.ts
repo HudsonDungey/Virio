@@ -31,11 +31,11 @@ export function buildWagmiConfig(publicCfg: PublicLocalConfig): Config {
       },
     ],
     {
-      appName: "Pulse",
+      appName: "Virio",
       // RainbowKit requires SOMETHING here; if the user hasn't set up WC yet, use a
       // placeholder. WalletConnect-based connections will fail with a clear error
       // until they paste a real id, but MetaMask / injected / Coinbase still work.
-      projectId: publicCfg.walletConnectProjectId ?? "pulse-dev-placeholder",
+      projectId: publicCfg.walletConnectProjectId ?? "virio-dev-placeholder",
     },
   );
 

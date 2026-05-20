@@ -21,7 +21,7 @@
     {
       "hash": "0x92b85407a2fecfbde3f4e9e4791d5e1d3a6fbe36f5412d7716862aaf00f01f3f",
       "transactionType": "CREATE",
-      "contractName": "PulseSubscriptionManager",
+      "contractName": "VirioSubscriptionManager",
       "contractAddress": "0x45b4c64a666548548bac6118c6343ef3aa5e9e40",
       "function": null,
       "arguments": [

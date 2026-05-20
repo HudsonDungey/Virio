@@ -2,8 +2,8 @@
 pragma solidity ^0.8.24;
 
 import {Test, console} from "forge-std/Test.sol";
-import {PulseSubscriptionManager} from "../src/PulseSubscriptionManager.sol";
-import {IPulseSubscriptionManager} from "../src/interfaces/IPulseSubscriptionManager.sol";
+import {VirioSubscriptionManager} from "../src/VirioSubscriptionManager.sol";
+import {IVirioSubscriptionManager} from "../src/interfaces/IVirioSubscriptionManager.sol";
 import {MockUSDC} from "../src/test-helpers/MockUSDC.sol";
 
 /// End-to-end scenario tests.
@@ -15,7 +15,7 @@ import {MockUSDC} from "../src/test-helpers/MockUSDC.sol";
 ///
 /// Run with:  forge test --match-path test/Scenarios.t.sol -vvv
 contract ScenariosTest is Test {
-    PulseSubscriptionManager internal mgr;
+    VirioSubscriptionManager internal mgr;
     MockUSDC                 internal usdc;
 
     address internal OWNER     = makeAddr("owner");
@@ -73,7 +73,7 @@ contract ScenariosTest is Test {
 
         vm.startPrank(OWNER);
         usdc = new MockUSDC();
-        mgr  = new PulseSubscriptionManager(FEE_RECIP);
+        mgr  = new VirioSubscriptionManager(FEE_RECIP);
         vm.stopPrank();
 
         // Fund & approve every customer
@@ -154,7 +154,7 @@ contract ScenariosTest is Test {
         bytes32 subId = mgr.computeSubId(idA, alice);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IPulseSubscriptionManager.TooEarlyToCharge.selector,
+                IVirioSubscriptionManager.TooEarlyToCharge.selector,
                 subId,
                 block.timestamp + planA.period
             )
@@ -171,7 +171,7 @@ contract ScenariosTest is Test {
         bytes32 bobCid = mgr.computeSubId(idC, bob);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IPulseSubscriptionManager.TooEarlyToCharge.selector,
+                IVirioSubscriptionManager.TooEarlyToCharge.selector,
                 bobCid,
                 _subNextCharge(bobCid)
             )
@@ -199,7 +199,7 @@ contract ScenariosTest is Test {
         bytes32 eveDid = mgr.computeSubId(idD, eve);
         // Don't warp — the sub's nextChargeAt is already < now after 25h passed
         vm.expectEmit(true, true, false, false, address(mgr));
-        emit IPulseSubscriptionManager.Cancelled(eveDid, address(mgr));
+        emit IVirioSubscriptionManager.Cancelled(eveDid, address(mgr));
         vm.prank(botAlpha);
         mgr.charge(eveDid);
         assertFalse(mgr.getSubscription(eveDid).active, "eve.D should be auto-cancelled");
@@ -207,7 +207,7 @@ contract ScenariosTest is Test {
         // ── Customer cancels their own sub ───────────────────────────────────
         bytes32 carolBid = mgr.computeSubId(idB, carol);
         vm.expectEmit(true, true, false, false, address(mgr));
-        emit IPulseSubscriptionManager.Cancelled(carolBid, carol);
+        emit IVirioSubscriptionManager.Cancelled(carolBid, carol);
         vm.prank(carol);
         mgr.cancel(carolBid);
         assertFalse(mgr.getSubscription(carolBid).active);
@@ -215,7 +215,7 @@ contract ScenariosTest is Test {
         // ── Merchant cancels a customer's sub ────────────────────────────────
         bytes32 daveCid = mgr.computeSubId(idC, dave);
         vm.expectEmit(true, true, false, false, address(mgr));
-        emit IPulseSubscriptionManager.Cancelled(daveCid, hyperMerchant);
+        emit IVirioSubscriptionManager.Cancelled(daveCid, hyperMerchant);
         vm.prank(hyperMerchant);
         mgr.cancel(daveCid);
         assertFalse(mgr.getSubscription(daveCid).active);
@@ -225,14 +225,14 @@ contract ScenariosTest is Test {
         vm.prank(stranger);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IPulseSubscriptionManager.NotSubscribed.selector, aliceAid
+                IVirioSubscriptionManager.NotSubscribed.selector, aliceAid
             )
         );
         mgr.cancel(aliceAid);
 
         // ── Deactivate plan A — existing subs keep charging ─────────────────
         vm.expectEmit(true, true, false, false, address(mgr));
-        emit IPulseSubscriptionManager.PlanDeactivated(idA, acmeMerchant);
+        emit IVirioSubscriptionManager.PlanDeactivated(idA, acmeMerchant);
         vm.prank(acmeMerchant);
         mgr.deactivatePlan(idA);
 
@@ -243,7 +243,7 @@ contract ScenariosTest is Test {
         // ── New subscribe to deactivated plan should revert ──────────────────
         vm.prank(stranger);
         vm.expectRevert(
-            abi.encodeWithSelector(IPulseSubscriptionManager.PlanNotActive.selector, idA)
+            abi.encodeWithSelector(IVirioSubscriptionManager.PlanNotActive.selector, idA)
         );
         mgr.subscribe(idA, 0);
 
@@ -258,7 +258,7 @@ contract ScenariosTest is Test {
         // 4th charge would put bob over cap (40 > 30) → auto-cancel
         vm.warp(block.timestamp + planA.period);
         vm.expectEmit(true, true, false, false, address(mgr));
-        emit IPulseSubscriptionManager.Cancelled(bobAid, address(mgr));
+        emit IVirioSubscriptionManager.Cancelled(bobAid, address(mgr));
         vm.prank(botAlpha);
         mgr.charge(bobAid);
         assertFalse(mgr.getSubscription(bobAid).active);
@@ -278,7 +278,7 @@ contract ScenariosTest is Test {
         bytes32 sid = mgr.computeSubId(idA, alice);
         vm.prank(alice);
         vm.expectRevert(
-            abi.encodeWithSelector(IPulseSubscriptionManager.AlreadySubscribed.selector, sid)
+            abi.encodeWithSelector(IVirioSubscriptionManager.AlreadySubscribed.selector, sid)
         );
         mgr.subscribe(idA, 0);
     }
@@ -286,7 +286,7 @@ contract ScenariosTest is Test {
     function test_chargeNonExistentSub_reverts() public {
         bytes32 sid = mgr.computeSubId(idA, alice);
         vm.expectRevert(
-            abi.encodeWithSelector(IPulseSubscriptionManager.NotSubscribed.selector, sid)
+            abi.encodeWithSelector(IVirioSubscriptionManager.NotSubscribed.selector, sid)
         );
         vm.prank(botAlpha);
         mgr.charge(sid);
@@ -352,7 +352,7 @@ contract ScenariosTest is Test {
     function _subscribe(address customer, bytes32 planId, uint256 cap) internal {
         bytes32 sid = mgr.computeSubId(planId, customer);
         vm.expectEmit(true, true, true, true, address(mgr));
-        emit IPulseSubscriptionManager.Subscribed(sid, planId, customer, cap);
+        emit IVirioSubscriptionManager.Subscribed(sid, planId, customer, cap);
         vm.prank(customer);
         mgr.subscribe(planId, cap);
     }
@@ -367,7 +367,7 @@ contract ScenariosTest is Test {
 
         (uint256 execFee, uint256 protoFee, uint256 merchantAmt) = _split(amount);
 
-        IPulseSubscriptionManager.Subscription memory sub = mgr.getSubscription(sid);
+        IVirioSubscriptionManager.Subscription memory sub = mgr.getSubscription(sid);
         address merchant     = sub.merchant;
         uint256 expectedNext = sub.nextChargeAt + sub.period;
 
@@ -377,7 +377,7 @@ contract ScenariosTest is Test {
         uint256 eBefore = usdc.balanceOf(executor);
 
         vm.expectEmit(true, true, true, true, address(mgr));
-        emit IPulseSubscriptionManager.ChargeExecuted(
+        emit IVirioSubscriptionManager.ChargeExecuted(
             sid, executor, customer, amount, merchantAmt, execFee, protoFee, expectedNext
         );
         vm.prank(executor);

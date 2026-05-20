@@ -2,7 +2,7 @@ Findings
 
   1. Duplicate plans are almost certainly a dashboard event-cache bug, not the contract storing 4-5 plans.
      The contract stores plans by unique planId in a mapping, and createPlan() increments _planNonce once per successful transaction: contracts/src/
-     PulseSubscriptionManager.sol:84. There is no on-chain list that can duplicate itself.
+     VirioSubscriptionManager.sol:84. There is no on-chain list that can duplicate itself.
   2. syncEvents() is not concurrency-safe or idempotent.
      In packages/dashboard/lib/chain-reads.ts:53, multiple API requests can enter syncEvents() at the same time, all read the same lastSyncedBlock, all
      fetch the same logs, and all append them into planEvents: packages/dashboard/lib/chain-reads.ts:83.

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.24;
 
 // ─────────────────────────────────────────────────────────────────────────────
-// PULSE — the cross-chain governance token for Pulse.
+// VIRIO — the cross-chain governance token for Virio.
 //
 // Same source, deployed identically on every supported EVM via CREATE3.
 // Standards:
@@ -23,7 +23,7 @@ pragma solidity ^0.8.24;
 //   3. mint() / burn() are gated to allowlisted bridges. Each bridge has
 //      independent mint and burn ceilings that refill linearly from 0 → max
 //      over RATE_LIMIT_DURATION.
-//   4. The owner (Pulse multisig → DAO at month 12) adds/removes bridges and
+//   4. The owner (Virio multisig → DAO at month 12) adds/removes bridges and
 //      tunes ceilings via setLimits().
 //   5. No public mint after genesis. No inflation. No backdoors.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -37,7 +37,7 @@ import {Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 
 import {IXERC20} from "./interfaces/IXERC20.sol";
 
-contract PULSE is ERC20, ERC20Permit, ERC20Votes, Ownable2Step, IXERC20 {
+contract VIRIO is ERC20, ERC20Permit, ERC20Votes, Ownable2Step, IXERC20 {
     // ─── Constants ────────────────────────────────────────────────────────────
 
     /// @notice Total supply cap. Minted once on the home chain at deploy.
@@ -69,12 +69,12 @@ contract PULSE is ERC20, ERC20Permit, ERC20Votes, Ownable2Step, IXERC20 {
     /// @param _initialOwner    Multisig / DAO address controlling bridge limits.
     /// @param _genesisRecipient Address receiving the 1B initial mint on the home chain.
     constructor(address _initialOwner, address _genesisRecipient)
-        ERC20("Pulse", "PULSE")
-        ERC20Permit("Pulse")
+        ERC20("Virio", "VIRIO")
+        ERC20Permit("Virio")
         Ownable(_initialOwner)
     {
         if (block.chainid == HOME_CHAIN_ID) {
-            require(_genesisRecipient != address(0), "PULSE: zero recipient");
+            require(_genesisRecipient != address(0), "VIRIO: zero recipient");
             _mint(_genesisRecipient, GENESIS_SUPPLY);
         }
         // On every other chain totalSupply starts at zero; supply only enters
@@ -105,7 +105,7 @@ contract PULSE is ERC20, ERC20Permit, ERC20Votes, Ownable2Step, IXERC20 {
         external
         onlyOwner
     {
-        require(bridge != address(0), "PULSE: zero bridge");
+        require(bridge != address(0), "VIRIO: zero bridge");
         // Prevent overflow in ratePerSecond arithmetic.
         if (mintingLimit > type(uint256).max / 2 || burningLimit > type(uint256).max / 2) {
             revert IXERC20_LimitsTooHigh();

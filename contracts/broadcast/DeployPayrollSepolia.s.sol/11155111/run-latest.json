@@ -3,7 +3,7 @@
     {
       "hash": "0x8818e9ecc4e45ba2a8b58c1267fed684d28d0eb9da4d33cce0c392b1cedb49c9",
       "transactionType": "CREATE",
-      "contractName": "PulsePayrollManager",
+      "contractName": "VirioPayrollManager",
       "contractAddress": "0x5256ddc57163596882e03ce054ce4ddadc5f04eb",
       "function": null,
       "arguments": [

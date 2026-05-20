@@ -168,7 +168,7 @@ const config: Config = {
           "0%": { transform: "scale(1)", opacity: "0.5" },
           "100%": { transform: "scale(2.5)", opacity: "0" },
         },
-        "pulse-dot": {
+        "virio-dot": {
           "0%, 100%": { opacity: "0.95" },
           "50%": { opacity: "0.5" },
         },
@@ -213,7 +213,7 @@ const config: Config = {
           "0%, 100%": { backgroundPosition: "0% 50%" },
           "50%":      { backgroundPosition: "100% 50%" },
         },
-        "pulse-ring": {
+        "virio-ring": {
           "0%":   { transform: "scale(0.8)", opacity: "0.7" },
           "100%": { transform: "scale(2.4)", opacity: "0" },
         },
@@ -232,7 +232,7 @@ const config: Config = {
         flash: "flash 1.6s ease-out",
         ripple: "ripple 0.65s cubic-bezier(0.16,1,0.3,1)",
         "live-ping": "live-ping 1.6s ease-out infinite",
-        "pulse-dot": "pulse-dot 2s ease-in-out infinite",
+        "virio-dot": "virio-dot 2s ease-in-out infinite",
         drift1: "drift1 24s ease-in-out infinite",
         drift2: "drift2 28s ease-in-out infinite",
         "slide-down": "slide-down 0.5s cubic-bezier(0.34,1.56,0.64,1)",
@@ -244,7 +244,7 @@ const config: Config = {
         "float-slow": "float-slow 9s ease-in-out infinite",
         shimmer: "shimmer 2s infinite",
         "border-flow": "border-flow 6s ease infinite",
-        "pulse-ring": "pulse-ring 2s cubic-bezier(0.16,1,0.3,1) infinite",
+        "virio-ring": "virio-ring 2s cubic-bezier(0.16,1,0.3,1) infinite",
         "ticker-up": "ticker-up 0.4s cubic-bezier(0.16,1,0.3,1) both",
       },
     },

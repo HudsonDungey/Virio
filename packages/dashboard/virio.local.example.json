@@ -1,6 +1,6 @@
 {
-  "$schema": "./pulse.config.json",
-  "_comment": "Copy this file to pulse.local.json and fill it in. pulse.local.json is gitignored.",
+  "$schema": "./virio.config.json",
+  "_comment": "Copy this file to virio.local.json and fill it in. virio.local.json is gitignored.",
 
   "network": "sepolia",
   "rpc": {

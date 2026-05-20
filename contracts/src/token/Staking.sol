@@ -2,16 +2,16 @@
 pragma solidity ^0.8.24;
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Staking — the 1:1 stPULSE staking primitive for Pulse.
+// Staking — the 1:1 stVIRIO staking primitive for Virio.
 //
 // One Staking contract is deployed per chain. It custodies the chain-local
-// PULSE that users stake, mints stPULSE 1:1 to depositors, and continuously
-// accrues fee-token rewards (USDC etc.) to stPULSE balances using the
+// VIRIO that users stake, mints stVIRIO 1:1 to depositors, and continuously
+// accrues fee-token rewards (USDC etc.) to stVIRIO balances using the
 // Synthetix `StakingRewards` math, generalised to N reward tokens.
 //
 // Key invariants:
-//   1. stPULSE.totalSupply() == PULSE balance held by this contract.
-//      Strict 1:1 — N PULSE in mints N stPULSE; N stPULSE burned returns N PULSE.
+//   1. stVIRIO.totalSupply() == VIRIO balance held by this contract.
+//      Strict 1:1 — N VIRIO in mints N stVIRIO; N stVIRIO burned returns N VIRIO.
 //   2. Multi-token rewards: any ERC-20 transferred in via notifyReward becomes
 //      a claimable yield stream. Each reward token has its own independent
 //      rewardPerToken accumulator. The reward-token set is owner-curated and
@@ -56,7 +56,7 @@ contract Staking is ERC20, ERC20Permit, ERC20Votes, Ownable2Step, ReentrancyGuar
     /// @dev Membership lookup so notifyReward / register are O(1).
     mapping(address => bool) public isRewardToken;
 
-    /// @dev Per-reward-token cumulative reward-per-stPULSE, scaled by 1e18.
+    /// @dev Per-reward-token cumulative reward-per-stVIRIO, scaled by 1e18.
     mapping(address => uint256) public rewardPerTokenStored;
 
     /// @dev Per-user snapshot of rewardPerTokenStored at last interaction.
@@ -94,8 +94,8 @@ contract Staking is ERC20, ERC20Permit, ERC20Votes, Ownable2Step, ReentrancyGuar
     // ─── Constructor ──────────────────────────────────────────────────────────
 
     constructor(IERC20 _stakedToken, address _initialOwner)
-        ERC20("Staked Pulse", "stPULSE")
-        ERC20Permit("Staked Pulse")
+        ERC20("Staked Virio", "stVIRIO")
+        ERC20Permit("Staked Virio")
         Ownable(_initialOwner)
     {
         require(address(_stakedToken) != address(0), "Staking: zero token");
@@ -154,7 +154,7 @@ contract Staking is ERC20, ERC20Permit, ERC20Votes, Ownable2Step, ReentrancyGuar
     // ─── Reward injection ─────────────────────────────────────────────────────
 
     /// @notice Pull `amount` of an owner-registered reward token from the caller
-    ///         and distribute it pro-rata across the current stPULSE supply.
+    ///         and distribute it pro-rata across the current stVIRIO supply.
     function notifyReward(address rewardToken, uint256 amount) external nonReentrant {
         if (!isRewardToken[rewardToken]) revert UnknownRewardToken();
         if (amount == 0) revert ZeroAmount();

@@ -9,7 +9,7 @@ import { Select } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast";
 import { api } from "@/lib/api";
 import { fmt$, fmtAddr } from "@/lib/format";
-import { usePulseActions } from "@/lib/wallet-actions";
+import { useVirioActions } from "@/lib/wallet-actions";
 import type { Plan, Subscription } from "@/lib/types";
 import type { Hex } from "viem";
 
@@ -22,7 +22,7 @@ interface Props {
 
 export function CreateSubDialog({ open, onOpenChange, plans, onCreated }: Props) {
   const { toast } = useToast();
-  const actions = usePulseActions();
+  const actions = useVirioActions();
   const activePlans = plans.filter((p) => p.active);
   const [planId, setPlanId] = React.useState("");
   const [spendCap, setSpendCap] = React.useState("");

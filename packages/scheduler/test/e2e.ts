@@ -42,14 +42,14 @@ import { mnemonicToAccount, privateKeyToAccount } from "viem/accounts";
 import { hardhat as hardhatChain } from "viem/chains";
 
 import {
-  PulseClient,
-  PULSE_ABI,
+  VirioClient,
+  VIRIO_ABI,
   ERC20_ABI,
   verifyWebhook,
   computeSubscriptionId,
   usdc,
   PERIOD,
-} from "@pulse/sdk";
+} from "@virio/sdk";
 import { Scheduler } from "../src/Scheduler.js";
 import { MemoryStorage } from "../src/MemoryStorage.js";
 import type { StoredSubscription } from "../src/storage.js";
@@ -133,7 +133,7 @@ function startWebhookServer(port: number): {
     let body = "";
     req.on("data", (chunk: Buffer) => { body += chunk.toString(); });
     req.on("end", () => {
-      const sig = (req.headers["x-pulse-signature"] ?? "") as string;
+      const sig = (req.headers["x-virio-signature"] ?? "") as string;
       res.writeHead(200);
       res.end();
       resolve({ payload: body, signature: sig });
@@ -159,8 +159,8 @@ let usdcAddress:     Address;
 let managerAddress:  Address;
 let planId:          Hex;
 let subscriptionId:  Hex;
-let pulseClient:     PulseClient;
-let schedulerClient: PulseClient;
+let virioClient:     VirioClient;
+let schedulerClient: VirioClient;
 let storage:         MemoryStorage;
 let sched:           Scheduler;
 
@@ -180,7 +180,7 @@ before(async () => {
   await hre.run("compile", { quiet: true });
 
   // Read compiled artifacts
-  const managerArtifact = await hre.artifacts.readArtifact("PulseSubscriptionManager");
+  const managerArtifact = await hre.artifacts.readArtifact("VirioSubscriptionManager");
   const usdcArtifact    = await hre.artifacts.readArtifact("MockUSDC");
 
   const deployerWallet  = makeWallet(deployer);
@@ -190,19 +190,19 @@ before(async () => {
   console.log("  🚀 Deploying MockUSDC…");
   usdcAddress = await deployContract(deployerWallet, usdcArtifact);
 
-  // Deploy PulseSubscriptionManager(feeRecipient)
-  console.log("  🚀 Deploying PulseSubscriptionManager…");
+  // Deploy VirioSubscriptionManager(feeRecipient)
+  console.log("  🚀 Deploying VirioSubscriptionManager…");
   managerAddress = await deployContract(deployerWallet, managerArtifact, [feeRecip.address]);
 
   // Build SDK clients
-  pulseClient = new PulseClient({
+  virioClient = new VirioClient({
     contractAddress: managerAddress,
     chain: hardhatChain,
     walletClient: merchantWallet as never,
     publicClient: pubClient as never,
   });
 
-  schedulerClient = new PulseClient({
+  schedulerClient = new VirioClient({
     contractAddress: managerAddress,
     chain: hardhatChain,
     walletClient: makeWallet(scheduler) as never,
@@ -229,7 +229,7 @@ after(() => {
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 test("1. merchant creates a plan", async () => {
-  const result = await pulseClient.createPlan({
+  const result = await virioClient.createPlan({
     token:              usdcAddress,
     amount:             AMOUNT,
     period:             BigInt(PERIOD_S),
@@ -242,7 +242,7 @@ test("1. merchant creates a plan", async () => {
   assert.ok(planId.startsWith("0x"),    "planId should be a hex string");
   assert.notEqual(planId, "0x" + "0".repeat(64), "planId should not be zero bytes");
 
-  const plan = await pulseClient.getPlan(planId);
+  const plan = await virioClient.getPlan(planId);
   assert.equal(plan.merchant, merchant.address,                "merchant mismatch");
   assert.equal(plan.token,    usdcAddress,                     "token mismatch");
   assert.equal(plan.amount,   AMOUNT,                          "amount mismatch");
@@ -253,7 +253,7 @@ test("1. merchant creates a plan", async () => {
 });
 
 test("2. customer approves USDC and subscribes", async () => {
-  const customerPulse = new PulseClient({
+  const customerVirio = new VirioClient({
     contractAddress: managerAddress,
     chain:           hardhatChain,
     walletClient:    makeWallet(customer) as never,
@@ -262,9 +262,9 @@ test("2. customer approves USDC and subscribes", async () => {
 
   // Cap the approval to 5 charges worth
   const cap = AMOUNT * 5n;
-  await customerPulse.approveToken(usdcAddress, cap);
+  await customerVirio.approveToken(usdcAddress, cap);
 
-  const result = await customerPulse.subscribe({
+  const result = await customerVirio.subscribe({
     planId,
     totalSpendCap: cap,
   });
@@ -275,7 +275,7 @@ test("2. customer approves USDC and subscribes", async () => {
   const expected = computeSubscriptionId(planId, customer.address);
   assert.equal(subscriptionId, expected, "subscriptionId should be keccak256(planId, customer)");
 
-  const sub = await customerPulse.getSubscription(subscriptionId);
+  const sub = await customerVirio.getSubscription(subscriptionId);
   assert.ok(sub.active,                        "subscription should be active");
   assert.equal(sub.customer, customer.address, "customer mismatch");
   assert.equal(sub.planId,   planId,           "planId mismatch");
@@ -381,16 +381,16 @@ test("6. cancellation prevents future charges", async () => {
   // Advance time to make a charge valid again
   await increaseTime(PERIOD_S + 1);
 
-  const customerPulse = new PulseClient({
+  const customerVirio = new VirioClient({
     contractAddress: managerAddress,
     chain:           hardhatChain,
     walletClient:    makeWallet(customer) as never,
     publicClient:    pubClient as never,
   });
 
-  await customerPulse.cancel(subscriptionId);
+  await customerVirio.cancel(subscriptionId);
 
-  const sub = await customerPulse.getSubscription(subscriptionId);
+  const sub = await customerVirio.getSubscription(subscriptionId);
   assert.ok(!sub.active, "subscription should be inactive after cancel");
 
   // Force scheduler to try (storage still shows it due)
@@ -421,7 +421,7 @@ test("7. spend cap enforcement — contract level", async () => {
     account: deployer,
   });
 
-  const c2Pulse = new PulseClient({
+  const c2Virio = new VirioClient({
     contractAddress: managerAddress,
     chain: hardhatChain,
     walletClient: c2Wallet as never,
@@ -429,8 +429,8 @@ test("7. spend cap enforcement — contract level", async () => {
   });
 
   // Approve and subscribe with cap = exactly 1 charge
-  await c2Pulse.approveToken(usdcAddress, AMOUNT * 2n);
-  const { subscriptionId: sub2Id } = await c2Pulse.subscribe({
+  await c2Virio.approveToken(usdcAddress, AMOUNT * 2n);
+  const { subscriptionId: sub2Id } = await c2Virio.subscribe({
     planId,
     totalSpendCap: AMOUNT, // cap = exactly one charge
   });
@@ -462,7 +462,7 @@ test("8. webhook signature: tampered payload fails verification", async () => {
     "tampered signature should fail verification"
   );
 
-  const realSig = (await import("@pulse/sdk")).signWebhook(payload, WEBHOOK_SECRET);
+  const realSig = (await import("@virio/sdk")).signWebhook(payload, WEBHOOK_SECRET);
   assert.ok(
     verifyWebhook(payload, realSig, WEBHOOK_SECRET),
     "correct signature should verify"

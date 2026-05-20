@@ -2,16 +2,16 @@
 pragma solidity ^0.8.24;
 
 import {Test} from "forge-std/Test.sol";
-import {PulsePayrollManager} from "../src/PulsePayrollManager.sol";
-import {IPulsePayrollManager} from "../src/interfaces/IPulsePayrollManager.sol";
+import {VirioPayrollManager} from "../src/VirioPayrollManager.sol";
+import {IVirioPayrollManager} from "../src/interfaces/IVirioPayrollManager.sol";
 import {MockUSDC} from "../src/test-helpers/MockUSDC.sol";
 
-/// Smoke tests for PulsePayrollManager.
+/// Smoke tests for VirioPayrollManager.
 /// Covers: plan create / deactivate, add (single + batch), update, remove,
 /// single payroll execute, batch execute with partial fail, spend-cap auto-remove,
 /// owner-only setters, and full event capture on the happy path.
-contract PulsePayrollManagerTest is Test {
-    PulsePayrollManager internal mgr;
+contract VirioPayrollManagerTest is Test {
+    VirioPayrollManager internal mgr;
     MockUSDC            internal usdc;
 
     address internal OWNER    = makeAddr("owner");
@@ -43,7 +43,7 @@ contract PulsePayrollManagerTest is Test {
         usdc = new MockUSDC();
 
         vm.prank(OWNER);
-        mgr = new PulsePayrollManager(FEE_REC);
+        mgr = new VirioPayrollManager(FEE_REC);
 
         // Fund the employer with enough USDC for many pay cycles and approve.
         usdc.mint(EMPLOYER, 1_000_000e6);
@@ -68,20 +68,20 @@ contract PulsePayrollManagerTest is Test {
     function test_createPlan_emitsEvent() public {
         bytes32 expected = keccak256(abi.encodePacked(EMPLOYER, uint256(2), block.chainid));
         vm.expectEmit(true, true, false, true, address(mgr));
-        emit IPulsePayrollManager.PlanCreated(expected, EMPLOYER, address(usdc), PERIOD);
+        emit IVirioPayrollManager.PlanCreated(expected, EMPLOYER, address(usdc), PERIOD);
         vm.prank(EMPLOYER);
         mgr.createPlan(address(usdc), PERIOD);
     }
 
     function test_createPlan_revertsOnZeroPeriod() public {
         vm.prank(EMPLOYER);
-        vm.expectRevert(IPulsePayrollManager.InvalidPeriod.selector);
+        vm.expectRevert(IVirioPayrollManager.InvalidPeriod.selector);
         mgr.createPlan(address(usdc), 0);
     }
 
     function test_createPlan_revertsOnZeroToken() public {
         vm.prank(EMPLOYER);
-        vm.expectRevert(IPulsePayrollManager.ZeroAddress.selector);
+        vm.expectRevert(IVirioPayrollManager.ZeroAddress.selector);
         mgr.createPlan(address(0), PERIOD);
     }
 
@@ -89,7 +89,7 @@ contract PulsePayrollManagerTest is Test {
 
     function test_deactivatePlan_byEmployer() public {
         vm.expectEmit(true, true, false, false, address(mgr));
-        emit IPulsePayrollManager.PlanDeactivated(planId, EMPLOYER);
+        emit IVirioPayrollManager.PlanDeactivated(planId, EMPLOYER);
         vm.prank(EMPLOYER);
         mgr.deactivatePlan(planId);
         assertFalse(mgr.getPlan(planId).active);
@@ -98,7 +98,7 @@ contract PulsePayrollManagerTest is Test {
     function test_deactivatePlan_revertsForStranger() public {
         vm.prank(STRANGER);
         vm.expectRevert(
-            abi.encodeWithSelector(IPulsePayrollManager.UnauthorizedEmployer.selector, planId)
+            abi.encodeWithSelector(IVirioPayrollManager.UnauthorizedEmployer.selector, planId)
         );
         mgr.deactivatePlan(planId);
     }
@@ -109,7 +109,7 @@ contract PulsePayrollManagerTest is Test {
 
         vm.prank(EMPLOYER);
         vm.expectRevert(
-            abi.encodeWithSelector(IPulsePayrollManager.PlanNotActive.selector, planId)
+            abi.encodeWithSelector(IVirioPayrollManager.PlanNotActive.selector, planId)
         );
         mgr.addRecipient(planId, alice, ALICE_AMOUNT, 0);
     }
@@ -120,12 +120,12 @@ contract PulsePayrollManagerTest is Test {
         bytes32 expectedRid = mgr.computeRecipientId(planId, alice);
 
         vm.expectEmit(true, true, false, true, address(mgr));
-        emit IPulsePayrollManager.RecipientAdded(planId, expectedRid, alice, ALICE_AMOUNT, 0);
+        emit IVirioPayrollManager.RecipientAdded(planId, expectedRid, alice, ALICE_AMOUNT, 0);
         vm.prank(EMPLOYER);
         bytes32 rid = mgr.addRecipient(planId, alice, ALICE_AMOUNT, 0);
 
         assertEq(rid, expectedRid);
-        IPulsePayrollManager.Recipient memory r = mgr.getRecipient(planId, rid);
+        IVirioPayrollManager.Recipient memory r = mgr.getRecipient(planId, rid);
         assertEq(r.wallet, alice);
         assertEq(r.amount, ALICE_AMOUNT);
         assertEq(r.totalPaid, 0);
@@ -137,7 +137,7 @@ contract PulsePayrollManagerTest is Test {
         vm.startPrank(EMPLOYER);
         bytes32 rid = mgr.addRecipient(planId, alice, ALICE_AMOUNT, 0);
         vm.expectRevert(
-            abi.encodeWithSelector(IPulsePayrollManager.RecipientAlreadyExists.selector, rid)
+            abi.encodeWithSelector(IVirioPayrollManager.RecipientAlreadyExists.selector, rid)
         );
         mgr.addRecipient(planId, alice, ALICE_AMOUNT, 0);
         vm.stopPrank();
@@ -145,7 +145,7 @@ contract PulsePayrollManagerTest is Test {
 
     function test_addRecipient_revertsOnZeroAmount() public {
         vm.prank(EMPLOYER);
-        vm.expectRevert(IPulsePayrollManager.InvalidAmount.selector);
+        vm.expectRevert(IVirioPayrollManager.InvalidAmount.selector);
         mgr.addRecipient(planId, alice, 0, 0);
     }
 
@@ -173,7 +173,7 @@ contract PulsePayrollManagerTest is Test {
         amounts[0] = ALICE_AMOUNT; amounts[1] = BOB_AMOUNT; amounts[2] = CAROL_AMOUNT;
 
         vm.prank(EMPLOYER);
-        vm.expectRevert(IPulsePayrollManager.ArrayLengthMismatch.selector);
+        vm.expectRevert(IVirioPayrollManager.ArrayLengthMismatch.selector);
         mgr.addRecipientsBatch(planId, wallets, amounts, caps);
     }
 
@@ -191,7 +191,7 @@ contract PulsePayrollManagerTest is Test {
         uint256 bBefore = usdc.balanceOf(BOT);
 
         vm.expectEmit(true, true, true, true, address(mgr));
-        emit IPulsePayrollManager.PayrollExecuted(
+        emit IVirioPayrollManager.PayrollExecuted(
             planId, rid, BOT, alice, ALICE_AMOUNT, net, execFee, proto, block.timestamp + PERIOD
         );
         vm.prank(BOT);
@@ -211,7 +211,7 @@ contract PulsePayrollManagerTest is Test {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                IPulsePayrollManager.TooEarlyToPay.selector, rid, block.timestamp + PERIOD
+                IVirioPayrollManager.TooEarlyToPay.selector, rid, block.timestamp + PERIOD
             )
         );
         vm.prank(BOT);
@@ -229,7 +229,7 @@ contract PulsePayrollManagerTest is Test {
         vm.warp(block.timestamp + PERIOD);
 
         vm.expectEmit(true, true, true, false, address(mgr));
-        emit IPulsePayrollManager.RecipientRemoved(planId, rid, address(mgr));
+        emit IVirioPayrollManager.RecipientRemoved(planId, rid, address(mgr));
         vm.prank(BOT);
         mgr.executePayroll(planId, rid);
 
@@ -252,7 +252,7 @@ contract PulsePayrollManagerTest is Test {
         bytes32[] memory rids = mgr.addRecipientsBatch(planId, wallets, amounts, caps);
 
         vm.expectEmit(true, true, false, true, address(mgr));
-        emit IPulsePayrollManager.BatchPayrollExecuted(planId, BOT, 4, 0);
+        emit IVirioPayrollManager.BatchPayrollExecuted(planId, BOT, 4, 0);
         vm.prank(BOT);
         mgr.executePayrollBatch(planId, rids);
 
@@ -283,7 +283,7 @@ contract PulsePayrollManagerTest is Test {
         batch[2] = rids[1];
 
         vm.expectEmit(true, true, false, true, address(mgr));
-        emit IPulsePayrollManager.BatchPayrollExecuted(planId, BOT, 2, 1);
+        emit IVirioPayrollManager.BatchPayrollExecuted(planId, BOT, 2, 1);
         vm.prank(BOT);
         mgr.executePayrollBatch(planId, batch);
 
@@ -300,7 +300,7 @@ contract PulsePayrollManagerTest is Test {
 
         bytes32[] memory empty = new bytes32[](0);
         vm.expectRevert(
-            abi.encodeWithSelector(IPulsePayrollManager.PlanNotActive.selector, planId)
+            abi.encodeWithSelector(IVirioPayrollManager.PlanNotActive.selector, planId)
         );
         vm.prank(BOT);
         mgr.executePayrollBatch(planId, empty);
@@ -313,7 +313,7 @@ contract PulsePayrollManagerTest is Test {
         bytes32 rid = mgr.addRecipient(planId, alice, ALICE_AMOUNT, 0);
 
         vm.expectEmit(true, true, false, true, address(mgr));
-        emit IPulsePayrollManager.RecipientRemoved(planId, rid, EMPLOYER);
+        emit IVirioPayrollManager.RecipientRemoved(planId, rid, EMPLOYER);
         vm.prank(EMPLOYER);
         mgr.removeRecipient(planId, rid);
 
@@ -327,7 +327,7 @@ contract PulsePayrollManagerTest is Test {
 
         vm.prank(STRANGER);
         vm.expectRevert(
-            abi.encodeWithSelector(IPulsePayrollManager.UnauthorizedEmployer.selector, planId)
+            abi.encodeWithSelector(IVirioPayrollManager.UnauthorizedEmployer.selector, planId)
         );
         mgr.removeRecipient(planId, rid);
     }
@@ -358,7 +358,7 @@ contract PulsePayrollManagerTest is Test {
         vm.prank(EMPLOYER);
         mgr.updateRecipient(planId, rid, 2_000e6, 10_000e6);
 
-        IPulsePayrollManager.Recipient memory r = mgr.getRecipient(planId, rid);
+        IVirioPayrollManager.Recipient memory r = mgr.getRecipient(planId, rid);
         assertEq(r.amount, 2_000e6);
         assertEq(r.spendCap, 10_000e6);
     }
@@ -368,7 +368,7 @@ contract PulsePayrollManagerTest is Test {
         bytes32 rid = mgr.addRecipient(planId, alice, ALICE_AMOUNT, 0);
 
         vm.prank(EMPLOYER);
-        vm.expectRevert(IPulsePayrollManager.InvalidAmount.selector);
+        vm.expectRevert(IVirioPayrollManager.InvalidAmount.selector);
         mgr.updateRecipient(planId, rid, 0, 0);
     }
 
@@ -380,7 +380,7 @@ contract PulsePayrollManagerTest is Test {
         assertEq(mgr.protocolFeeBps(), 50);
 
         vm.prank(STRANGER);
-        vm.expectRevert("Pulse: not owner");
+        vm.expectRevert("Virio: not owner");
         mgr.setProtocolFeeBps(50);
     }
 
@@ -390,7 +390,7 @@ contract PulsePayrollManagerTest is Test {
         assertEq(mgr.protocolFlatFee(), 5e6);
 
         vm.prank(STRANGER);
-        vm.expectRevert("Pulse: not owner");
+        vm.expectRevert("Virio: not owner");
         mgr.setProtocolFlatFee(5e6);
     }
 
@@ -400,7 +400,7 @@ contract PulsePayrollManagerTest is Test {
         assertEq(mgr.executorFeeBps(), 20);
 
         vm.prank(STRANGER);
-        vm.expectRevert("Pulse: not owner");
+        vm.expectRevert("Virio: not owner");
         mgr.setExecutorFeeBps(20);
     }
 

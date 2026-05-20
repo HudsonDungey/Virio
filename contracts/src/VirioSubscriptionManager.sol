@@ -2,7 +2,7 @@
 pragma solidity ^0.8.24;
 
 // ─────────────────────────────────────────────────────────────────────────────
-// PulseSubscriptionManager
+// VirioSubscriptionManager
 //
 // Pull-based ERC-20 subscription protocol.
 //
@@ -24,14 +24,14 @@ pragma solidity ^0.8.24;
 //      (no intermediate custody).
 // ─────────────────────────────────────────────────────────────────────────────
 
-import {IPulseSubscriptionManager} from "./interfaces/IPulseSubscriptionManager.sol";
+import {IVirioSubscriptionManager} from "./interfaces/IVirioSubscriptionManager.sol";
 
 /// @dev Minimal ERC-20 interface (only what we call).
 interface IERC20 {
     function transferFrom(address from, address to, uint256 amount) external returns (bool);
 }
 
-contract PulseSubscriptionManager is IPulseSubscriptionManager {
+contract VirioSubscriptionManager is IVirioSubscriptionManager {
     // ─── Constants ────────────────────────────────────────────────────────────
 
     uint16  public executorFeeBps  = 10;  // 0.1%
@@ -62,7 +62,7 @@ contract PulseSubscriptionManager is IPulseSubscriptionManager {
     }
 
     modifier onlyOwner() {
-        require(msg.sender == owner, "Pulse: not owner");
+        require(msg.sender == owner, "Virio: not owner");
         _;
     }
 
@@ -250,12 +250,12 @@ contract PulseSubscriptionManager is IPulseSubscriptionManager {
     }
 
     function setExecutorFeeBps(uint16 _bps) external onlyOwner {
-        require(_bps <= 10_000, "Pulse: bps > 10000");
+        require(_bps <= 10_000, "Virio: bps > 10000");
         executorFeeBps = _bps;
     }
 
     function setProtocolFeeBps(uint16 _bps) external onlyOwner {
-        require(_bps <= 10_000, "Pulse: bps > 10000");
+        require(_bps <= 10_000, "Virio: bps > 10000");
         protocolFeeBps = _bps;
     }
 
@@ -279,6 +279,6 @@ contract PulseSubscriptionManager is IPulseSubscriptionManager {
         (bool ok, bytes memory data) = token.call(
             abi.encodeWithSelector(0x23b872dd, from, to, amount)
         );
-        require(ok && (data.length == 0 || abi.decode(data, (bool))), "Pulse: transferFrom failed");
+        require(ok && (data.length == 0 || abi.decode(data, (bool))), "Virio: transferFrom failed");
     }
 }

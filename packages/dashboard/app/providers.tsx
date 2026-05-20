@@ -12,9 +12,9 @@ export const ConfigContext = React.createContext<PublicLocalConfig | null>(null)
 
 /// Convenience hook for client components that need access to the runtime config
 /// (contract addresses, merchant address, network name).
-export function usePulseConfig(): PublicLocalConfig {
+export function useVirioConfig(): PublicLocalConfig {
   const ctx = React.useContext(ConfigContext);
-  if (!ctx) throw new Error("usePulseConfig must be used inside <Providers>");
+  if (!ctx) throw new Error("useVirioConfig must be used inside <Providers>");
   return ctx;
 }
 

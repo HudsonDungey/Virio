@@ -1263,9 +1263,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pulse/dashboard@workspace:packages/dashboard":
+"@virio/dashboard@workspace:packages/dashboard":
   version: 0.0.0-use.local
-  resolution: "@pulse/dashboard@workspace:packages/dashboard"
+  resolution: "@virio/dashboard@workspace:packages/dashboard"
   dependencies:
     "@rainbow-me/rainbowkit": "npm:^2.2.1"
     "@tanstack/react-query": "npm:^5.59.0"
@@ -1292,11 +1292,11 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@pulse/scheduler@workspace:packages/scheduler":
+"@virio/scheduler@workspace:packages/scheduler":
   version: 0.0.0-use.local
-  resolution: "@pulse/scheduler@workspace:packages/scheduler"
+  resolution: "@virio/scheduler@workspace:packages/scheduler"
   dependencies:
-    "@pulse/sdk": "npm:*"
+    "@virio/sdk": "npm:*"
     "@types/node": "npm:^20.0.0"
     hardhat: "npm:^2.22.0"
     ts-node: "npm:^10.9.2"
@@ -1305,9 +1305,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@pulse/sdk@npm:*, @pulse/sdk@workspace:packages/sdk":
+"@virio/sdk@npm:*, @virio/sdk@workspace:packages/sdk":
   version: 0.0.0-use.local
-  resolution: "@pulse/sdk@workspace:packages/sdk"
+  resolution: "@virio/sdk@workspace:packages/sdk"
   dependencies:
     "@types/node": "npm:^20.0.0"
     typescript: "npm:^5.4.0"
@@ -7959,9 +7959,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pulse@workspace:.":
+"virio@workspace:.":
   version: 0.0.0-use.local
-  resolution: "pulse@workspace:."
+  resolution: "virio@workspace:."
   dependencies:
     "@nomicfoundation/hardhat-toolbox": "npm:^5.0.0"
     "@types/node": "npm:^20.0.0"

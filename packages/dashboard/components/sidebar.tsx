@@ -161,7 +161,7 @@ export function Sidebar({
             </span>
             <div className="min-w-0 flex-1">
               <div className="truncate text-sm font-medium text-foreground">
-                Pulse Labs
+                Virio Labs
               </div>
               <div className="truncate text-2xs text-muted-foreground">
                 Merchant workspace

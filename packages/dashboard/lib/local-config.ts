@@ -1,13 +1,13 @@
-/// Loader for the gitignored `pulse.local.json` + env vars. Server-only — never import
+/// Loader for the gitignored `virio.local.json` + env vars. Server-only — never import
 /// from a client component. Use `lib/public-config.ts` to surface the safe subset to the browser.
 
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import type { PulseLocalConfig, Network } from "./types";
+import type { VirioLocalConfig, Network } from "./types";
 
 const ZERO = "0x0000000000000000000000000000000000000000" as const;
 
-let cached: PulseLocalConfig | null = null;
+let cached: VirioLocalConfig | null = null;
 let cachedError: string | null = null;
 
 interface RawLocal {
@@ -28,12 +28,12 @@ interface RawLocal {
 }
 
 function readRaw(): RawLocal {
-  const p = join(process.cwd(), "pulse.local.json");
+  const p = join(process.cwd(), "virio.local.json");
   if (!existsSync(p)) return {};
   try {
     return JSON.parse(readFileSync(p, "utf8")) as RawLocal;
   } catch (e) {
-    cachedError = `Failed to parse pulse.local.json: ${(e as Error).message}`;
+    cachedError = `Failed to parse virio.local.json: ${(e as Error).message}`;
     return {};
   }
 }
@@ -49,7 +49,7 @@ function asPk(v: string | undefined | null): `0x${string}` | null {
   return v as `0x${string}`;
 }
 
-export function getLocalConfig(): PulseLocalConfig {
+export function getLocalConfig(): VirioLocalConfig {
   if (cached) return cached;
   const raw = readRaw();
 
@@ -112,7 +112,7 @@ export interface PublicLocalConfig {
   testAddresses: Array<{ label: string; address: `0x${string}` }>;
 }
 
-export function buildRpcUrl(cfg: PulseLocalConfig): string | null {
+export function buildRpcUrl(cfg: VirioLocalConfig): string | null {
   if (cfg.rpc.fullUrlOverride) return cfg.rpc.fullUrlOverride;
   if (!cfg.rpc.alchemyKey) return null;
   const host =
@@ -120,7 +120,7 @@ export function buildRpcUrl(cfg: PulseLocalConfig): string | null {
   return `https://${host}/v2/${cfg.rpc.alchemyKey}`;
 }
 
-export function publicView(cfg: PulseLocalConfig): PublicLocalConfig {
+export function publicView(cfg: VirioLocalConfig): PublicLocalConfig {
   return {
     network: cfg.network,
     rpcUrl: buildRpcUrl(cfg),

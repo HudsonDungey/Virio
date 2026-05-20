@@ -7,8 +7,8 @@ out/
 .env.local
 *.log
 # Local Sepolia config — contains API keys + (optionally) executor private key
-pulse.local.json
-packages/dashboard/pulse.local.json
+virio.local.json
+packages/dashboard/virio.local.json
 packages/dashboard/.env.local
 contracts/.env
 .DS_Store

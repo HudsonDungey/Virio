@@ -1,14 +1,14 @@
-# How to operate Pulse
+# How to operate Virio
 
 > **Just want to run it?** → [`RUN.md`](./RUN.md) has the copy-paste quickstart.
 > This file is the deeper reference: what's happening on chain, the API surface, troubleshooting, the file map.
 
-Pulse runs in two modes:
+Virio runs in two modes:
 
 - **Sepolia (real wallets, RainbowKit + wagmi)** — the main path. Your MetaMask signs every plan/subscribe/cancel; an Alchemy RPC powers reads; an off-chain executor key calls `charge()` for due subscriptions. → [Sepolia setup](#sepolia-setup) below.
 - **Anvil (local testbed, server-signed)** — the older fast-feedback path. A forked local chain with five funded accounts whose keys live in `deployments.json`. → [Anvil testbed](#anvil-testbed).
 
-Pick the mode by setting `network` in `packages/dashboard/pulse.local.json` to `"sepolia"` (default) or `"anvil"`.
+Pick the mode by setting `network` in `packages/dashboard/virio.local.json` to `"sepolia"` (default) or `"anvil"`.
 
 ---
 
@@ -39,11 +39,11 @@ The script prints addresses + the deployment block. Note all four (manager, USDC
 
 ```bash
 cd packages/dashboard
-cp pulse.local.example.json pulse.local.json
+cp virio.local.example.json virio.local.json
 cp .env.local.example .env.local
 ```
 
-Edit `pulse.local.json`:
+Edit `virio.local.json`:
 
 ```jsonc
 {
@@ -75,7 +75,7 @@ EXECUTOR_PRIVATE_KEY=0x...        # the SECOND Sepolia EOA, NOT your merchant ke
 ### 4. Run the dashboard
 
 ```bash
-yarn workspace @pulse/dashboard dev -p 3001
+yarn workspace @virio/dashboard dev -p 3001
 ```
 
 Open <http://localhost:3001>. Click **Connect Wallet** in the sidebar — MetaMask will prompt for connection and ask you to switch to Sepolia.
@@ -92,26 +92,26 @@ Open <http://localhost:3001>. Click **Connect Wallet** in the sidebar — MetaMa
 The deploy script uses `MockUSDC`, a mintable test token. Anyone can mint to themselves with:
 
 ```bash
-USDC=0x...   # from pulse.local.json
+USDC=0x...   # from virio.local.json
 cast send $USDC "mint(address,uint256)" 0xYourAddress 100000000 \
     --private-key 0xYourKey \
     --rpc-url https://eth-sepolia.g.alchemy.com/v2/YOUR_KEY
 # = mint 100 USDC (100 * 1e6) to 0xYourAddress
 ```
 
-If you'd rather use Circle's official Sepolia USDC (`0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238`), edit `DeploySepolia.s.sol` to skip the MockUSDC deployment and reference that address in `pulse.local.json` — you'll need to bridge in real testnet USDC from <https://faucet.circle.com/>.
+If you'd rather use Circle's official Sepolia USDC (`0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238`), edit `DeploySepolia.s.sol` to skip the MockUSDC deployment and reference that address in `virio.local.json` — you'll need to bridge in real testnet USDC from <https://faucet.circle.com/>.
 
 ---
 
 ## Anvil testbed
 
 End-to-end guide for spinning up a local anvil chain, deploying the
-`PulseSubscriptionManager` + `MockUSDC` contracts, and driving them through
+`VirioSubscriptionManager` + `MockUSDC` contracts, and driving them through
 the Next.js dashboard.
 
 > **Heads up — wagmi rewire.** All writes (createPlan, subscribe, cancel, deactivate) are now signed by the **connected wallet via RainbowKit**, regardless of network. To use the funded anvil accounts in this mode, **import the anvil private keys into MetaMask** and add a custom network for `http://127.0.0.1:8545` (chain id `31337`). The "funded accounts dropdown" in the subscribe dialog has been replaced by "your connected wallet".
 >
-> To switch to this mode, set `"network": "anvil"` in `packages/dashboard/pulse.local.json`. The dashboard reads contract addresses from `pulse.local.json` regardless of network — paste the addresses the local deploy script prints under `contracts.manager` / `contracts.usdc`.
+> To switch to this mode, set `"network": "anvil"` in `packages/dashboard/virio.local.json`. The dashboard reads contract addresses from `virio.local.json` regardless of network — paste the addresses the local deploy script prints under `contracts.manager` / `contracts.usdc`.
 >
 > The off-chain scheduler also no longer uses `anvil[0]` implicitly — set `EXECUTOR_PRIVATE_KEY` in `.env.local` to one of the anvil keys (e.g. `0xac0974…`) to enable automatic charging.
 
@@ -121,7 +121,7 @@ the Next.js dashboard.
 
 - **Anvil** running on `127.0.0.1:8545`, chain id `31337`
 - **MockUSDC** at `0x5FbDB2315678afecb367f032d93F642f64180aa3`
-- **PulseSubscriptionManager** at `0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512`
+- **VirioSubscriptionManager** at `0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512`
 - 5 funded accounts, each with 10 ETH and 10,000 USDC, pre-approved to the manager
 - The dashboard at `http://localhost:3001` reads from and writes to the chain — no mock state
 
@@ -174,11 +174,11 @@ forge script script/Deploy.s.sol \
     --skip-simulation
 ```
 
-This deploys MockUSDC and PulseSubscriptionManager, mints 10,000 USDC to each of 5 anvil accounts, and approves the manager for all of them. You should see:
+This deploys MockUSDC and VirioSubscriptionManager, mints 10,000 USDC to each of 5 anvil accounts, and approves the manager for all of them. You should see:
 
 ```
 MockUSDC                  : 0x5FbDB2315678afecb367f032d93F642f64180aa3
-PulseSubscriptionManager  : 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512
+VirioSubscriptionManager  : 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512
 Deployer (anvil[0])       : 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
 ONCHAIN EXECUTION COMPLETE & SUCCESSFUL.
 ```
@@ -188,7 +188,7 @@ ONCHAIN EXECUTION COMPLETE & SUCCESSFUL.
 ### Terminal C — dashboard
 
 ```bash
-yarn workspace @pulse/dashboard dev -p 3001
+yarn workspace @virio/dashboard dev -p 3001
 ```
 
 Open **<http://localhost:3001>**.
@@ -367,7 +367,7 @@ The API only signs from accounts whose private keys are in `deployments.json`. U
 Check `price > 0`, `intervalSeconds > 0`, `feeBps ≤ 10000`. The route validates these but only emits a useful error from the chain revert.
 
 **Port 3001 in use.**
-Run `yarn workspace @pulse/dashboard dev -p 3002` and update your bookmarks.
+Run `yarn workspace @virio/dashboard dev -p 3002` and update your bookmarks.
 
 **Port 8545 in use.**
 `lsof -nP -iTCP:8545 -sTCP:LISTEN` to see who's holding it. Stop that process or anvil on another port (and update `deployments.json` + `lib/chain.ts`).
@@ -384,7 +384,7 @@ pkill -f "next dev"  # ditto
 # Start fresh:
 anvil --host 127.0.0.1 --port 8545 --chain-id 31337 &
 (cd contracts && forge script script/Deploy.s.sol --rpc-url http://127.0.0.1:8545 --broadcast --skip-simulation)
-yarn workspace @pulse/dashboard dev -p 3001
+yarn workspace @virio/dashboard dev -p 3001
 ```
 
 ---
@@ -394,9 +394,9 @@ yarn workspace @pulse/dashboard dev -p 3001
 ```
 contracts/
 ├── src/
-│   ├── PulseSubscriptionManager.sol        ← core settlement
+│   ├── VirioSubscriptionManager.sol        ← core settlement
 │   ├── SubscriptionDelegate7702.sol         ← EIP-7702 delegate target (not wired into the dashboard yet)
-│   ├── interfaces/IPulseSubscriptionManager.sol
+│   ├── interfaces/IVirioSubscriptionManager.sol
 │   └── test-helpers/MockUSDC.sol
 ├── script/
 │   └── Deploy.s.sol                         ← one-shot local deploy
@@ -420,5 +420,5 @@ packages/dashboard/
 │   ├── stats/route.ts                       ← aggregate
 │   ├── charge/[id]/route.ts                 ← manual single-charge trigger
 │   └── config/route.ts                      ← test-mode toggle
-└── pulse.config.json                        ← test mode + interval presets + scheduler tick ms
+└── virio.config.json                        ← test mode + interval presets + scheduler tick ms
 ```

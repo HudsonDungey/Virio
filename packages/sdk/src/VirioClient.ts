@@ -12,7 +12,7 @@ import {
   type Transport,
 } from "viem";
 
-import { PULSE_ABI, ERC20_ABI } from "./abi.js";
+import { VIRIO_ABI, ERC20_ABI } from "./abi.js";
 import type {
   Plan,
   Subscription,
@@ -23,7 +23,7 @@ import { computeSubscriptionId } from "./helpers.js";
 
 // ─── Client config ────────────────────────────────────────────────────────────
 
-export interface PulseClientConfig {
+export interface VirioClientConfig {
   contractAddress: Address;
   chain: Chain;
   /** Provide a pre-built walletClient for write operations. */
@@ -34,16 +34,16 @@ export interface PulseClientConfig {
   rpcUrl?: string;
 }
 
-// ─── PulseClient ─────────────────────────────────────────────────────────────
+// ─── VirioClient ─────────────────────────────────────────────────────────────
 
-export class PulseClient {
+export class VirioClient {
   readonly contractAddress: Address;
   readonly chain: Chain;
 
   private readonly pub: PublicClient;
   private readonly wal: WalletClient<Transport, Chain> | undefined;
 
-  constructor(config: PulseClientConfig) {
+  constructor(config: VirioClientConfig) {
     this.contractAddress = config.contractAddress;
     this.chain           = config.chain;
     this.wal             = config.walletClient;
@@ -60,7 +60,7 @@ export class PulseClient {
     // real viem infers the return type from the ABI; stubs return unknown, so cast.
     const raw = await this.pub.readContract({
       address: this.contractAddress,
-      abi: PULSE_ABI,
+      abi: VIRIO_ABI,
       functionName: "getPlan",
       args: [planId],
     }) as { merchant: Address; token: Address; amount: bigint; period: bigint; maxAmountPerCharge: bigint; feeBps: number; active: boolean };
@@ -78,7 +78,7 @@ export class PulseClient {
   async getSubscription(subscriptionId: Hex): Promise<Subscription> {
     const raw = await this.pub.readContract({
       address: this.contractAddress,
-      abi: PULSE_ABI,
+      abi: VIRIO_ABI,
       functionName: "getSubscription",
       args: [subscriptionId],
     }) as { planId: Hex; customer: Address; nextChargeAt: bigint; totalSpent: bigint; totalSpendCap: bigint; active: boolean };
@@ -119,7 +119,7 @@ export class PulseClient {
 
     const txHash = await wal.writeContract({
       address: this.contractAddress,
-      abi: PULSE_ABI,
+      abi: VIRIO_ABI,
       functionName: "createPlan",
       args: [
         params.token,
@@ -133,7 +133,7 @@ export class PulseClient {
     });
 
     const receipt = await this.pub.waitForTransactionReceipt({ hash: txHash });
-    const logs = parseEventLogs({ abi: PULSE_ABI, logs: receipt.logs });
+    const logs = parseEventLogs({ abi: VIRIO_ABI, logs: receipt.logs });
     const planCreated = logs.find((l) => l.eventName === "PlanCreated");
     if (!planCreated) throw new Error("PlanCreated event not found in receipt");
 
@@ -151,7 +151,7 @@ export class PulseClient {
 
     const txHash = await wal.writeContract({
       address: this.contractAddress,
-      abi: PULSE_ABI,
+      abi: VIRIO_ABI,
       functionName: "subscribe",
       args: [params.planId, params.totalSpendCap],
       account,
@@ -164,7 +164,7 @@ export class PulseClient {
     return { txHash, subscriptionId };
   }
 
-  /** Approve the Pulse contract to spend the plan's token on behalf of the caller. */
+  /** Approve the Virio contract to spend the plan's token on behalf of the caller. */
   async approveToken(token: Address, amount: bigint): Promise<Hash> {
     const wal = this.requireWallet();
     const [account] = await wal.getAddresses();
@@ -189,7 +189,7 @@ export class PulseClient {
 
     const txHash = await wal.writeContract({
       address: this.contractAddress,
-      abi: PULSE_ABI,
+      abi: VIRIO_ABI,
       functionName: "charge",
       args: [subscriptionId],
       account,
@@ -207,7 +207,7 @@ export class PulseClient {
 
     const txHash = await wal.writeContract({
       address: this.contractAddress,
-      abi: PULSE_ABI,
+      abi: VIRIO_ABI,
       functionName: "cancel",
       args: [subscriptionId],
       account,
@@ -225,7 +225,7 @@ export class PulseClient {
 
     const txHash = await wal.writeContract({
       address: this.contractAddress,
-      abi: PULSE_ABI,
+      abi: VIRIO_ABI,
       functionName: "deactivatePlan",
       args: [planId],
       account,
@@ -239,7 +239,7 @@ export class PulseClient {
   // ─── Internal ──────────────────────────────────────────────────────────────
 
   private requireWallet(): WalletClient<Transport, Chain> {
-    if (!this.wal) throw new Error("PulseClient: walletClient is required for write operations");
+    if (!this.wal) throw new Error("VirioClient: walletClient is required for write operations");
     return this.wal;
   }
 }

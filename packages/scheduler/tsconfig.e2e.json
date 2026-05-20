@@ -4,7 +4,7 @@
     "noEmit": true,
     "baseUrl": "../..",
     "paths": {
-      "@pulse/sdk":     ["packages/sdk/src/index.ts"],
+      "@virio/sdk":     ["packages/sdk/src/index.ts"],
       "hardhat":        ["types/hardhat.d.ts"],
       "hardhat/config": ["types/hardhat.d.ts"]
     },

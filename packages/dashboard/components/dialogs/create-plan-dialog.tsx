@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast";
 import { api } from "@/lib/api";
-import { usePulseActions } from "@/lib/wallet-actions";
+import { useVirioActions } from "@/lib/wallet-actions";
 import type { IntervalDef } from "@/lib/types";
 
 interface Props {
@@ -27,7 +27,7 @@ export function CreatePlanDialog({
   onCreated,
 }: Props) {
   const { toast } = useToast();
-  const actions = usePulseActions();
+  const actions = useVirioActions();
   const [name, setName] = React.useState("");
   const [desc, setDesc] = React.useState("");
   const [price, setPrice] = React.useState("");

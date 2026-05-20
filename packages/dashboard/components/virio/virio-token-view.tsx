@@ -47,7 +47,7 @@ const BUCKETS: Bucket[] = [
     tokens: "300M",
     vesting: "5-yr programmatic emission",
     group: "community",
-    blurb: "Rewards for the people who actually use Pulse — merchants, executors, and liquidity providers.",
+    blurb: "Rewards for the people who actually use Virio — merchants, executors, and liquidity providers.",
     Icon: Users,
   },
   {
@@ -74,7 +74,7 @@ const BUCKETS: Bucket[] = [
     tokens: "80M",
     vesting: "12-mo cliff, 36-mo linear",
     group: "insider",
-    blurb: "The people building Pulse. Locked for a year, then drips out monthly over 3 years.",
+    blurb: "The people building Virio. Locked for a year, then drips out monthly over 3 years.",
     Icon: Users,
   },
   {
@@ -119,7 +119,7 @@ const BUCKETS: Bucket[] = [
     tokens: "50M",
     vesting: "25% at TGE, 9-mo linear",
     group: "public",
-    blurb: "Open public sale on Pulse. No allowlists, no VC sweetheart pricing, no private rounds — same terms for everyone.",
+    blurb: "Open public sale on Virio. No allowlists, no VC sweetheart pricing, no private rounds — same terms for everyone.",
     Icon: Coins,
   },
   {
@@ -161,11 +161,11 @@ const EMISSION = [
 
 const FEE_DISCOUNTS = [
   { stake: "0",          stakeLabel: "No stake",       bps: 25, flat: "$1.00" },
-  { stake: "10k",        stakeLabel: "10,000 PULSE",   bps: 20, flat: "$1.00" },
-  { stake: "50k",        stakeLabel: "50,000 PULSE",   bps: 16, flat: "$0.50" },
-  { stake: "250k",       stakeLabel: "250,000 PULSE",  bps: 12, flat: "$0.25" },
-  { stake: "1M",         stakeLabel: "1,000,000 PULSE",bps: 10, flat: "$0.10"  },
-  { stake: "5M",         stakeLabel: "5,000,000 PULSE",bps: 5,  flat: "waived" },
+  { stake: "10k",        stakeLabel: "10,000 VIRIO",   bps: 20, flat: "$1.00" },
+  { stake: "50k",        stakeLabel: "50,000 VIRIO",   bps: 16, flat: "$0.50" },
+  { stake: "250k",       stakeLabel: "250,000 VIRIO",  bps: 12, flat: "$0.25" },
+  { stake: "1M",         stakeLabel: "1,000,000 VIRIO",bps: 10, flat: "$0.10"  },
+  { stake: "5M",         stakeLabel: "5,000,000 VIRIO",bps: 5,  flat: "waived" },
 ];
 
 const REVENUE = [
@@ -297,16 +297,16 @@ function Hero() {
               <Coins className="h-3 w-3" />
               Tokenomics
             </span>
-            One billion $PULSE · fixed supply · zero inflation
+            One billion $VIRIO · fixed supply · zero inflation
           </span>
         </div>
 
         <h1 className="mx-auto mt-7 max-w-[920px] animate-fade-up text-balance text-center font-display text-[clamp(2.5rem,6vw,4.5rem)] font-extrabold leading-[1.04] tracking-[-0.03em] text-foreground animation-delay-100">
-          The token that <span className="text-gradient">powers Pulse</span>.
+          The token that <span className="text-gradient">powers Virio</span>.
         </h1>
 
         <p className="mx-auto mt-6 max-w-[680px] animate-fade-up text-balance text-center text-[16.5px] leading-relaxed text-muted-foreground animation-delay-200">
-          $PULSE is one token across every EVM chain Pulse runs on. Stake it on your chain of choice,
+          $VIRIO is one token across every EVM chain Virio runs on. Stake it on your chain of choice,
           earn real fee-token yield where you staked. No VC round, no inflation, no NFTs, and every LP
           token burns the moment it&apos;s minted.
         </p>
@@ -347,17 +347,17 @@ function TLDR() {
     {
       Icon: Repeat,
       title: "Stake 1:1",
-      body: "Stake N PULSE, get N stPULSE — a regular token. Burn it any time to get your PULSE back. No NFTs, no lockup, no decay math.",
+      body: "Stake N VIRIO, get N stVIRIO — a regular token. Burn it any time to get your VIRIO back. No NFTs, no lockup, no decay math.",
     },
     {
       Icon: TrendingUp,
       title: "Real fee yield",
-      body: "60% of every protocol fee streams to stPULSE holders in the original fee token (USDC etc.) — not minted, not diluted.",
+      body: "60% of every protocol fee streams to stVIRIO holders in the original fee token (USDC etc.) — not minted, not diluted.",
     },
     {
       Icon: Globe,
       title: "Stake on any chain",
-      body: "PULSE lives on Ethereum, Base, Arbitrum, Optimism, and Polygon at launch. Stake on the chain you're on and earn that chain's fees — no bridging.",
+      body: "VIRIO lives on Ethereum, Base, Arbitrum, Optimism, and Polygon at launch. Stake on the chain you're on and earn that chain's fees — no bridging.",
     },
     {
       Icon: Flame,
@@ -409,7 +409,7 @@ function Allocation() {
       <div className="mx-auto max-w-[1200px] px-6 sm:px-8">
         <SectionHeading
           eyebrow="Allocation"
-          title={<>Where every <span className="text-gradient">$PULSE</span> goes.</>}
+          title={<>Where every <span className="text-gradient">$VIRIO</span> goes.</>}
           description="One billion tokens, split across ten buckets. The community gets the majority — by design."
         />
 
@@ -417,7 +417,7 @@ function Allocation() {
         <Reveal>
           <div className="mt-12 rounded-2xl border border-border bg-card p-6 shadow-soft sm:p-7">
             <div className="flex items-center justify-between text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-              <span>1,000,000,000 PULSE</span>
+              <span>1,000,000,000 VIRIO</span>
               <span className="tabular-nums">100%</span>
             </div>
             <div className="mt-3 flex h-4 w-full overflow-hidden rounded-full ring-1 ring-border">
@@ -529,7 +529,7 @@ function MultiChain() {
         <SectionHeading
           eyebrow="Multichain"
           title={<>One token, <span className="text-gradient">every chain</span>.</>}
-          description="$PULSE follows the xERC20 standard. There's no 'wrapped' or 'bridged' version — every PULSE is the canonical PULSE, just temporarily resident on whichever chain you're on. Bridging burns on the source and mints on the destination, so total supply across every chain is always exactly 1,000,000,000."
+          description="$VIRIO follows the xERC20 standard. There's no 'wrapped' or 'bridged' version — every VIRIO is the canonical VIRIO, just temporarily resident on whichever chain you're on. Bridging burns on the source and mints on the destination, so total supply across every chain is always exactly 1,000,000,000."
         />
 
         {/* chain strip */}
@@ -570,7 +570,7 @@ function MultiChain() {
                 Bridging = burn + mint
               </div>
               <h3 className="mt-4 font-display text-[20px] font-bold text-foreground">
-                How PULSE moves between chains
+                How VIRIO moves between chains
               </h3>
 
               <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto_1fr]">
@@ -578,7 +578,7 @@ function MultiChain() {
                   <div className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground">
                     Source chain
                   </div>
-                  <div className="mt-1 font-display text-[15px] font-bold text-foreground">Burn 1,000 PULSE</div>
+                  <div className="mt-1 font-display text-[15px] font-bold text-foreground">Burn 1,000 VIRIO</div>
                   <div className="mt-1 text-[12px] text-muted-foreground tabular-nums">total supply −1,000</div>
                 </div>
                 <div className="hidden items-center justify-center sm:flex">
@@ -588,7 +588,7 @@ function MultiChain() {
                   <div className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground">
                     Destination chain
                   </div>
-                  <div className="mt-1 font-display text-[15px] font-bold text-foreground">Mint 1,000 PULSE</div>
+                  <div className="mt-1 font-display text-[15px] font-bold text-foreground">Mint 1,000 VIRIO</div>
                   <div className="mt-1 text-[12px] text-muted-foreground tabular-nums">total supply +1,000</div>
                 </div>
               </div>
@@ -599,7 +599,7 @@ function MultiChain() {
               </div>
 
               <PlainEnglish>
-                You can&apos;t accidentally end up with two different PULSEs. There&apos;s one token. It
+                You can&apos;t accidentally end up with two different VIRIOs. There&apos;s one token. It
                 just moves — like sending USDC between exchanges.
               </PlainEnglish>
             </div>
@@ -613,8 +613,8 @@ function MultiChain() {
                 Earn where you stake
               </h3>
               <p className="mt-2 text-[13.5px] leading-relaxed text-muted-foreground">
-                Each chain has its own self-contained loop: a Pulse manager collects fees, a fee
-                distributor splits them 60/25/15, and 60% streams to stPULSE holders on that same chain
+                Each chain has its own self-contained loop: a Virio manager collects fees, a fee
+                distributor splits them 60/25/15, and 60% streams to stVIRIO holders on that same chain
                 in the same token the fee was paid in.
               </p>
               <ul className="mt-5 space-y-2.5 text-[13px] text-foreground">
@@ -699,39 +699,39 @@ function Emission() {
   );
 }
 
-/* ─────────────────────────  VALUE ACCRUAL (stPULSE)  ───────────────────────── */
+/* ─────────────────────────  VALUE ACCRUAL (stVIRIO)  ───────────────────────── */
 
 function ValueAccrual() {
   return (
     <section className="py-20">
       <div className="mx-auto max-w-[1200px] px-6 sm:px-8">
         <SectionHeading
-          eyebrow="How $PULSE makes money"
+          eyebrow="How $VIRIO makes money"
           title={<>Stake it. <span className="text-gradient">Earn real fees.</span></>}
-          description="Staking is a simple 1:1 swap. Drop in PULSE, get back stPULSE — a regular ERC-20 you can hold, trade, or use as collateral. While you hold it, you earn a pro-rata share of every fee Pulse collects on that chain."
+          description="Staking is a simple 1:1 swap. Drop in VIRIO, get back stVIRIO — a regular ERC-20 you can hold, trade, or use as collateral. While you hold it, you earn a pro-rata share of every fee Virio collects on that chain."
         />
 
         <div className="mt-12 grid gap-5 lg:grid-cols-[1.1fr_1fr]">
-          {/* stPULSE explainer */}
+          {/* stVIRIO explainer */}
           <Reveal>
             <div className="ring-gradient relative h-full overflow-hidden rounded-3xl border border-border bg-card p-6 shadow-lift sm:p-8">
               <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(99,91,255,0.22),transparent_70%)] blur-2xl" />
               <div className="relative">
                 <div className="inline-flex items-center gap-2 rounded-full bg-brand-500/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-brand-600 dark:text-brand-300">
                   <Repeat className="h-3 w-3" />
-                  stPULSE
+                  stVIRIO
                 </div>
                 <h3 className="mt-4 font-display text-[22px] font-bold text-foreground">The 1:1 stake receipt</h3>
                 <p className="mt-2 text-[14px] leading-relaxed text-muted-foreground">
-                  Stake PULSE → mint stPULSE 1:1. Burn stPULSE → redeem PULSE 1:1. That&apos;s the whole
-                  thing. stPULSE is a transferable ERC-20 with voting power, so you can stack it on top of
+                  Stake VIRIO → mint stVIRIO 1:1. Burn stVIRIO → redeem VIRIO 1:1. That&apos;s the whole
+                  thing. stVIRIO is a transferable ERC-20 with voting power, so you can stack it on top of
                   other DeFi while it earns.
                 </p>
 
                 <div className="mt-5 rounded-xl border border-border bg-secondary/40 p-4 font-mono text-[12.5px] text-foreground">
-                  stake(<span className="text-brand-600 dark:text-brand-300">10,000 PULSE</span>) → <span className="text-emerald-600 dark:text-emerald-400">10,000 stPULSE</span>
+                  stake(<span className="text-brand-600 dark:text-brand-300">10,000 VIRIO</span>) → <span className="text-emerald-600 dark:text-emerald-400">10,000 stVIRIO</span>
                   <br />
-                  unstake(<span className="text-emerald-600 dark:text-emerald-400">10,000 stPULSE</span>) → <span className="text-brand-600 dark:text-brand-300">10,000 PULSE</span>
+                  unstake(<span className="text-emerald-600 dark:text-emerald-400">10,000 stVIRIO</span>) → <span className="text-brand-600 dark:text-brand-300">10,000 VIRIO</span>
                 </div>
 
                 <ul className="mt-5 space-y-3 text-[13.5px] text-foreground">
@@ -739,13 +739,13 @@ function ValueAccrual() {
                     <span className="mt-0.5 grid h-4 w-4 flex-shrink-0 place-items-center rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
                       <CheckCircle2 className="h-3 w-3" />
                     </span>
-                    Pro-rata <strong>fee-token yield</strong> (USDC and any other token Pulse collects)
+                    Pro-rata <strong>fee-token yield</strong> (USDC and any other token Virio collects)
                   </li>
                   <li className="flex items-start gap-2.5">
                     <span className="mt-0.5 grid h-4 w-4 flex-shrink-0 place-items-center rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
                       <CheckCircle2 className="h-3 w-3" />
                     </span>
-                    <strong>Governance votes</strong> via ERC20Votes on stPULSE
+                    <strong>Governance votes</strong> via ERC20Votes on stVIRIO
                   </li>
                   <li className="flex items-start gap-2.5">
                     <span className="mt-0.5 grid h-4 w-4 flex-shrink-0 place-items-center rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
@@ -756,8 +756,8 @@ function ValueAccrual() {
                 </ul>
 
                 <PlainEnglish>
-                  Think of stPULSE like an LP token. You drop PULSE in, get a receipt out. Your receipt
-                  earns yield automatically. When you want your PULSE back, you hand the receipt in.
+                  Think of stVIRIO like an LP token. You drop VIRIO in, get a receipt out. Your receipt
+                  earns yield automatically. When you want your VIRIO back, you hand the receipt in.
                 </PlainEnglish>
               </div>
             </div>
@@ -778,14 +778,14 @@ function ValueAccrual() {
               </p>
 
               <div className="mt-5 space-y-3">
-                <FeeRow pct={60} label="stPULSE stakers" sub="paid in the fee token, on the same chain" tone="brand" />
+                <FeeRow pct={60} label="stVIRIO stakers" sub="paid in the fee token, on the same chain" tone="brand" />
                 <FeeRow pct={25} label="Chain-local treasury" sub="held in the fee token" tone="electric" />
-                <FeeRow pct={15} label="PULSE buyback → Safety Module" sub="on-market bid on the local DEX" tone="emerald" />
+                <FeeRow pct={15} label="VIRIO buyback → Safety Module" sub="on-market bid on the local DEX" tone="emerald" />
               </div>
 
               <div className="mt-6 rounded-xl border border-border bg-secondary/40 p-4 text-[12.5px] leading-relaxed text-muted-foreground">
                 <strong className="text-foreground">Buyback floor:</strong> 15% of every fee becomes a
-                permanent on-market bid for PULSE on the chain that collected it. At year-3 base revenue
+                permanent on-market bid for VIRIO on the chain that collected it. At year-3 base revenue
                 that&apos;s ~$3.6M/year of automatic buy pressure across chains.
               </div>
             </div>
@@ -840,14 +840,14 @@ function MerchantDiscounts() {
       <div className="mx-auto max-w-[1100px] px-6 sm:px-8">
         <SectionHeading
           eyebrow="For merchants"
-          title={<>Stake $PULSE, <span className="text-gradient">pay less in fees</span>.</>}
-          description="The more $PULSE a merchant stakes, the cheaper Pulse becomes for them. At 1M staked, the flat fee is waived entirely."
+          title={<>Stake $VIRIO, <span className="text-gradient">pay less in fees</span>.</>}
+          description="The more $VIRIO a merchant stakes, the cheaper Virio becomes for them. At 1M staked, the flat fee is waived entirely."
         />
 
         <Reveal>
           <div className="mt-12 overflow-hidden rounded-2xl border border-border bg-card shadow-soft">
             <div className="grid grid-cols-3 border-b border-border bg-secondary/40 px-5 py-3 text-[11.5px] font-semibold uppercase tracking-wider text-muted-foreground">
-              <span>Staked $PULSE</span>
+              <span>Staked $VIRIO</span>
               <span className="text-center">Protocol fee</span>
               <span className="text-right">Flat fee per charge</span>
             </div>
@@ -884,7 +884,7 @@ function MerchantDiscounts() {
 
         <PlainEnglish>
           A merchant doing $1M/month in volume saves ~$900/month on protocol fees by staking 50k
-          $PULSE — plus a per-charge flat-fee discount, and earns USDC yield on top.
+          $VIRIO — plus a per-charge flat-fee discount, and earns USDC yield on top.
         </PlainEnglish>
       </div>
     </section>
@@ -898,7 +898,7 @@ function Revenue() {
     <section className="py-20">
       <div className="mx-auto max-w-[1100px] px-6 sm:px-8">
         <SectionHeading
-          eyebrow="What Pulse will earn"
+          eyebrow="What Virio will earn"
           title={<>The revenue <span className="text-gradient">that gets shared</span>.</>}
           description="These are the assumptions feeding holder earnings. Average charge $50, 1.5 charges per relationship per month."
         />
@@ -959,8 +959,8 @@ function HolderEarnings() {
       <div className="mx-auto max-w-[1200px] px-6 sm:px-8">
         <SectionHeading
           eyebrow="What you could earn"
-          title={<>Two ways $PULSE <span className="text-gradient">pays you</span>.</>}
-          description="Real USDC yield from fees, plus the token's own appreciation as Pulse grows. Numbers below are illustrative scenarios — not promises."
+          title={<>Two ways $VIRIO <span className="text-gradient">pays you</span>.</>}
+          description="Real USDC yield from fees, plus the token's own appreciation as Virio grows. Numbers below are illustrative scenarios — not promises."
         />
 
         <div className="mt-12 grid gap-5 lg:grid-cols-2">
@@ -970,11 +970,11 @@ function HolderEarnings() {
               <div className="flex items-center gap-2">
                 <Wallet className="h-4 w-4 flex-shrink-0 text-brand-500" />
                 <h3 className="font-display text-[15px] font-bold leading-tight text-foreground sm:text-[16px]">
-                  USDC yield per 10,000 stPULSE / year
+                  USDC yield per 10,000 stVIRIO / year
                 </h3>
               </div>
               <p className="mt-1.5 text-[12.5px] text-muted-foreground">
-                Assumes 125M stPULSE outstanding across all chains, 60% of fees → stakers.
+                Assumes 125M stVIRIO outstanding across all chains, 60% of fees → stakers.
               </p>
 
               <div className="mt-5 divide-y divide-border rounded-xl border border-border">
@@ -992,7 +992,7 @@ function HolderEarnings() {
               </div>
 
               <PlainEnglish>
-                If you held 10,000 stPULSE through a year-3 base-case scenario, you&apos;d earn ~$1,152
+                If you held 10,000 stVIRIO through a year-3 base-case scenario, you&apos;d earn ~$1,152
                 in USDC — without selling a single token.
               </PlainEnglish>
             </div>
@@ -1046,7 +1046,7 @@ function HolderEarnings() {
             <div className="flex flex-wrap items-center gap-2">
               <Pill tone="brand">Worked example</Pill>
               <h3 className="font-display text-[18px] font-bold text-foreground">
-                Buy 100k $PULSE at $0.30 → stake all of it
+                Buy 100k $VIRIO at $0.30 → stake all of it
               </h3>
             </div>
             <p className="mt-2 text-[13.5px] text-muted-foreground">
@@ -1079,7 +1079,7 @@ function HolderEarnings() {
               </div>
             </div>
             <p className="mt-4 text-[11.5px] text-muted-foreground">
-              Illustrative only. Token markets are volatile and these numbers depend on Pulse hitting
+              Illustrative only. Token markets are volatile and these numbers depend on Virio hitting
               its revenue scenarios — they are not promises or guarantees.
             </p>
           </div>
@@ -1099,7 +1099,7 @@ function Launch() {
     },
     {
       label: "Public sale",
-      body: "50M PULSE offered openly — no allowlist, no private pricing. 25% unlocks at TGE; the rest streams linearly over 9 months. Expected clear $0.10–$0.30, raising $5–15M.",
+      body: "50M VIRIO offered openly — no allowlist, no private pricing. 25% unlocks at TGE; the rest streams linearly over 9 months. Expected clear $0.10–$0.30, raising $5–15M.",
     },
     {
       label: "DEX liquidity",
@@ -1119,7 +1119,7 @@ function Launch() {
       <div className="mx-auto max-w-[1100px] px-6 sm:px-8">
         <SectionHeading
           eyebrow="Launch"
-          title={<>How $PULSE goes <span className="text-gradient">live</span>.</>}
+          title={<>How $VIRIO goes <span className="text-gradient">live</span>.</>}
           description="Public sale only. No private rounds, no sweetheart pricing."
         />
         <div className="mt-12 grid gap-4 md:grid-cols-2">
@@ -1177,12 +1177,12 @@ function Risks() {
 
 const FAQ = [
   {
-    q: "What is $PULSE actually for?",
-    a: "Two things. First, staking it earns you a share of every fee Pulse collects on the same chain, paid in the original fee token (USDC etc.). Second, merchants who stake it pay lower protocol fees.",
+    q: "What is $VIRIO actually for?",
+    a: "Two things. First, staking it earns you a share of every fee Virio collects on the same chain, paid in the original fee token (USDC etc.). Second, merchants who stake it pay lower protocol fees.",
   },
   {
-    q: "What's stPULSE and can I sell it?",
-    a: "stPULSE is the receipt token you get when you stake. Stake N PULSE, mint N stPULSE — strict 1:1. It's a regular ERC-20, so yes: you can sell it, send it, LP it, or use it as collateral. To get your PULSE back, you burn the stPULSE you hold.",
+    q: "What's stVIRIO and can I sell it?",
+    a: "stVIRIO is the receipt token you get when you stake. Stake N VIRIO, mint N stVIRIO — strict 1:1. It's a regular ERC-20, so yes: you can sell it, send it, LP it, or use it as collateral. To get your VIRIO back, you burn the stVIRIO you hold.",
   },
   {
     q: "Is there a lockup?",
@@ -1190,15 +1190,15 @@ const FAQ = [
   },
   {
     q: "How does the same token exist on multiple chains?",
-    a: "$PULSE follows the xERC20 (ERC-7281) standard. Bridging is burn-and-mint: when you move PULSE from Base to Arbitrum, the source contract burns your tokens and the destination contract mints the same amount, gated by a per-bridge rate limit. Total supply across every chain is always exactly 1,000,000,000. Arbitrageurs keep the price aligned across chains, just like USDC.",
+    a: "$VIRIO follows the xERC20 (ERC-7281) standard. Bridging is burn-and-mint: when you move VIRIO from Base to Arbitrum, the source contract burns your tokens and the destination contract mints the same amount, gated by a per-bridge rate limit. Total supply across every chain is always exactly 1,000,000,000. Arbitrageurs keep the price aligned across chains, just like USDC.",
   },
   {
     q: "If I stake on Base, do I get fees from Arbitrum too?",
-    a: "No — fee distribution is chain-local. Stake on Base, earn from Base fees. Stake on Arbitrum, earn from Arbitrum fees. You can split a position across chains if you want exposure to multiple revenue streams. Bridging PULSE between chains is free of yield consequence — yield accrues only while you hold stPULSE on a given chain.",
+    a: "No — fee distribution is chain-local. Stake on Base, earn from Base fees. Stake on Arbitrum, earn from Arbitrum fees. You can split a position across chains if you want exposure to multiple revenue streams. Bridging VIRIO between chains is free of yield consequence — yield accrues only while you hold stVIRIO on a given chain.",
   },
   {
     q: "Is the supply inflationary?",
-    a: "No. The total supply is fixed at 1,000,000,000 PULSE forever. No new tokens will ever be minted beyond the genesis 1B. The only motion is the existing supply unlocking over time and moving between chains.",
+    a: "No. The total supply is fixed at 1,000,000,000 VIRIO forever. No new tokens will ever be minted beyond the genesis 1B. The only motion is the existing supply unlocking over time and moving between chains.",
   },
   {
     q: "Can the team rug-pull?",
@@ -1304,7 +1304,7 @@ function CtaFooter() {
 
 /* ─────────────────────────  ROOT  ───────────────────────── */
 
-export function PulseTokenView() {
+export function VirioTokenView() {
   return (
     <>
       <Hero />

@@ -18,7 +18,7 @@ export function EmptyState({ Icon, title, description, action, className }: Prop
       )}
     >
       <div className="relative mb-4">
-        <span className="absolute inset-0 -z-10 animate-pulse-ring rounded-2xl bg-brand-500/20" />
+        <span className="absolute inset-0 -z-10 animate-virio-ring rounded-2xl bg-brand-500/20" />
         <span className="grid h-14 w-14 place-items-center rounded-2xl border border-border bg-secondary text-brand-600 dark:text-brand-300">
           <Icon className="h-6 w-6" strokeWidth={1.75} />
         </span>

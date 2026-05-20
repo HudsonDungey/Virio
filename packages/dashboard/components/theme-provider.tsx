@@ -13,7 +13,7 @@ interface ThemeContextValue {
 
 const ThemeContext = React.createContext<ThemeContextValue | null>(null);
 
-const STORAGE_KEY = "pulse-theme";
+const STORAGE_KEY = "virio-theme";
 
 /// Inlined into <head> so the correct theme class is applied before first paint —
 /// prevents the light→dark flash on reload.

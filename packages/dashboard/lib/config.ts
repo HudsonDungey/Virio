@@ -1,12 +1,12 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import type { PulseConfig } from "./types";
+import type { VirioConfig } from "./types";
 
-let cached: PulseConfig | null = null;
+let cached: VirioConfig | null = null;
 
-export function getPulseConfig(): PulseConfig {
+export function getVirioConfig(): VirioConfig {
   if (cached) return cached;
-  const path = join(process.cwd(), "pulse.config.json");
-  cached = JSON.parse(readFileSync(path, "utf8")) as PulseConfig;
+  const path = join(process.cwd(), "virio.config.json");
+  cached = JSON.parse(readFileSync(path, "utf8")) as VirioConfig;
   return cached;
 }

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.24;
 
 // ─────────────────────────────────────────────────────────────────────────────
-// PulsePayrollManager
+// VirioPayrollManager
 //
 // Automated, bot-executable ERC-20 payroll protocol.
 //
@@ -30,7 +30,7 @@ pragma solidity ^0.8.24;
 //  12.  Enumerable recipient list per plan for easy off-chain indexing.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import {IPulsePayrollManager} from "./interfaces/IPulsePayrollManager.sol";
+import {IVirioPayrollManager} from "./interfaces/IVirioPayrollManager.sol";
 
 /// @dev Minimal ERC-20 interface (only what we call).
 interface IERC20 {
@@ -38,7 +38,7 @@ interface IERC20 {
     function allowance(address owner, address spender) external view returns (uint256);
 }
 
-contract PulsePayrollManager is IPulsePayrollManager {
+contract VirioPayrollManager is IVirioPayrollManager {
     // ─── Constants / Config ───────────────────────────────────────────────────
 
     uint16  public executorFeeBps  = 10;   // 0.1 %
@@ -74,7 +74,7 @@ contract PulsePayrollManager is IPulsePayrollManager {
     }
 
     modifier onlyOwner() {
-        require(msg.sender == owner, "Pulse: not owner");
+        require(msg.sender == owner, "Virio: not owner");
         _;
     }
 
@@ -327,12 +327,12 @@ contract PulsePayrollManager is IPulsePayrollManager {
     }
 
     function setExecutorFeeBps(uint16 _bps) external onlyOwner {
-        require(_bps <= 10_000, "Pulse: bps > 10000");
+        require(_bps <= 10_000, "Virio: bps > 10000");
         executorFeeBps = _bps;
     }
 
     function setProtocolFeeBps(uint16 _bps) external onlyOwner {
-        require(_bps <= 10_000, "Pulse: bps > 10000");
+        require(_bps <= 10_000, "Virio: bps > 10000");
         protocolFeeBps = _bps;
     }
 
@@ -536,7 +536,7 @@ contract PulsePayrollManager is IPulsePayrollManager {
         );
         require(
             ok && (data.length == 0 || abi.decode(data, (bool))),
-            "Pulse: transferFrom failed"
+            "Virio: transferFrom failed"
         );
     }
 

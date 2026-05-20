@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-/// A faux Pulse dashboard rendered for the marketing hero. Everything is static /
+/// A faux Virio dashboard rendered for the marketing hero. Everything is static /
 /// animated locally — no data fetching — so it can ship on a static page.
 
 const SPARK = [
@@ -84,7 +84,7 @@ export function DashboardPreview() {
         <span className="h-2.5 w-2.5 rounded-full bg-[#28c840]" />
         <span className="ml-3 inline-flex items-center gap-1.5 rounded-md bg-background px-2.5 py-1 text-[10.5px] font-medium text-muted-foreground">
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-          app.pulse.xyz/dashboard
+          app.virio.xyz/dashboard
         </span>
       </div>
 

@@ -16,9 +16,9 @@ export const USDC_ADDRESSES: Record<SupportedChainId, `0x${string}`> = {
   [arbitrum.id]:  "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
 };
 
-// The deterministic PulseSubscriptionManager address (same on every chain).
+// The deterministic VirioSubscriptionManager address (same on every chain).
 // Set after first CREATE2 deployment.
-export const PULSE_CONTRACT_ADDRESS: `0x${string}` =
+export const VIRIO_CONTRACT_ADDRESS: `0x${string}` =
   "0x0000000000000000000000000000000000000000"; // TODO: update after deployment
 
 export { mainnet, base, arbitrum };

@@ -1,4 +1,4 @@
-/// On-chain readers for PulsePayrollManager. Pattern mirrors `chain-reads.ts`:
+/// On-chain readers for VirioPayrollManager. Pattern mirrors `chain-reads.ts`:
 /// stateful event ingestion + slot reads layered on top.
 ///
 /// Server-only — every public function returns plain JSON shapes for API routes.
