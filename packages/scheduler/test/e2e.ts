@@ -170,7 +170,15 @@ const WEBHOOK_URL    = `http://127.0.0.1:${WEBHOOK_PORT}`;
 
 const AMOUNT  = usdc(10);    // 10 USDC
 const PERIOD_S = 30 * 24 * 3600; // 30 days in seconds
-const FEE_BPS = 100;          // 1 %
+
+// VirioSubscriptionManager default fees (see the contract constructor/state):
+const EXECUTOR_FEE_BPS  = 10n;        // 0.1%
+const PROTOCOL_FEE_BPS  = 25n;        // 0.25%
+const PROTOCOL_FLAT_FEE = 1_000_000n; // 1 USDC
+
+const EXECUTOR_FEE = (AMOUNT * EXECUTOR_FEE_BPS) / 10_000n;
+const PROTOCOL_FEE = (AMOUNT * PROTOCOL_FEE_BPS) / 10_000n + PROTOCOL_FLAT_FEE;
+const MERCHANT_AMT = AMOUNT - EXECUTOR_FEE - PROTOCOL_FEE;
 
 // ─── Suite setup ─────────────────────────────────────────────────────────────
 
@@ -230,11 +238,9 @@ after(() => {
 
 test("1. merchant creates a plan", async () => {
   const result = await virioClient.createPlan({
-    token:              usdcAddress,
-    amount:             AMOUNT,
-    period:             BigInt(PERIOD_S),
-    maxAmountPerCharge: AMOUNT,
-    feeBps:             FEE_BPS,
+    token:  usdcAddress,
+    amount: AMOUNT,
+    period: BigInt(PERIOD_S),
   });
 
   planId = result.planId;
@@ -246,7 +252,7 @@ test("1. merchant creates a plan", async () => {
   assert.equal(plan.merchant, merchant.address,                "merchant mismatch");
   assert.equal(plan.token,    usdcAddress,                     "token mismatch");
   assert.equal(plan.amount,   AMOUNT,                          "amount mismatch");
-  assert.equal(plan.feeBps,   FEE_BPS,                         "feeBps mismatch");
+  assert.equal(plan.period,   BigInt(PERIOD_S),                "period mismatch");
   assert.ok(plan.active,                                       "plan should be active");
 
   console.log("  planId:", planId);
@@ -278,7 +284,8 @@ test("2. customer approves USDC and subscribes", async () => {
   const sub = await customerVirio.getSubscription(subscriptionId);
   assert.ok(sub.active,                        "subscription should be active");
   assert.equal(sub.customer, customer.address, "customer mismatch");
-  assert.equal(sub.planId,   planId,           "planId mismatch");
+  assert.equal(sub.merchant, merchant.address, "merchant mismatch");
+  assert.equal(sub.amount,   AMOUNT,           "amount mismatch");
   assert.equal(sub.totalSpendCap, cap,         "totalSpendCap mismatch");
 
   console.log("  subscriptionId:", subscriptionId);
@@ -306,6 +313,7 @@ test("3. scheduler.tick() charges the subscription", async () => {
 
   const merchantBefore  = await balanceOf(usdcAddress, merchant.address);
   const feeBefore       = await balanceOf(usdcAddress, feeRecip.address);
+  const executorBefore  = await balanceOf(usdcAddress, scheduler.address);
   const customerBefore  = await balanceOf(usdcAddress, customer.address);
 
   sched = new Scheduler({
@@ -330,19 +338,22 @@ test("3. scheduler.tick() charges the subscription", async () => {
   assert.equal(event.data.subscriptionId, subscriptionId, "subscriptionId in webhook mismatch");
 
   // ── Balance deltas ────────────────────────────────────────────────────────
+  // The contract splits the gross AMOUNT three ways: merchant, executor (the
+  // address that called charge — here the scheduler), and the protocol fee
+  // recipient.
   const merchantAfter = await balanceOf(usdcAddress, merchant.address);
   const feeAfter      = await balanceOf(usdcAddress, feeRecip.address);
+  const executorAfter = await balanceOf(usdcAddress, scheduler.address);
   const customerAfter = await balanceOf(usdcAddress, customer.address);
 
-  const expectedFee      = (AMOUNT * BigInt(FEE_BPS)) / 10_000n; // 0.10 USDC
-  const expectedMerchant = AMOUNT - expectedFee;                   // 9.90 USDC
+  assert.equal(merchantAfter - merchantBefore,  MERCHANT_AMT,  "merchant balance delta");
+  assert.equal(feeAfter      - feeBefore,       PROTOCOL_FEE,  "protocol fee recipient delta");
+  assert.equal(executorAfter - executorBefore,  EXECUTOR_FEE,  "executor fee delta");
+  assert.equal(customerBefore - customerAfter,  AMOUNT,        "customer balance delta");
 
-  assert.equal(merchantAfter - merchantBefore,  expectedMerchant, "merchant balance delta");
-  assert.equal(feeAfter      - feeBefore,       expectedFee,      "fee recipient delta");
-  assert.equal(customerBefore - customerAfter,  AMOUNT,           "customer balance delta");
-
-  console.log("  ✓  merchant received", expectedMerchant, "units");
-  console.log("  ✓  feeRecipient received", expectedFee, "units");
+  console.log("  ✓  merchant received", MERCHANT_AMT, "units");
+  console.log("  ✓  feeRecipient received", PROTOCOL_FEE, "units");
+  console.log("  ✓  executor received", EXECUTOR_FEE, "units");
 });
 
 test("4. nextChargeAt advances by exactly one period", async () => {
@@ -406,7 +417,7 @@ test("6. cancellation prevents future charges", async () => {
   console.log("  ✓  cancelled subscription correctly blocked");
 });
 
-test("7. spend cap enforcement — contract level", async () => {
+test("7. spend cap enforcement — auto-cancel at contract level", async () => {
   // Create a fresh customer with a 1-charge cap
   const customer2 = mnemonicToAccount(MNEMONIC, { addressIndex: 5 });
   const c2Wallet  = makeWallet(customer2);
@@ -435,22 +446,24 @@ test("7. spend cap enforcement — contract level", async () => {
     totalSpendCap: AMOUNT, // cap = exactly one charge
   });
 
-  // First charge works
+  // First charge works and transfers the gross AMOUNT.
+  const balBefore1 = await balanceOf(usdcAddress, customer2.address);
   await schedulerClient.charge(sub2Id);
+  const balAfter1 = await balanceOf(usdcAddress, customer2.address);
+  assert.equal(balBefore1 - balAfter1, AMOUNT, "first charge should pull the gross amount");
 
-  // Second charge (after period) must revert with SpendCapExceeded
+  // Second charge after the period would exceed the cap. The contract does NOT
+  // revert — it auto-cancels the subscription and moves no funds.
   await increaseTime(PERIOD_S + 1);
+  await schedulerClient.charge(sub2Id); // resolves (no throw)
 
-  await assert.rejects(
-    () => schedulerClient.charge(sub2Id),
-    (err: Error) => {
-      // viem wraps contract errors; check the message contains the error name
-      return err.message.includes("SpendCapExceeded") || err.message.includes("0x");
-    },
-    "SpendCapExceeded error expected"
-  );
+  const balAfter2 = await balanceOf(usdcAddress, customer2.address);
+  assert.equal(balAfter2, balAfter1, "cap-exceeding charge must not move funds");
 
-  console.log("  ✓  spend cap enforced at contract level");
+  const sub2 = await c2Virio.getSubscription(sub2Id);
+  assert.ok(!sub2.active, "subscription should auto-cancel once the cap is exceeded");
+
+  console.log("  ✓  spend cap auto-cancels the subscription at contract level");
 });
 
 test("8. webhook signature: tampered payload fails verification", async () => {
