@@ -1,0 +1,32 @@
+{
+  "_comment": "Copy to virio.config.json (or virio.local.json) and fill in. Load with Virio.fromConfigFile(). Secrets and RPC URLs can also come from env: VIRIO_PRIVATE_KEY, VIRIO_RPC_URL, VIRIO_CONFIG.",
+
+  "chain": "sepolia",
+  "rpcUrl": "https://sepolia.infura.io/v3/REPLACE_WITH_YOUR_KEY",
+
+  "contractAddress": "0x0000000000000000000000000000000000000000",
+  "usdcAddress": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
+
+  "account": "0x0000000000000000000000000000000000000000",
+
+  "deploymentBlock": 0,
+
+  "privateKey": null,
+
+  "_multiChainExample": {
+    "_comment": "Alternative shape for multiple chains. Set defaultChain and a chains map; pass { chain } to fromConfigFile() to override the selection.",
+    "defaultChain": "base",
+    "contractAddress": "0x0000000000000000000000000000000000000000",
+    "account": "0x0000000000000000000000000000000000000000",
+    "chains": {
+      "base": {
+        "rpcUrl": "https://mainnet.base.org",
+        "usdcAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "deploymentBlock": 0
+      },
+      "sepolia": {
+        "rpcUrl": "https://sepolia.infura.io/v3/REPLACE_WITH_YOUR_KEY"
+      }
+    }
+  }
+}
