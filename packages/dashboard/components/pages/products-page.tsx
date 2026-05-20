@@ -10,7 +10,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/page-header";
 import { useToast } from "@/components/ui/toast";
 import { useConfirm } from "@/components/ui/confirm";
-import { usePulseActions } from "@/lib/wallet-actions";
+import { useVirioActions } from "@/lib/wallet-actions";
 import { fmt$ } from "@/lib/format";
 import type { Plan } from "@/lib/types";
 import type { Hex } from "viem";
@@ -24,7 +24,7 @@ interface Props {
 export function ProductsPage({ plans, refresh, onCreate }: Props) {
   const { toast } = useToast();
   const confirm = useConfirm();
-  const actions = usePulseActions();
+  const actions = useVirioActions();
   const [pendingId, setPendingId] = React.useState<string | null>(null);
 
   async function deactivate(id: string) {
@@ -54,7 +54,7 @@ export function ProductsPage({ plans, refresh, onCreate }: Props) {
     <section className="animate-page-in mx-auto w-full max-w-[1180px] px-4 pb-20 pt-8 sm:px-6 sm:pt-9 lg:px-12">
       <PageHeader
         title="Products"
-        subtitle="Subscription products created on the Pulse manager"
+        subtitle="Subscription products created on the Virio manager"
         action={
           <Button onClick={onCreate}>
             <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />

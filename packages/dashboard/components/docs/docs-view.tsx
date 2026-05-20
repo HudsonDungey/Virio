@@ -85,12 +85,12 @@ const ARTICLES: Article[] = [
     group: "Getting started",
     title: "Introduction",
     Icon: Rocket,
-    summary: "What Pulse is and how the pieces fit together.",
+    summary: "What Virio is and how the pieces fit together.",
     render: () => (
       <>
         <H2>Introduction</H2>
         <P>
-          Pulse is onchain subscription &amp; payroll infrastructure — the
+          Virio is onchain subscription &amp; payroll infrastructure — the
           settlement layer for recurring crypto payments. It turns billing into a
           single programmable primitive that powers subscriptions, payroll, and
           metered usage from one integration.
@@ -115,7 +115,7 @@ const ARTICLES: Article[] = [
           </Li>
         </Ul>
         <Callout>
-          New to Pulse? Jump straight to the{" "}
+          New to Virio? Jump straight to the{" "}
           <Code>Quickstart</Code> — you can have a working integration on testnet
           in about ten minutes.
         </Callout>
@@ -141,17 +141,17 @@ const ARTICLES: Article[] = [
               {
                 label: "Install",
                 language: "bash",
-                code: "# npm\nnpm install @pulse/sdk\n\n# yarn\nyarn add @pulse/sdk\n\n# pnpm\npnpm add @pulse/sdk",
+                code: "# npm\nnpm install @virio/sdk\n\n# yarn\nyarn add @virio/sdk\n\n# pnpm\npnpm add @virio/sdk",
               },
               {
                 label: "Create a product",
                 language: "ts",
                 filename: "quickstart.ts",
-                code: `import { Pulse } from "@pulse/sdk";
+                code: `import { Virio } from "@virio/sdk";
 
-const pulse = new Pulse({ apiKey: process.env.PULSE_KEY });
+const virio = new Virio({ apiKey: process.env.VIRIO_KEY });
 
-const plan = await pulse.products.create({
+const plan = await virio.products.create({
   name: "Pro plan",
   price: 49,
   token: "USDC",
@@ -164,7 +164,7 @@ console.log(plan.id); // plan_0x9d0e…`,
                 label: "Subscribe",
                 language: "ts",
                 filename: "subscribe.ts",
-                code: `const sub = await pulse.subscriptions.subscribe({
+                code: `const sub = await virio.subscriptions.subscribe({
   planId: plan.id,
   customer: "0x1b7d…9d0e",
 });
@@ -194,9 +194,9 @@ console.log(sub.status); // "active"`,
       <>
         <H2>Authentication</H2>
         <P>
-          Pulse uses API keys scoped to an environment. Test keys are prefixed{" "}
+          Virio uses API keys scoped to an environment. Test keys are prefixed{" "}
           <Code>pk_test_</Code> and live keys <Code>pk_live_</Code>. Pass the key
-          when constructing the client, or set <Code>PULSE_KEY</Code> in your
+          when constructing the client, or set <Code>VIRIO_KEY</Code> in your
           environment.
         </P>
         <Note>
@@ -205,16 +205,16 @@ console.log(sub.status); // "active"`,
               {
                 label: "Server",
                 language: "ts",
-                code: `const pulse = new Pulse({
-  apiKey: process.env.PULSE_KEY,
+                code: `const virio = new Virio({
+  apiKey: process.env.VIRIO_KEY,
   environment: "test", // or "live"
 });`,
               },
               {
                 label: "cURL",
                 language: "bash",
-                code: `curl https://api.pulse.xyz/v1/subscriptions \\
-  -H "Authorization: Bearer $PULSE_KEY" \\
+                code: `curl https://api.virio.xyz/v1/subscriptions \\
+  -H "Authorization: Bearer $VIRIO_KEY" \\
   -H "Content-Type: application/json"`,
               },
             ]}
@@ -263,10 +263,10 @@ console.log(sub.status); // "active"`,
                 label: "Manage",
                 language: "ts",
                 code: `// cancel — either customer or merchant may call this
-await pulse.subscriptions.cancel(sub.id);
+await virio.subscriptions.cancel(sub.id);
 
 // inspect onchain state
-const state = await pulse.subscriptions.retrieve(sub.id);
+const state = await virio.subscriptions.retrieve(sub.id);
 state.chargeCount;   // 4
 state.nextChargeAt;  // unix seconds`,
               },
@@ -303,7 +303,7 @@ mapping(address => address[]) public payerStoredAddresses;`,
               {
                 label: "Schedule (TypeScript)",
                 language: "ts",
-                code: `await pulse.payroll.schedule({
+                code: `await virio.payroll.schedule({
   name: "Core team — monthly",
   recipients: ["ava.eth", "0x1b7d…9d0e"],
   amounts: [4800, 3450],
@@ -333,8 +333,8 @@ mapping(address => address[]) public payerStoredAddresses;`,
       <>
         <H2>Webhooks</H2>
         <P>
-          Pulse delivers a signed webhook for every meaningful event. Verify the{" "}
-          <Code>Pulse-Signature</Code> header, then switch on{" "}
+          Virio delivers a signed webhook for every meaningful event. Verify the{" "}
+          <Code>Virio-Signature</Code> header, then switch on{" "}
           <Code>event.type</Code>.
         </P>
         <Note>
@@ -358,8 +358,8 @@ mapping(address => address[]) public payerStoredAddresses;`,
               {
                 label: "Handler",
                 language: "ts",
-                code: `app.post("/webhooks/pulse", (req, res) => {
-  const event = pulse.webhooks.verify(req.body, req.headers);
+                code: `app.post("/webhooks/virio", (req, res) => {
+  const event = virio.webhooks.verify(req.body, req.headers);
   if (event.type === "subscription.charged") {
     grantAccess(event.data.subscriptionId);
   }
@@ -386,7 +386,7 @@ mapping(address => address[]) public payerStoredAddresses;`,
       <>
         <H2>Fee model</H2>
         <P>
-          Pulse charges no monthly fee. Every settlement is split onchain into
+          Virio charges no monthly fee. Every settlement is split onchain into
           three transparent components:
         </P>
         <Ul>
@@ -452,9 +452,9 @@ mapping(address => address[]) public payerStoredAddresses;`,
           <CodeWindow
             tabs={[
               {
-                label: "PulseManager.sol",
+                label: "VirioManager.sol",
                 language: "sol",
-                code: `contract PulseManager {
+                code: `contract VirioManager {
     mapping(bytes32 => Plan) public plans;
     mapping(bytes32 => Agreement) public agreements;
     mapping(address => address[]) public payerStoredAddresses;

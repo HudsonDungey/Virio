@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getPulseConfig } from "@/lib/config";
+import { getVirioConfig } from "@/lib/config";
 import { getStore } from "@/lib/store";
 import { ensureSchedulerStarted } from "@/lib/scheduler";
 
@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   ensureSchedulerStarted();
-  const cfg = getPulseConfig();
+  const cfg = getVirioConfig();
   const store = getStore();
   return NextResponse.json({
     testMode: store.state.testMode,

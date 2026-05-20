@@ -1,5 +1,5 @@
 {
-  "name": "pulse",
+  "name": "virio",
   "private": true,
   "packageManager": "yarn@4.9.1",
   "workspaces": [
@@ -12,14 +12,14 @@
     "deploy:sepolia:etherscan": "cd contracts && forge script script/DeploySepolia.s.sol --rpc-url sepolia --broadcast --verify -vvvv",
     "deploy:payroll:sepolia": "cd contracts && FEE_RECIPIENT=0x2cA6c628E6Fd6F7a7A4Cfb48daF3dF6f079783A4 forge script script/DeployPayrollSepolia.s.sol --rpc-url sepolia --broadcast --verify --verifier sourcify -vvvv",
     "deploy:payroll:sepolia:etherscan": "cd contracts && FEE_RECIPIENT=0x2cA6c628E6Fd6F7a7A4Cfb48daF3dF6f079783A4 forge script script/DeployPayrollSepolia.s.sol --rpc-url sepolia --broadcast --verify -vvvv",
-    "dev": "yarn workspace @pulse/dashboard dev -p 3001",
+    "dev": "yarn workspace @virio/dashboard dev -p 3001",
     "reset": "pkill -f anvil || true; pkill -f 'next dev' || true",
     "compile": "cd contracts && forge build",
     "test:contracts": "cd contracts && forge test -vv",
     "test:scenarios": "cd contracts && forge test --match-path test/Scenarios.t.sol -vv",
     "test:gas": "cd contracts && forge test --gas-report",
-    "build": "yarn workspace @pulse/sdk build && yarn workspace @pulse/scheduler build",
-    "typecheck": "yarn workspace @pulse/sdk typecheck && yarn workspace @pulse/scheduler typecheck",
+    "build": "yarn workspace @virio/sdk build && yarn workspace @virio/scheduler build",
+    "typecheck": "yarn workspace @virio/sdk typecheck && yarn workspace @virio/scheduler typecheck",
     "test:e2e": "node --loader ts-node/esm packages/scheduler/test/e2e.ts",
     "compile:contracts": "yarn hardhat compile"
   },

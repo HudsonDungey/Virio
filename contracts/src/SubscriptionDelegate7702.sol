@@ -9,7 +9,7 @@ pragma solidity ^0.8.24;
 // contract.  All token balances and allowances still belong to the EOA.
 //
 // Key design invariants:
-//   1. Only config.manager (PulseSubscriptionManager) may call executeTransfer.
+//   1. Only config.manager (VirioSubscriptionManager) may call executeTransfer.
 //   2. Only config.token (the whitelisted ERC-20) may be moved.
 //   3. Per-period spend cap enforced independently from the subscription cap.
 //   4. Epoch-based revocation: revoking increments authEpoch; any stored

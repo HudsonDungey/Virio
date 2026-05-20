@@ -1,4 +1,4 @@
-# Pulse — operations
+# Virio — operations
 
 Every command runs from the repo root. Pick a section:
 
@@ -42,7 +42,7 @@ What's covered:
 
 | File | What it tests |
 |---|---|
-| `contracts/test/PulseSubscriptionManager.t.sol` | Focused unit tests — createPlan validation, subscribe lifecycle, charge happy-path balance deltas + event, period enforcement, cancel by customer / merchant / stranger, deactivation, allowance revocation, spend cap auto-cancel. |
+| `contracts/test/VirioSubscriptionManager.t.sol` | Focused unit tests — createPlan validation, subscribe lifecycle, charge happy-path balance deltas + event, period enforcement, cancel by customer / merchant / stranger, deactivation, allowance revocation, spend cap auto-cancel. |
 | `contracts/test/Scenarios.t.sol` | End-to-end sweep — 5 plans across 2 merchants, 5 customers subscribing to 2–3 plans each, 2 executor bots alternating charges across time, cancellation flows (customer, merchant, stranger revert), plan deactivation, spend-cap auto-cancel, re-subscribe after self-cancel, late-charge additive period anchoring. Full event capture via `vm.expectEmit`. |
 
 Run a single test with `forge test --match-test <name>`. Use `-vvvv` for execution traces.
@@ -72,7 +72,7 @@ yarn deploy:sepolia              # broadcast only
 yarn deploy:sepolia:verify       # + Etherscan verification (needs ETHERSCAN_API_KEY in .env)
 ```
 
-The script prints `manager`, `usdc`, `feeRecipient`, `deploymentBlock` — paste those into `packages/dashboard/pulse.local.json` (see [Web](#web-dashboard) below).
+The script prints `manager`, `usdc`, `feeRecipient`, `deploymentBlock` — paste those into `packages/dashboard/virio.local.json` (see [Web](#web-dashboard) below).
 
 ### cast snippets — read & write directly
 
@@ -88,8 +88,8 @@ export PK=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80   #
 # Sepolia (after sourcing contracts/.env)
 source contracts/.env
 export RPC=$SEPOLIA_RPC_URL
-export MGR=0x...   # from pulse.local.json
-export USDC=0x...  # from pulse.local.json
+export MGR=0x...   # from virio.local.json
+export USDC=0x...  # from virio.local.json
 export PK=$PRIVATE_KEY
 ```
 
@@ -146,7 +146,7 @@ NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=
 EXECUTOR_PRIVATE_KEY=0x...            # SECOND Sepolia EOA, funded with a little ETH
 ```
 
-`packages/dashboard/pulse.local.json` — onchain wiring (gitignored):
+`packages/dashboard/virio.local.json` — onchain wiring (gitignored):
 
 ```jsonc
 {
@@ -166,13 +166,13 @@ EXECUTOR_PRIVATE_KEY=0x...            # SECOND Sepolia EOA, funded with a little
 Starting fresh:
 ```bash
 cp packages/dashboard/.env.local.example       packages/dashboard/.env.local
-cp packages/dashboard/pulse.local.example.json packages/dashboard/pulse.local.json
+cp packages/dashboard/virio.local.example.json packages/dashboard/virio.local.json
 ```
 
 ### Typecheck & build
 
 ```bash
-yarn typecheck         # @pulse/sdk + @pulse/scheduler
+yarn typecheck         # @virio/sdk + @virio/scheduler
 yarn build             # compiles workspace packages
 ```
 

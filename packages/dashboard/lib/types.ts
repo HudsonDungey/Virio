@@ -3,7 +3,7 @@ export interface IntervalDef {
   seconds: number;
 }
 
-export interface PulseConfig {
+export interface VirioConfig {
   testMode: boolean;
   testIntervals: IntervalDef[];
   productionIntervals: IntervalDef[];
@@ -14,7 +14,7 @@ export interface PulseConfig {
 
 export type Network = "sepolia" | "anvil";
 
-export interface PulseLocalConfig {
+export interface VirioLocalConfig {
   network: Network;
   rpc: { alchemyKey: string | null; fullUrlOverride: string | null };
   walletConnectProjectId: string | null;

@@ -60,8 +60,8 @@ export function DashboardPage({
         title="Overview"
         subtitle={
           address
-            ? `Connected as ${fmtAddr(address)} — live from the Pulse manager`
-            : "Live from the Pulse manager"
+            ? `Connected as ${fmtAddr(address)} — live from the Virio manager`
+            : "Live from the Virio manager"
         }
         action={
           <>

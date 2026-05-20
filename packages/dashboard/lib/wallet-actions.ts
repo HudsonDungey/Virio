@@ -5,7 +5,7 @@ import { useAccount, useConfig } from "wagmi";
 import { writeContract, waitForTransactionReceipt, readContract } from "wagmi/actions";
 import { decodeEventLog, maxUint256, type Hex } from "viem";
 import { managerAbi, erc20Abi } from "./abis";
-import { usePulseConfig } from "@/app/providers";
+import { useVirioConfig } from "@/app/providers";
 
 /// Convert a USDC display amount (e.g. 9.99) to base units (6 decimals).
 export function usdcUnits(display: number): bigint {
@@ -34,10 +34,10 @@ interface SubscribeInput {
 /// Client-side wallet actions — every write here is signed by the connected wallet.
 /// Each action returns the transaction hash AND the decoded eventful arg (planId, subId)
 /// where applicable, so callers can post off-chain metadata under that id.
-export function usePulseActions() {
+export function useVirioActions() {
   const config = useConfig();
   const account = useAccount();
-  const publicCfg = usePulseConfig();
+  const publicCfg = useVirioConfig();
   const expectedChainId = chainIdFor(publicCfg.network);
 
   const help = React.useMemo<WriteHelpers>(() => ({ expectedChainId }), [expectedChainId]);
@@ -51,7 +51,7 @@ export function usePulseActions() {
     }
     if (publicCfg.contracts.manager === "0x0000000000000000000000000000000000000000") {
       throw new Error(
-        "manager address not set in pulse.local.json — deploy the contracts and paste the address there",
+        "manager address not set in virio.local.json — deploy the contracts and paste the address there",
       );
     }
   }

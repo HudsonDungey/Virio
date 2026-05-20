@@ -1,14 +1,14 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
-import type { PulseEvent } from "./types.js";
+import type { VirioEvent } from "./types.js";
 
-const SIGNATURE_HEADER = "x-pulse-signature";
+const SIGNATURE_HEADER = "x-virio-signature";
 const ALGORITHM = "sha256";
 
 // ─── Signing ─────────────────────────────────────────────────────────────────
 
 /**
  * Sign a webhook payload (JSON string) with an HMAC-SHA256 secret.
- * Returns the hex digest — attach as the `x-pulse-signature` header.
+ * Returns the hex digest — attach as the `x-virio-signature` header.
  */
 export function signWebhook(payload: string, secret: string): string {
   return createHmac(ALGORITHM, secret).update(payload).digest("hex");
@@ -23,7 +23,7 @@ export function signWebhook(payload: string, secret: string): string {
  * signatures with `===` or `.includes()`.
  *
  * @param payload   Raw request body (string, not parsed).
- * @param signature Value of the `x-pulse-signature` header.
+ * @param signature Value of the `x-virio-signature` header.
  * @param secret    Webhook secret shared with the merchant.
  */
 export function verifyWebhook(
@@ -42,11 +42,11 @@ export function verifyWebhook(
 
 let _counter = 0;
 
-/** Build a PulseEvent with a unique id. */
+/** Build a VirioEvent with a unique id. */
 export function buildEvent(
-  type: PulseEvent["type"],
-  data: PulseEvent["data"]
-): PulseEvent {
+  type: VirioEvent["type"],
+  data: VirioEvent["data"]
+): VirioEvent {
   return {
     id:        `evt_${Date.now()}_${(_counter++).toString(36)}`,
     type,

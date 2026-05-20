@@ -2,14 +2,14 @@
 pragma solidity ^0.8.24;
 
 import {Test, console} from "forge-std/Test.sol";
-import {PulseSubscriptionManager} from "../src/PulseSubscriptionManager.sol";
-import {IPulseSubscriptionManager} from "../src/interfaces/IPulseSubscriptionManager.sol";
+import {VirioSubscriptionManager} from "../src/VirioSubscriptionManager.sol";
+import {IVirioSubscriptionManager} from "../src/interfaces/IVirioSubscriptionManager.sol";
 import {MockUSDC} from "../src/test-helpers/MockUSDC.sol";
 
-/// Unit tests for the core PulseSubscriptionManager surface.
+/// Unit tests for the core VirioSubscriptionManager surface.
 /// Run with:  forge test -vv
-contract PulseSubscriptionManagerTest is Test {
-    PulseSubscriptionManager internal mgr;
+contract VirioSubscriptionManagerTest is Test {
+    VirioSubscriptionManager internal mgr;
     MockUSDC                 internal usdc;
 
     address internal OWNER     = makeAddr("owner");
@@ -33,7 +33,7 @@ contract PulseSubscriptionManagerTest is Test {
     function setUp() public {
         vm.startPrank(OWNER);
         usdc = new MockUSDC();
-        mgr  = new PulseSubscriptionManager(FEE_RECIP);
+        mgr  = new VirioSubscriptionManager(FEE_RECIP);
         vm.stopPrank();
 
         vm.prank(MERCHANT);
@@ -52,7 +52,7 @@ contract PulseSubscriptionManagerTest is Test {
         bytes32 expected = keccak256(abi.encodePacked(MERCHANT, uint256(2), block.chainid));
 
         vm.expectEmit(true, true, false, true, address(mgr));
-        emit IPulseSubscriptionManager.PlanCreated(
+        emit IVirioSubscriptionManager.PlanCreated(
             expected, MERCHANT, address(usdc), AMOUNT, PERIOD
         );
         vm.prank(MERCHANT);
@@ -61,19 +61,19 @@ contract PulseSubscriptionManagerTest is Test {
 
     function test_createPlan_revertsZeroToken() public {
         vm.prank(MERCHANT);
-        vm.expectRevert(IPulseSubscriptionManager.ZeroAddress.selector);
+        vm.expectRevert(IVirioSubscriptionManager.ZeroAddress.selector);
         mgr.createPlan(address(0), AMOUNT, PERIOD);
     }
 
     function test_createPlan_revertsZeroAmount() public {
         vm.prank(MERCHANT);
-        vm.expectRevert(IPulseSubscriptionManager.InvalidAmount.selector);
+        vm.expectRevert(IVirioSubscriptionManager.InvalidAmount.selector);
         mgr.createPlan(address(usdc), 0, PERIOD);
     }
 
     function test_createPlan_revertsZeroPeriod() public {
         vm.prank(MERCHANT);
-        vm.expectRevert(IPulseSubscriptionManager.InvalidPeriod.selector);
+        vm.expectRevert(IVirioSubscriptionManager.InvalidPeriod.selector);
         mgr.createPlan(address(usdc), AMOUNT, 0);
     }
 
@@ -87,13 +87,13 @@ contract PulseSubscriptionManagerTest is Test {
 
     function test_setProtocolFeeBps_revertsForNonOwner() public {
         vm.prank(STRANGER);
-        vm.expectRevert("Pulse: not owner");
+        vm.expectRevert("Virio: not owner");
         mgr.setProtocolFeeBps(42);
     }
 
     function test_setProtocolFeeBps_revertsAboveCap() public {
         vm.prank(OWNER);
-        vm.expectRevert("Pulse: bps > 10000");
+        vm.expectRevert("Virio: bps > 10000");
         mgr.setProtocolFeeBps(10_001);
     }
 
@@ -105,7 +105,7 @@ contract PulseSubscriptionManagerTest is Test {
 
     function test_setProtocolFlatFee_revertsForNonOwner() public {
         vm.prank(STRANGER);
-        vm.expectRevert("Pulse: not owner");
+        vm.expectRevert("Virio: not owner");
         mgr.setProtocolFlatFee(5e6);
     }
 
@@ -117,7 +117,7 @@ contract PulseSubscriptionManagerTest is Test {
 
     function test_setExecutorFeeBps_revertsForNonOwner() public {
         vm.prank(STRANGER);
-        vm.expectRevert("Pulse: not owner");
+        vm.expectRevert("Virio: not owner");
         mgr.setExecutorFeeBps(15);
     }
 
@@ -128,7 +128,7 @@ contract PulseSubscriptionManagerTest is Test {
         bytes32 returnedId = mgr.subscribe(planId, 0);
         assertEq(returnedId, subId, "subscriptionId mismatch");
 
-        IPulseSubscriptionManager.Subscription memory sub = mgr.getSubscription(subId);
+        IVirioSubscriptionManager.Subscription memory sub = mgr.getSubscription(subId);
         assertEq(sub.customer,      CUSTOMER);
         assertEq(sub.merchant,      MERCHANT);
         assertEq(sub.token,         address(usdc));
@@ -145,7 +145,7 @@ contract PulseSubscriptionManagerTest is Test {
 
         vm.prank(CUSTOMER);
         vm.expectRevert(
-            abi.encodeWithSelector(IPulseSubscriptionManager.PlanNotActive.selector, planId)
+            abi.encodeWithSelector(IVirioSubscriptionManager.PlanNotActive.selector, planId)
         );
         mgr.subscribe(planId, 0);
     }
@@ -156,7 +156,7 @@ contract PulseSubscriptionManagerTest is Test {
 
         vm.prank(CUSTOMER);
         vm.expectRevert(
-            abi.encodeWithSelector(IPulseSubscriptionManager.AlreadySubscribed.selector, subId)
+            abi.encodeWithSelector(IVirioSubscriptionManager.AlreadySubscribed.selector, subId)
         );
         mgr.subscribe(planId, 0);
     }
@@ -183,7 +183,7 @@ contract PulseSubscriptionManagerTest is Test {
         uint256 eBefore = usdc.balanceOf(EXECUTOR);
 
         vm.expectEmit(true, true, true, true, address(mgr));
-        emit IPulseSubscriptionManager.ChargeExecuted(
+        emit IVirioSubscriptionManager.ChargeExecuted(
             subId, EXECUTOR, CUSTOMER, AMOUNT, MERCHANT_AMT, EXEC_FEE, PROTOCOL_FEE,
             block.timestamp + PERIOD
         );
@@ -203,7 +203,7 @@ contract PulseSubscriptionManagerTest is Test {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                IPulseSubscriptionManager.TooEarlyToCharge.selector,
+                IVirioSubscriptionManager.TooEarlyToCharge.selector,
                 subId,
                 block.timestamp + PERIOD
             )
@@ -224,7 +224,7 @@ contract PulseSubscriptionManagerTest is Test {
 
     function test_charge_revertsIfNotSubscribed() public {
         vm.expectRevert(
-            abi.encodeWithSelector(IPulseSubscriptionManager.NotSubscribed.selector, subId)
+            abi.encodeWithSelector(IVirioSubscriptionManager.NotSubscribed.selector, subId)
         );
         mgr.charge(subId);
     }
@@ -240,7 +240,7 @@ contract PulseSubscriptionManagerTest is Test {
         vm.warp(block.timestamp + PERIOD);
 
         vm.expectEmit(true, true, false, false, address(mgr));
-        emit IPulseSubscriptionManager.Cancelled(subId, address(mgr));
+        emit IVirioSubscriptionManager.Cancelled(subId, address(mgr));
         mgr.charge(subId);
 
         // No transfer should have happened on the auto-cancel charge.
@@ -265,7 +265,7 @@ contract PulseSubscriptionManagerTest is Test {
         mgr.subscribe(planId, 0);
 
         vm.expectEmit(true, true, false, false, address(mgr));
-        emit IPulseSubscriptionManager.Cancelled(subId, CUSTOMER);
+        emit IVirioSubscriptionManager.Cancelled(subId, CUSTOMER);
         vm.prank(CUSTOMER);
         mgr.cancel(subId);
         assertFalse(mgr.getSubscription(subId).active);
@@ -276,7 +276,7 @@ contract PulseSubscriptionManagerTest is Test {
         mgr.subscribe(planId, 0);
 
         vm.expectEmit(true, true, false, false, address(mgr));
-        emit IPulseSubscriptionManager.Cancelled(subId, MERCHANT);
+        emit IVirioSubscriptionManager.Cancelled(subId, MERCHANT);
         vm.prank(MERCHANT);
         mgr.cancel(subId);
         assertFalse(mgr.getSubscription(subId).active);
@@ -288,7 +288,7 @@ contract PulseSubscriptionManagerTest is Test {
 
         vm.prank(STRANGER);
         vm.expectRevert(
-            abi.encodeWithSelector(IPulseSubscriptionManager.NotSubscribed.selector, subId)
+            abi.encodeWithSelector(IVirioSubscriptionManager.NotSubscribed.selector, subId)
         );
         mgr.cancel(subId);
     }
@@ -300,7 +300,7 @@ contract PulseSubscriptionManagerTest is Test {
         mgr.cancel(subId);
 
         vm.expectRevert(
-            abi.encodeWithSelector(IPulseSubscriptionManager.NotSubscribed.selector, subId)
+            abi.encodeWithSelector(IVirioSubscriptionManager.NotSubscribed.selector, subId)
         );
         mgr.charge(subId);
     }
@@ -309,7 +309,7 @@ contract PulseSubscriptionManagerTest is Test {
 
     function test_deactivatePlan_byMerchant_emitsEvent() public {
         vm.expectEmit(true, true, false, false, address(mgr));
-        emit IPulseSubscriptionManager.PlanDeactivated(planId, MERCHANT);
+        emit IVirioSubscriptionManager.PlanDeactivated(planId, MERCHANT);
         vm.prank(MERCHANT);
         mgr.deactivatePlan(planId);
         assertFalse(mgr.getPlan(planId).active);
@@ -336,7 +336,7 @@ contract PulseSubscriptionManagerTest is Test {
 
         vm.prank(CUSTOMER);
         vm.expectRevert(
-            abi.encodeWithSelector(IPulseSubscriptionManager.PlanNotActive.selector, planId)
+            abi.encodeWithSelector(IVirioSubscriptionManager.PlanNotActive.selector, planId)
         );
         mgr.subscribe(planId, 0);
     }
@@ -344,7 +344,7 @@ contract PulseSubscriptionManagerTest is Test {
     function test_deactivatePlan_revertsForStranger() public {
         vm.prank(STRANGER);
         vm.expectRevert(
-            abi.encodeWithSelector(IPulseSubscriptionManager.UnauthorizedMerchant.selector, planId)
+            abi.encodeWithSelector(IVirioSubscriptionManager.UnauthorizedMerchant.selector, planId)
         );
         mgr.deactivatePlan(planId);
     }
@@ -353,7 +353,7 @@ contract PulseSubscriptionManagerTest is Test {
         vm.startPrank(MERCHANT);
         mgr.deactivatePlan(planId);
         vm.expectRevert(
-            abi.encodeWithSelector(IPulseSubscriptionManager.PlanNotActive.selector, planId)
+            abi.encodeWithSelector(IVirioSubscriptionManager.PlanNotActive.selector, planId)
         );
         mgr.deactivatePlan(planId);
         vm.stopPrank();

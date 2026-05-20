@@ -12,7 +12,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/page-header";
 import { useToast } from "@/components/ui/toast";
 import { useConfirm } from "@/components/ui/confirm";
-import { usePulseActions } from "@/lib/wallet-actions";
+import { useVirioActions } from "@/lib/wallet-actions";
 import { fmt$, fmtAddr, fmtNextCharge } from "@/lib/format";
 import type { Plan, Subscription } from "@/lib/types";
 import type { Hex } from "viem";
@@ -27,7 +27,7 @@ interface Props {
 export function SubscriptionsPage({ subscriptions, refresh, onCreate }: Props) {
   const { toast } = useToast();
   const confirm = useConfirm();
-  const actions = usePulseActions();
+  const actions = useVirioActions();
   const [search, setSearch] = React.useState("");
   const [statusF, setStatusF] = React.useState("");
   const [pendingId, setPendingId] = React.useState<string | null>(null);

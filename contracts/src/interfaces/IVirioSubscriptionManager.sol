@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-/// @title IPulseSubscriptionManager
+/// @title IVirioSubscriptionManager
 /// @notice Pull-based ERC-20 subscription protocol.
 ///         Merchants create Plans; customers subscribe; anyone calls charge()
 ///         and earns EXECUTOR_FEE_BPS — all timing and cap enforcement
-///         happens on-chain, Pulse never custodies funds.
-interface IPulseSubscriptionManager {
+///         happens on-chain, Virio never custodies funds.
+interface IVirioSubscriptionManager {
     // ─── Errors ──────────────────────────────────────────────────────────────
 
     /// Plan does not exist or has been deactivated.

@@ -1,7 +1,7 @@
 {
-  "name": "@pulse/scheduler",
+  "name": "@virio/scheduler",
   "version": "0.1.0",
-  "description": "Off-chain scheduler for the Pulse subscription protocol",
+  "description": "Off-chain scheduler for the Virio subscription protocol",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -17,7 +17,7 @@
     "test:e2e": "cd ../.. && node --import tsx/esm packages/scheduler/test/e2e.ts"
   },
   "dependencies": {
-    "@pulse/sdk": "*",
+    "@virio/sdk": "*",
     "viem": "^2.0.0"
   },
   "devDependencies": {

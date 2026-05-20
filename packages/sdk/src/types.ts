@@ -46,15 +46,15 @@ export interface SubscribeParams {
 
 // ─── Webhook types ────────────────────────────────────────────────────────────
 
-export type PulseEventType =
+export type VirioEventType =
   | "subscription.created"
   | "subscription.charged"
   | "subscription.cancelled"
   | "plan.deactivated";
 
-export interface PulseEvent {
+export interface VirioEvent {
   id: string;
-  type: PulseEventType;
+  type: VirioEventType;
   createdAt: number; // unix seconds
   data: SubscriptionChargedData | SubscriptionCreatedData | Record<string, unknown>;
 }

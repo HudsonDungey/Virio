@@ -2,15 +2,15 @@
 pragma solidity ^0.8.24;
 
 // ─────────────────────────────────────────────────────────────────────────────
-// FeeDistributor — chain-local 60/25/15 fee splitter for Pulse.
+// FeeDistributor — chain-local 60/25/15 fee splitter for Virio.
 //
-// Pulse managers (PulseSubscriptionManager / PulsePayrollManager) are
+// Virio managers (VirioSubscriptionManager / VirioPayrollManager) are
 // configured to transfer their protocol fees into this contract on every
 // charge. Anyone may then call distribute(token) to fan the accumulated
 // balance out to:
 //   • 60% → Staking.notifyReward(token, amount60)
 //   • 25% → treasury (chain-local, multisig / DAO)
-//   • 15% → buybackOperator (off-chain or contract that swaps into PULSE
+//   • 15% → buybackOperator (off-chain or contract that swaps into VIRIO
 //                            and forwards to the SafetyModule)
 //
 // The split percentages are immutable at deploy. The sink addresses are

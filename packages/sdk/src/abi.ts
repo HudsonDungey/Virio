@@ -1,6 +1,6 @@
-/// ABI for PulseSubscriptionManager — kept as a TypeScript const so viem
+/// ABI for VirioSubscriptionManager — kept as a TypeScript const so viem
 /// can infer argument and return types without a codegen step.
-export const PULSE_ABI = [
+export const VIRIO_ABI = [
   // ─── Errors ──────────────────────────────────────────────────────────────
   { type: "error", name: "PlanNotActive",         inputs: [{ name: "planId",         type: "bytes32" }] },
   { type: "error", name: "AlreadySubscribed",     inputs: [{ name: "subscriptionId", type: "bytes32" }] },
@@ -174,7 +174,7 @@ export const PULSE_ABI = [
   },
 ] as const;
 
-export type PulseAbi = typeof PULSE_ABI;
+export type VirioAbi = typeof VIRIO_ABI;
 
 // ─── Minimal ERC-20 ABI ───────────────────────────────────────────────────────
 

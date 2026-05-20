@@ -5,7 +5,7 @@ import { useAccount, useConfig } from "wagmi";
 import { writeContract, waitForTransactionReceipt, readContract } from "wagmi/actions";
 import { decodeEventLog, maxUint256, type Hex } from "viem";
 import { payrollAbi, erc20Abi } from "./abis";
-import { usePulseConfig } from "@/app/providers";
+import { useVirioConfig } from "@/app/providers";
 
 export function usdcUnits(display: number): bigint {
   return BigInt(Math.round(display * 1_000_000));
@@ -26,12 +26,12 @@ interface AddRecipientInput {
   spendCapUsdc?: number | null;
 }
 
-/// Wallet-side actions for PulsePayrollManager. Each write is signed by the
+/// Wallet-side actions for VirioPayrollManager. Each write is signed by the
 /// connected wallet via wagmi; reads come from `lib/payroll-reads.ts` API routes.
 export function usePayrollActions() {
   const config = useConfig();
   const account = useAccount();
-  const publicCfg = usePulseConfig();
+  const publicCfg = useVirioConfig();
   const expectedChainId = chainIdFor(publicCfg.network);
   const payrollAddress = publicCfg.contracts.payrollManager;
 
@@ -46,7 +46,7 @@ export function usePayrollActions() {
     }
     if (payrollAddress === "0x0000000000000000000000000000000000000000") {
       throw new Error(
-        "payrollManager address not set in pulse.local.json — deploy it first",
+        "payrollManager address not set in virio.local.json — deploy it first",
       );
     }
   }

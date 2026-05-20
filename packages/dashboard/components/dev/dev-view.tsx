@@ -136,7 +136,7 @@ function ApiKeysPanel() {
           Environment variables
         </p>
         <pre className="code-shell mt-1.5 text-muted-foreground">
-          {`PULSE_KEY=${keys[0].value}\nPULSE_WEBHOOK_SECRET=whsec_3d44b8e1a2b3c4d5\nPULSE_ENV=test`}
+          {`VIRIO_KEY=${keys[0].value}\nVIRIO_WEBHOOK_SECRET=whsec_3d44b8e1a2b3c4d5\nVIRIO_ENV=test`}
         </pre>
       </div>
     </div>
@@ -279,10 +279,10 @@ const EXAMPLE_TABS: CodeTab[] = [
     label: "React",
     language: "tsx",
     filename: "Subscribe.tsx",
-    code: `import { usePulseCheckout } from "@pulse/react";
+    code: `import { useVirioCheckout } from "@virio/react";
 
 export function Subscribe({ planId }: { planId: string }) {
-  const { subscribe, status } = usePulseCheckout(planId);
+  const { subscribe, status } = useVirioCheckout(planId);
   return (
     <button onClick={subscribe} disabled={status === "pending"}>
       {status === "active" ? "Subscribed" : "Subscribe — $49/mo"}
@@ -294,12 +294,12 @@ export function Subscribe({ planId }: { planId: string }) {
     label: "Next.js",
     language: "ts",
     filename: "app/api/webhooks/route.ts",
-    code: `import { pulse } from "@/lib/pulse";
+    code: `import { virio } from "@/lib/virio";
 
 export async function POST(req: Request) {
-  const event = pulse.webhooks.verify(
+  const event = virio.webhooks.verify(
     await req.text(),
-    req.headers.get("pulse-signature")!,
+    req.headers.get("virio-signature")!,
   );
   if (event.type === "subscription.charged") {
     await grantAccess(event.data.subscriptionId);
@@ -311,14 +311,14 @@ export async function POST(req: Request) {
     label: "Solidity",
     language: "sol",
     filename: "Integration.sol",
-    code: `import { IPulseManager } from "@pulse/contracts/IPulseManager.sol";
+    code: `import { IVirioManager } from "@virio/contracts/IVirioManager.sol";
 
 contract MyApp {
-    IPulseManager constant PULSE =
-        IPulseManager(0x9d0e4e88A2b3C4d5E6F7a8B9c0D1e2F3A8b97f12);
+    IVirioManager constant VIRIO =
+        IVirioManager(0x9d0e4e88A2b3C4d5E6F7a8B9c0D1e2F3A8b97f12);
 
     function onCharged(bytes32 agreementId) external {
-        require(msg.sender == address(PULSE), "not pulse");
+        require(msg.sender == address(VIRIO), "not virio");
         // grant access, mint, etc.
     }
 }`,
@@ -358,9 +358,9 @@ const LIFECYCLE = [
 ];
 
 const SDKS = [
-  { name: "@pulse/sdk", desc: "Core TypeScript SDK", size: "18 kB" },
-  { name: "@pulse/react", desc: "React hooks & components", size: "9 kB" },
-  { name: "@pulse/contracts", desc: "Solidity interfaces & ABIs", size: "—" },
+  { name: "@virio/sdk", desc: "Core TypeScript SDK", size: "18 kB" },
+  { name: "@virio/react", desc: "React hooks & components", size: "9 kB" },
+  { name: "@virio/contracts", desc: "Solidity interfaces & ABIs", size: "—" },
 ];
 
 export function DevView() {
@@ -374,7 +374,7 @@ export function DevView() {
         </span>
         <h1 className="mt-4 max-w-[640px] font-display text-[clamp(2rem,4.5vw,3.2rem)] font-extrabold leading-[1.08] tracking-[-0.025em] text-foreground">
           Everything you need to build with{" "}
-          <span className="text-gradient">Pulse</span>
+          <span className="text-gradient">Virio</span>
         </h1>
         <p className="mt-4 max-w-[560px] text-[15.5px] leading-relaxed text-muted-foreground">
           SDKs, interactive API references, event schemas, and copy-paste
@@ -441,17 +441,17 @@ export function DevView() {
               {
                 label: "Install",
                 language: "bash",
-                code: "npm install @pulse/sdk @pulse/react\n\n# then set your key\nexport PULSE_KEY=pk_test_8f3c2a4c91d4e2a7b6c5d8e9",
+                code: "npm install @virio/sdk @virio/react\n\n# then set your key\nexport VIRIO_KEY=pk_test_8f3c2a4c91d4e2a7b6c5d8e9",
               },
               {
                 label: "First call",
                 language: "ts",
                 filename: "index.ts",
-                code: `import { Pulse } from "@pulse/sdk";
+                code: `import { Virio } from "@virio/sdk";
 
-const pulse = new Pulse({ apiKey: process.env.PULSE_KEY });
+const virio = new Virio({ apiKey: process.env.VIRIO_KEY });
 
-const plan = await pulse.products.create({
+const plan = await virio.products.create({
   name: "Pro",
   price: 49,
   token: "USDC",

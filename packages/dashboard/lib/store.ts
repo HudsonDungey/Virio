@@ -1,4 +1,4 @@
-import { getPulseConfig } from "./config";
+import { getVirioConfig } from "./config";
 
 export interface PlanMeta {
   name: string;
@@ -27,20 +27,20 @@ interface GlobalStore {
 
 declare global {
   // eslint-disable-next-line no-var
-  var __pulseStore: GlobalStore | undefined;
+  var __virioStore: GlobalStore | undefined;
 }
 
 export function getStore(): GlobalStore {
-  if (!globalThis.__pulseStore) {
-    globalThis.__pulseStore = {
+  if (!globalThis.__virioStore) {
+    globalThis.__virioStore = {
       planMeta: new Map(),
       subMeta: new Map(),
       cancelledByMerchant: new Set(),
-      state: { testMode: getPulseConfig().testMode },
+      state: { testMode: getVirioConfig().testMode },
       schedulerStarted: false,
     };
   }
-  return globalThis.__pulseStore;
+  return globalThis.__virioStore;
 }
 
 export function round2(n: number): number {

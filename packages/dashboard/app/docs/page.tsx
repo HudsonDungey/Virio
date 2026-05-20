@@ -4,9 +4,9 @@ import { Footer } from "@/components/marketing/footer";
 import { DocsView } from "@/components/docs/docs-view";
 
 export const metadata: Metadata = {
-  title: "Docs — Pulse",
+  title: "Docs — Virio",
   description:
-    "Pulse documentation — onchain subscriptions, payroll, webhooks, the fee model, and smart contract architecture.",
+    "Virio documentation — onchain subscriptions, payroll, webhooks, the fee model, and smart contract architecture.",
 };
 
 export default function DocsPage() {

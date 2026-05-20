@@ -3,11 +3,11 @@ pragma solidity ^0.8.24;
 
 import {Script, console} from "forge-std/Script.sol";
 import {MockUSDC} from "../src/test-helpers/MockUSDC.sol";
-import {PulseSubscriptionManager} from "../src/PulseSubscriptionManager.sol";
+import {VirioSubscriptionManager} from "../src/VirioSubscriptionManager.sol";
 
 /// @notice Local-anvil deploy:
 ///   1. Deploy MockUSDC
-///   2. Deploy PulseSubscriptionManager (feeRecipient = anvil[0])
+///   2. Deploy VirioSubscriptionManager (feeRecipient = anvil[0])
 ///   3. Mint USDC to anvil[0..4] (10 000 USDC each)
 ///   4. Have anvil[1..4] approve the manager for max
 ///
@@ -36,7 +36,7 @@ contract Deploy is Script {
         vm.startBroadcast(PK_0);
 
         MockUSDC usdc = new MockUSDC();
-        PulseSubscriptionManager mgr = new PulseSubscriptionManager(deployer);
+        VirioSubscriptionManager mgr = new VirioSubscriptionManager(deployer);
 
         // Mint to deployer (acts as merchant + executor) and four test users.
         usdc.mint(deployer, INITIAL_MINT);
@@ -59,7 +59,7 @@ contract Deploy is Script {
         vm.startBroadcast(PK_4); usdc.approve(address(mgr), type(uint256).max); vm.stopBroadcast();
 
         console.log("MockUSDC                  :", address(usdc));
-        console.log("PulseSubscriptionManager  :", address(mgr));
+        console.log("VirioSubscriptionManager  :", address(mgr));
         console.log("Deployer (anvil[0])       :", deployer);
     }
 }

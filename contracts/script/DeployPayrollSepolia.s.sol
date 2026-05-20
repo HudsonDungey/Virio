@@ -2,7 +2,7 @@
 pragma solidity ^0.8.24;
 
 import {Script, console} from "forge-std/Script.sol";
-import {PulsePayrollManager} from "../src/PulsePayrollManager.sol";
+import {VirioPayrollManager} from "../src/VirioPayrollManager.sol";
 
 /// Sepolia deploy of the payroll manager.
 ///   PRIVATE_KEY (env)         — deployer EOA, becomes the owner.
@@ -18,16 +18,16 @@ contract DeployPayrollSepolia is Script {
         address feeRecipient = vm.envOr("FEE_RECIPIENT", deployer);
 
         vm.startBroadcast(pk);
-        PulsePayrollManager mgr = new PulsePayrollManager(feeRecipient);
+        VirioPayrollManager mgr = new VirioPayrollManager(feeRecipient);
         vm.stopBroadcast();
 
         console.log("=== Sepolia payroll deploy ===");
-        console.log("PulsePayrollManager :", address(mgr));
+        console.log("VirioPayrollManager :", address(mgr));
         console.log("Owner / deployer    :", deployer);
         console.log("Fee recipient       :", feeRecipient);
         console.log("Deployment block    :", block.number);
         console.log("");
-        console.log("Paste into packages/dashboard/pulse.local.json under contracts:");
+        console.log("Paste into packages/dashboard/virio.local.json under contracts:");
         console.log('  "payrollManager": ', address(mgr));
         console.log('  "payrollDeploymentBlock":', block.number);
     }

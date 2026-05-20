@@ -9,14 +9,14 @@ const STEPS = [
     icon: PackagePlus,
     title: "Create a product or payroll",
     body: "Define a pricing plan or a payroll schedule. Set the token, interval, spend caps, and webhook endpoints — all from the dashboard or SDK.",
-    code: "pulse.products.create({ price: 49, interval: 'month' })",
+    code: "virio.products.create({ price: 49, interval: 'month' })",
   },
   {
     n: "02",
     icon: Fingerprint,
     title: "User approves once",
     body: "The customer signs a single onchain approval. No re-signing every cycle — the agreement is enforced by audited smart contracts.",
-    code: "await pulse.subscriptions.subscribe(planId)",
+    code: "await virio.subscriptions.subscribe(planId)",
   },
   {
     n: "03",
@@ -85,7 +85,7 @@ export function HowItWorks() {
         <SectionHeading
           eyebrow="How it works"
           title="From integration to settlement in three steps"
-          description="Pulse turns recurring payments into a single onchain primitive — the same execution model powers both subscriptions and payroll."
+          description="Virio turns recurring payments into a single onchain primitive — the same execution model powers both subscriptions and payroll."
         />
 
         <div className="mt-14 grid items-start gap-10 lg:grid-cols-[1.15fr_0.85fr]">

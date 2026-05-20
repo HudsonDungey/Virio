@@ -5,7 +5,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /// Lists the user-configured addresses (their merchant + test customer addresses
-/// from pulse.local.json) with on-chain balances. No private keys are returned —
+/// from virio.local.json) with on-chain balances. No private keys are returned —
 /// the dashboard signs from the connected wallet for any writes.
 export async function GET() {
   const enriched = await Promise.all(

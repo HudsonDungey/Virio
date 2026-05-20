@@ -1,4 +1,4 @@
-import { getPulseConfig } from "./config";
+import { getVirioConfig } from "./config";
 import { getStore } from "./store";
 import { dueSubscriptions, chargeOnce } from "./chain-reads";
 import { executorAddress, NETWORK } from "./chain";
@@ -31,7 +31,7 @@ async function tick() {
   } finally {
     running = false;
     const store = getStore();
-    const cfg = getPulseConfig();
+    const cfg = getVirioConfig();
     const delay = store.state.testMode ? cfg.scheduler.testTickMs : cfg.scheduler.productionTickMs;
     setTimeout(tick, delay);
   }

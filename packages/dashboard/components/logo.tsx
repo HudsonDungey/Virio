@@ -7,7 +7,7 @@ interface LogoMarkProps {
   size?: number;
 }
 
-/// The Pulse mark — a rounded gradient tile with an animated heartbeat/pulse line.
+/// The Virio mark — a rounded gradient tile with an animated heartbeat/virio line.
 export function LogoMark({ className, size = 32 }: LogoMarkProps) {
   return (
     <span
@@ -49,14 +49,14 @@ interface WordmarkProps {
   size?: number;
 }
 
-/// Full lockup: mark + "Pulse" wordmark, optional subtitle line.
+/// Full lockup: mark + "Virio" wordmark, optional subtitle line.
 export function Logo({ className, subtitle, size = 32 }: WordmarkProps) {
   return (
     <span className={cn("inline-flex items-center gap-2.5", className)}>
       <LogoMark size={size} />
       <span className="leading-none">
         <span className="font-display text-[17px] font-bold tracking-tight text-foreground">
-          Pulse
+          Virio
         </span>
         {subtitle && (
           <span className="mt-0.5 block text-[10.5px] tracking-wide text-muted-foreground">

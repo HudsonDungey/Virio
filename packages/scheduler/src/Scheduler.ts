@@ -1,11 +1,11 @@
 import { type Hex } from "viem";
 import {
-  PulseClient,
-  PULSE_ABI,
+  VirioClient,
+  VIRIO_ABI,
   buildEvent,
   signWebhook,
   type SubscriptionChargedData,
-} from "@pulse/sdk";
+} from "@virio/sdk";
 import type { SchedulerStorage } from "./storage.js";
 
 // ─── Config ───────────────────────────────────────────────────────────────────
@@ -13,10 +13,10 @@ import type { SchedulerStorage } from "./storage.js";
 export interface SchedulerConfig {
   storage: SchedulerStorage;
   /**
-   * One PulseClient per chain.  Key is the chainId.
+   * One VirioClient per chain.  Key is the chainId.
    * Each client must have a walletClient set (used to call charge()).
    */
-  clients: Record<number, PulseClient>;
+  clients: Record<number, VirioClient>;
   /**
    * Called with the raw event payload and signature so the caller can
    * POST them to the merchant's webhook URL.  Defaults to a fetch()-based
@@ -29,7 +29,7 @@ export interface SchedulerConfig {
 
 export class Scheduler {
   private readonly storage: SchedulerStorage;
-  private readonly clients: Record<number, PulseClient>;
+  private readonly clients: Record<number, VirioClient>;
   private readonly dispatch: (url: string, payload: string, signature: string) => Promise<void>;
 
   constructor(config: SchedulerConfig) {
@@ -101,7 +101,7 @@ export class Scheduler {
   }
 
   private async extractNextChargeAt(
-    client: PulseClient,
+    client: VirioClient,
     txHash: Hex,
     subscriptionId: Hex,
   ): Promise<number> {
@@ -124,7 +124,7 @@ async function defaultDispatch(url: string, payload: string, sig: string): Promi
     method:  "POST",
     headers: {
       "Content-Type":      "application/json",
-      "x-pulse-signature": sig,
+      "x-virio-signature": sig,
     },
     body: payload,
   });

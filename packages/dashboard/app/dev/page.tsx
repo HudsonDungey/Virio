@@ -4,9 +4,9 @@ import { Footer } from "@/components/marketing/footer";
 import { DevView } from "@/components/dev/dev-view";
 
 export const metadata: Metadata = {
-  title: "Developers — Pulse",
+  title: "Developers — Virio",
   description:
-    "The Pulse developer portal — SDKs, API keys, interactive API references, event schemas, and integration examples.",
+    "The Virio developer portal — SDKs, API keys, interactive API references, event schemas, and integration examples.",
 };
 
 export default function DevPage() {
