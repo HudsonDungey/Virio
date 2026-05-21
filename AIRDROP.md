@@ -11,8 +11,9 @@ qualified referrals, then claimed on a streamed schedule designed to favor peopl
   A snapshot is taken, then the airdrop becomes claimable at/after TGE.
 - **The "whitelist" is an airdrop-eligibility allowlist** — it is **not** sale access. The public sale
   has no allowlist (see `TOKENOMICS.md`).
-- **Release schedule:** **1% of the airdrop per month for 10 months** (per `TOKENOMICS.md`), claimed
-  per-wallet via a merkle distribution.
+- **Release schedule:** **1% of total supply per month for 10 months** (per `TOKENOMICS.md`) — the full
+  100M airdrop unlocks over 10 months. Equivalently, **each wallet's allocation vests in 10 equal
+  monthly tranches (10% per tranche)**, claimed via a merkle distribution.
 
 ## Allocation (100,000,000 VIRIO)
 
@@ -64,65 +65,137 @@ Eligibility rules are published **before** the season and may be tuned month-to-
 2. One or more **snapshots** are taken on pre-announced dates.
 3. Final eligibility = snapshot state + season points, filtered for sybils.
 4. At TGE, eligibility is published as a **merkle root**; each wallet claims via merkle proof.
-5. Claims unlock **1% of the airdrop per month for 10 months**. See anti-dump design below.
+5. Claims vest in **10 equal monthly tranches (10% each)** over 10 months. See anti-dump design below.
 
 ---
 
 ## Reducing dump risk over time
 
 A 100M airdrop is a large potential sell wall. The goal is to convert recipients into long-term
-holders/stakers and make holding the higher-EV choice. Mechanisms below are layered — vesting alone
-is not enough.
+holders/stakers and make holding the higher-EV choice. The **selected stack is mechanisms 1, 2, 3, 5,
+and 7**, layered so vesting buys time, staking + yield change the decision, gating removes mercenaries,
+and sybil filtering shrinks the wall before it forms.
 
 ### 1. Streamed vesting, not a cliff (baseline)
-The **1%/mo × 10 months** release is the first defense: no recipient can dump their full allocation at
-TGE. Spreading unlocks over ~10 months flattens sell pressure and lets organic demand absorb supply.
+The **10 equal monthly tranches (10%/mo × 10 months)** release is the first defense: no recipient can
+dump their full allocation at TGE. Spreading unlocks flattens sell pressure and lets organic demand
+absorb supply.
 
 ### 2. Claim-and-stake bonus (strongest lever)
-Offer a **meaningfully larger allocation to recipients who stake (convert to stVIRIO) instead of
-selling** — e.g. a bonus multiplier on tranches that are staked, or instant unlock of a future tranche
-when the current one is staked. Because stVIRIO earns 60% of protocol fees in USDC, staking is already
-attractive; the bonus makes selling the clearly worse choice. This redirects the airdrop into the
-staking flywheel rather than the order book.
+Recipients who **stake their claim (convert to stVIRIO) instead of taking it to their wallet** get a
+**bonus** — a multiplier on the staked amount and/or accelerated unlock of the next tranche. Because
+stVIRIO earns 60% of protocol fees in USDC, staking is already attractive; the bonus makes selling the
+clearly worse choice and routes the airdrop into the staking flywheel rather than the order book.
 
 ### 3. Use-it-or-lose-it tranches
-Make each monthly tranche **claimable only within a window**, and/or **gate the next tranche on
-continued eligibility** (e.g. the wallet must still be an active product user / still staked). Pure
-mercenaries who stop using the product and dump forfeit their remaining unclaimed tranches; those
-forfeited tokens recycle to the ecosystem or to remaining loyal users.
-
-### 4. Loyalty multiplier that grows with holding time
-Weight rewards by **duration**, not a single snapshot — time-weighted balance so tokens borrowed for
-one snapshot don't qualify, and longer holding/staking earns progressively more. Rewards patience,
-punishes flip-and-leave.
+Each monthly tranche is **claimable only within its month**, and **the next tranche is gated on
+continued eligibility** (still an active product user and/or still staked). Mercenaries who stop using
+the product and dump **forfeit their remaining tranches**; forfeited tokens recycle to the bonus pool
+and remaining loyal claimers.
 
 ### 5. Real yield as the reason to hold (not just lockups)
 Lockups only delay dumping; **yield changes the decision.** stVIRIO pays continuous USDC fee yield and
-the 15% buyback provides a standing bid. Market the airdrop as *"stake your claim and earn real USDC,"*
-so holding has a clear ongoing payoff rather than pure price speculation.
-
-### 6. Optional early-exit haircut
-If desired, allow recipients to exit unvested tranches early but at a **penalty/haircut**, with the
-forfeited portion redistributed to those who keep vesting. Makes dumping explicitly costly while still
-giving people an exit.
+the 15% buyback provides a standing bid. The airdrop is marketed as *"stake your claim and earn real
+USDC,"* so holding has an ongoing payoff rather than pure price speculation.
 
 ### 7. Anti-sybil = fewer pure dumpers
-The biggest dump risk is sybil farmers who only ever intended to sell. Tight sybil filtering (section
-above) removes much of the sell wall *before* it exists — the cheapest anti-dump measure is simply not
-allocating to mercenaries.
+The biggest dump risk is sybil farmers who only ever intended to sell. Tight sybil filtering removes
+much of the sell wall *before* it exists — the cheapest anti-dump measure is simply not allocating to
+mercenaries.
 
-### 8. Reward continued activity, not a one-time drop
-Run **recurring seasons** funded from the 30% community/ecosystem bucket so the best way to keep
-earning is to keep using and holding. Turns a one-time event into an ongoing reason to stay.
+---
 
-### 9. Supportive liquidity & supply design (already in tokenomics)
-- **LP burnt on deposit** → liquidity is one-way; depth grows but can't be rugged.
-- **15% fee buyback** → constant on-market VIRIO bid that absorbs sell pressure.
-- **No insider unlocks before M6** → no insider overhang colliding with airdrop unlocks early.
+## How the systems work
 
-### Recommended default stack
-1%/mo × 10mo streaming **+** claim-and-stake bonus **+** use-it-or-lose-it next-tranche gating **+**
-time-weighted loyalty **+** real USDC yield messaging. Tight sybil filtering underpins all of it.
+### Components
+
+**Off-chain — Points & Sybil Engine** (new service):
+- Indexes on-chain product activity from `VirioSubscriptionManager` and `VirioPayrollManager` events
+  (plans, subscribes, executed charges, payroll runs) via the existing event cache / an indexer.
+- Tracks the **referral graph** (referrer → referee wallets) in its own DB.
+- Computes points, applies sybil filters, and **builds the monthly merkle trees**. Publishes each root
+  on-chain plus the methodology + filtered list off-chain for transparency.
+
+**On-chain — `AirdropDistributor`** (new contract):
+- Holds the 100M VIRIO. Stores the current **merkle root** and a `tgeTimestamp`.
+- Enforces vesting, the claim-and-stake path, and per-tranche windows/gating.
+- Integrates with the **existing** `Staking.sol` (mints stVIRIO), `FeeDistributor.sol` (60% fees →
+  stakers in USDC), and `SafetyModule.sol` (15% buyback). No changes to token economics — it plugs
+  into what already exists.
+
+### End-to-end flow
+
+1. Product runs; the engine ingests usage + referral events continuously during the season.
+2. Snapshot(s) taken on announced dates → engine scores wallets and runs sybil filters.
+3. At TGE the engine publishes **root₁** to `AirdropDistributor`; tranche 1 (10%) becomes claimable.
+4. Each subsequent month the engine publishes **rootₘ** reflecting who is *still eligible that month*.
+5. Wallets claim each month via merkle proof — either to wallet (vested only) or **claim-and-stake**
+   (vested + bonus, deposited into `Staking.sol`).
+6. Missed or no-longer-eligible tranches are forfeited and recycled.
+
+### System 1 — Streamed vesting (`AirdropDistributor`)
+
+Leaf = `keccak256(wallet, totalAllocation)`. Vesting is purely time-based off `tgeTimestamp`:
+
+```
+elapsedMonths = (block.timestamp - tgeTimestamp) / 30 days
+vestedTranches = min(elapsedMonths + 1, 10)          // tranche 1 unlocks at TGE
+maxClaimable   = totalAllocation * vestedTranches / 10
+claimableNow   = maxClaimable - alreadyClaimed[wallet]
+```
+
+`claim(proof, totalAllocation, amount)` verifies the proof against the current root, checks
+`amount <= claimableNow`, transfers, and updates `alreadyClaimed`. A wallet can let tranches accrue
+and claim several at once (subject to System 3's windows).
+
+### System 2 — Claim-and-stake bonus
+
+Two entry points on the distributor:
+- `claim(...)` → transfers vested VIRIO to the wallet (no bonus).
+- `claimAndStake(...)` → routes the vested amount into `Staking.sol`, mints **stVIRIO to the claimant**,
+  and adds a **bonus** (e.g. +15–25% on the staked tranche, or unlocks the next tranche early).
+
+Bonus tokens come from a **reserved bonus pool** (funded by the 5% community slice and/or recycled
+forfeitures — *not* new supply, so total stays 100M). Bonus VIRIO is subject to a **minimum stake
+duration**; unstaking before it elapses **claws back the bonus** (handled by tagging bonus-staked
+balance in the distributor and checking the stVIRIO position on exit). The base tranche is never
+clawed back — only the bonus is at risk — so the incentive is purely positive.
+
+### System 3 — Use-it-or-lose-it tranches & gating
+
+Implemented with **fresh monthly merkle roots** rather than a single static root:
+- Each month the engine builds **rootₘ** containing only wallets that are **still eligible** —
+  i.e. had qualifying product activity in the trailing ~30 days (read from `SubscriptionManager` /
+  `PayrollManager`) and/or are still staked (read from `Staking.sol`).
+- To claim month *m*'s tranche, the wallet must prove inclusion in **rootₘ within month *m***. Fall
+  out of eligibility or miss the window → that tranche is **not in the root** → forfeited.
+- Forfeited tokens are swept (a `recycleForfeited()` keeper call after each window) into the bonus
+  pool / a pro-rata top-up for wallets that *did* stay eligible.
+
+Trade-off noted: monthly roots are more operational overhead than one static root, but they are what
+make "use it or lose it" actually enforceable on-chain.
+
+### System 5 — Real yield (existing contracts, no new code)
+
+`claimAndStake` deposits straight into the **already-built** `Staking.sol`, so the recipient
+immediately begins accruing **60% of protocol fees in USDC** via `FeeDistributor.sol` (Synthetix
+`rewardPerToken` math, claimed with `claim(token)`), while `SafetyModule.sol`'s 15% buyback maintains a
+standing VIRIO bid. The UI surfaces projected USDC APR at the claim screen so the hold-vs-sell math is
+explicit at the decision point.
+
+### System 7 — Points & Sybil pipeline (off-chain)
+
+Pipeline run before each monthly root:
+1. **Ingest** product events (charges, active relationships, longevity) + referral graph.
+2. **Score** usage and referrals into points → bucket allocations (60M / 35M / 5M).
+3. **Filter:** minimum-usage floor, funding-graph/clustering detection, referee-activation gating,
+   per-wallet & per-referrer caps, churn clawback, timing heuristics. Rules published pre-season and
+   tunable month-to-month (as reserved in `TOKENOMICS.md`).
+4. **Build** the merkle tree from the filtered allocations and **publish rootₘ** on-chain + the
+   methodology/eligibility list off-chain.
+
+The chain only ever sees the final root; all heuristics live off-chain but are transparent and
+auditable.
 
 ---
 
