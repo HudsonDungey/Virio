@@ -1,8 +1,5 @@
 import type { Metadata } from "next";
 import { Inter, Inter_Tight, JetBrains_Mono } from "next/font/google";
-import { ToastProvider } from "@/components/ui/toast";
-import { ConfirmProvider } from "@/components/ui/confirm";
-import { ThemeProvider, themeInitScript } from "@/components/theme-provider";
 import "./globals.css";
 
 const inter = Inter({
@@ -36,15 +33,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`${inter.variable} ${interTight.variable} ${jetbrains.variable}`}
       suppressHydrationWarning
     >
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
-      </head>
+      <head />
       <body className="min-h-screen bg-background font-sans">
-        <ThemeProvider>
-          <ToastProvider>
-            <ConfirmProvider>{children}</ConfirmProvider>
-          </ToastProvider>
-        </ThemeProvider>
+        {children}
       </body>
     </html>
   );

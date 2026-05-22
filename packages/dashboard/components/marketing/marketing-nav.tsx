@@ -4,7 +4,6 @@ import * as React from "react";
 import Link from "next/link";
 import { ArrowRight, Menu, X } from "lucide-react";
 import { Logo } from "@/components/logo";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
 
 const LINKS: { label: string; href: string }[] = [
@@ -53,7 +52,6 @@ export function MarketingNav() {
         </nav>
 
         <div className="flex flex-shrink-0 items-center gap-2">
-          <ThemeToggle variant="pill" className="hidden sm:grid" />
           <Link
             href="/dashboard"
             className="hidden h-9 items-center rounded-lg px-3.5 text-[13.5px] font-semibold text-muted-foreground transition-colors hover:text-foreground sm:inline-flex"
@@ -91,7 +89,6 @@ export function MarketingNav() {
             </Link>
           ))}
           <div className="mt-1 flex items-center gap-2 border-t border-border px-1 pt-2">
-            <ThemeToggle variant="pill" />
             <Link
               href="/dashboard"
               className="flex h-9 flex-1 items-center justify-center rounded-lg bg-brand-gradient text-[13.5px] font-semibold text-white"

@@ -7,6 +7,8 @@ import { MarkdownContent } from "@/lib/docs/markdown";
 import { DocsToc } from "@/components/docs/docs-toc";
 import { SITE_NAME, SITE_URL } from "@/lib/docs/site";
 
+export const dynamic = "force-dynamic";
+
 interface PageProps {
   params: { slug?: string[] };
 }

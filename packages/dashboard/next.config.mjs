@@ -3,6 +3,7 @@ const nextConfig = {
   reactStrictMode: true,
   experimental: {
     typedRoutes: false,
+    cpus: 1,
   },
   webpack: (config) => {
     // `@metamask/sdk` declares `@react-native-async-storage/async-storage` as an

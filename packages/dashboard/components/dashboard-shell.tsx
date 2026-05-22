@@ -14,7 +14,6 @@ import {
   Plus,
   Zap,
   Send,
-  Moon,
 } from "lucide-react";
 import { Sidebar, type PageKey } from "@/components/sidebar";
 import { Topbar } from "@/components/topbar";
@@ -29,7 +28,6 @@ import { TestingPage } from "@/components/pages/testing-page";
 import { CreatePlanDialog } from "@/components/dialogs/create-plan-dialog";
 import { CreateSubDialog } from "@/components/dialogs/create-sub-dialog";
 import { useToast } from "@/components/ui/toast";
-import { useTheme } from "@/components/theme-provider";
 import { api } from "@/lib/api";
 import type { IntervalDef, Plan, Stats, Subscription } from "@/lib/types";
 
@@ -50,7 +48,6 @@ const PAGE_TITLES: Record<PageKey, string> = {
 
 export function DashboardShell() {
   const { toast } = useToast();
-  const { toggle: toggleTheme } = useTheme();
   const { address } = useAccount();
   const [page, setPage] = React.useState<PageKey>("dashboard");
   const [cmdOpen, setCmdOpen] = React.useState(false);
@@ -169,7 +166,6 @@ export function DashboardShell() {
       { id: "act-sub", group: "Actions", label: "Create subscription", Icon: Plus, keywords: "subscribe customer", run: () => { go("subscriptions"); setCreateSubOpen(true); } },
       { id: "act-payroll", group: "Actions", label: "Run payroll", Icon: Send, keywords: "pay contractors employees", run: () => go("payroll") },
       { id: "act-test", group: "Actions", label: config.testMode ? "Disable test mode" : "Enable test mode", Icon: Zap, run: () => setTestMode(!config.testMode) },
-      { id: "act-theme", group: "Actions", label: "Toggle dark mode", Icon: Moon, keywords: "theme light", run: () => toggleTheme() },
       { id: "link-docs", group: "Resources", label: "Documentation", Icon: BookOpen, hint: "/docs", run: () => { window.location.href = "/docs"; } },
       { id: "link-dev", group: "Resources", label: "Developer portal", Icon: Code2, hint: "/dev", run: () => { window.location.href = "/dev"; } },
     ],

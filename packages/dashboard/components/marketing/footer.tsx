@@ -2,7 +2,6 @@ import * as React from "react";
 import Link from "next/link";
 import { Github, Twitter, ShieldCheck } from "lucide-react";
 import { Logo } from "@/components/logo";
-import { ThemeToggle } from "@/components/theme-toggle";
 
 const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
   {
@@ -61,7 +60,6 @@ export function Footer() {
               >
                 <Twitter className="h-4 w-4" />
               </a>
-              <ThemeToggle variant="pill" />
             </div>
           </div>
 

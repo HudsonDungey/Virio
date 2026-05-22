@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { listPayrollRecipients } from "@/lib/payroll-reads";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest) {
   const planId = req.nextUrl.searchParams.get("planId");
   if (!planId) {

@@ -3,7 +3,6 @@
 import * as React from "react";
 import { Menu } from "lucide-react";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { ThemeToggle } from "@/components/theme-toggle";
 
 interface TopbarProps {
   /// Kept for API compatibility with DashboardShell — title now lives in PageHeader.
@@ -24,7 +23,6 @@ export function Topbar({ onOpenSidebar }: TopbarProps) {
         <Menu className="h-5 w-5" />
       </button>
       <div className="ml-auto flex min-w-0 items-center gap-2">
-        <ThemeToggle variant="pill" />
         <ConnectButton
           chainStatus="icon"
           accountStatus={{ smallScreen: "avatar", largeScreen: "address" }}

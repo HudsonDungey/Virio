@@ -71,46 +71,6 @@
     --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  .dark {
-    --background: 222 18% 6%;
-    --foreground: 220 14% 96%;
-    --card: 222 14% 8%;
-    --card-foreground: 220 14% 96%;
-    --popover: 222 14% 9%;
-    --popover-foreground: 220 14% 96%;
-    --primary: 244 80% 70%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 222 14% 12%;
-    --secondary-foreground: 220 14% 96%;
-    --muted: 222 14% 12%;
-    --muted-foreground: 220 10% 65%;
-    --accent: 222 14% 13%;
-    --accent-foreground: 220 14% 96%;
-    --destructive: 354 70% 60%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 222 13% 16%;
-    --input: 222 13% 16%;
-    --ring: 244 80% 70%;
-    --success: 152 56% 50%;
-    --warning: 38 92% 58%;
-
-    --surface: 222 14% 8%;
-    --surface-2: 222 14% 10%;
-    --surface-3: 222 14% 12%;
-    --hairline: 222 13% 16%;
-    --hairline-strong: 222 12% 22%;
-    --text-strong: 220 14% 96%;
-    --text-soft: 220 10% 65%;
-    --sidebar-from: #0a0d18;
-    --sidebar-to: #11142a;
-
-    /* Re-tuned elevation for dark mode (slightly stronger). */
-    --elevation-1: 0 1px 2px hsl(0 0% 0% / 0.4), 0 1px 1px hsl(0 0% 0% / 0.3);
-    --elevation-2: 0 4px 8px hsl(0 0% 0% / 0.4), 0 2px 4px hsl(0 0% 0% / 0.35);
-    --elevation-3: 0 12px 24px hsl(0 0% 0% / 0.45),
-      0 4px 8px hsl(0 0% 0% / 0.35);
-  }
-
   * {
     @apply border-border;
   }
@@ -125,9 +85,6 @@
   }
   html {
     color-scheme: light;
-  }
-  html.dark {
-    color-scheme: dark;
   }
 
   @property --angle {
