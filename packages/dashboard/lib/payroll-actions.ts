@@ -46,7 +46,7 @@ export function usePayrollActions() {
     }
     if (payrollAddress === "0x0000000000000000000000000000000000000000") {
       throw new Error(
-        "payrollManager address not set in virio.local.json — deploy it first",
+        "payrollManager address not configured — set the contract addresses in lib/addresses.ts",
       );
     }
   }

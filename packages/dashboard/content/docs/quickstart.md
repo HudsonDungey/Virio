@@ -40,7 +40,7 @@ export const virio = new Virio({
 ```
 
 :::note
-Prefer a config file? Drop a `virio.config.json` next to your app and call `Virio.fromConfigFile()`. The `RPC_URL` and `PRIVATE_KEY` can also be supplied via the `VIRIO_RPC_URL` and `VIRIO_PRIVATE_KEY` environment variables, which always win over the file.
+Use env vars for runtime config in production. `RPC_URL` and `PRIVATE_KEY` can be supplied through `VIRIO_RPC_URL` and `VIRIO_PRIVATE_KEY`.
 :::
 
 ## 3. Create a plan

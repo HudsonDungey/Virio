@@ -24,7 +24,7 @@ if (cfg.network === "sepolia" && !rpcUrl) {
   // sees "Connect Wallet" + a clear "no RPC configured" error in the UI.
   // eslint-disable-next-line no-console
   console.warn(
-    "[virio] No Alchemy key or rpc.fullUrlOverride set in virio.local.json / .env.local — Sepolia reads will use viem's default public RPC and likely rate-limit. See virio.local.example.json.",
+    "[virio] No Alchemy key or VIRIO_RPC_URL set in env — Sepolia reads will use viem's default public RPC and likely rate-limit.",
   );
 }
 

@@ -51,7 +51,7 @@ export function useVirioActions() {
     }
     if (publicCfg.contracts.manager === "0x0000000000000000000000000000000000000000") {
       throw new Error(
-        "manager address not set in virio.local.json — deploy the contracts and paste the address there",
+        "manager address not configured — set the contract addresses in lib/addresses.ts",
       );
     }
   }

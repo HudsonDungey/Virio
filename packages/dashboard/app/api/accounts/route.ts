@@ -4,8 +4,8 @@ import { displayAccounts, publicClient, USDC_ADDRESS, erc20Abi, usdcDisplay } fr
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/// Lists the user-configured addresses (their merchant + test customer addresses
-/// from virio.local.json) with on-chain balances. No private keys are returned —
+/// Lists the configured merchant + test customer addresses with on-chain balances.
+/// No private keys are returned —
 /// the dashboard signs from the connected wallet for any writes.
 export async function GET() {
   const enriched = await Promise.all(

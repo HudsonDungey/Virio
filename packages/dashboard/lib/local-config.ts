@@ -1,48 +1,17 @@
-/// Loader for the gitignored `virio.local.json` + env vars. Server-only — never import
-/// from a client component. Use `lib/public-config.ts` to surface the safe subset to the browser.
+/// Loader for RPC + wallet-connect + executor settings. Server-only — never import
+/// from a client component. Addresses live in `lib/addresses.ts`.
 
-import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
-import type { VirioLocalConfig, Network } from "./types";
-
-const ZERO = "0x0000000000000000000000000000000000000000" as const;
+import type { Network, VirioLocalConfig } from "./types";
+import {
+  CONTRACTS,
+  DEPLOYMENT_BLOCK,
+  MERCHANT,
+  NETWORK,
+  PAYROLL_DEPLOYMENT_BLOCK,
+  TEST_ADDRESSES,
+} from "./addresses";
 
 let cached: VirioLocalConfig | null = null;
-let cachedError: string | null = null;
-
-interface RawLocal {
-  network?: Network;
-  rpc?: { alchemyKey?: string | null; fullUrlOverride?: string | null };
-  walletConnectProjectId?: string | null;
-  contracts?: {
-    manager?: string;
-    usdc?: string;
-    feeRecipient?: string;
-    payrollManager?: string;
-    delegate?: string;
-  };
-  deploymentBlock?: number | string | null;
-  payrollDeploymentBlock?: number | string | null;
-  merchant?: { address?: string; label?: string };
-  executor?: { privateKey?: string | null };
-  testAddresses?: Array<{ label?: string; address?: string }>;
-}
-
-function readRaw(): RawLocal {
-  const p = join(process.cwd(), "virio.local.json");
-  if (!existsSync(p)) return {};
-  try {
-    return JSON.parse(readFileSync(p, "utf8")) as RawLocal;
-  } catch (e) {
-    cachedError = `Failed to parse virio.local.json: ${(e as Error).message}`;
-    return {};
-  }
-}
-
-function asHex(v: string | undefined | null, fallback: `0x${string}`): `0x${string}` {
-  if (!v || !/^0x[0-9a-fA-F]{40}$/.test(v)) return fallback;
-  return v as `0x${string}`;
-}
 
 function asPk(v: string | undefined | null): `0x${string}` | null {
   if (!v) return null;
@@ -52,48 +21,30 @@ function asPk(v: string | undefined | null): `0x${string}` | null {
 
 export function getLocalConfig(): VirioLocalConfig {
   if (cached) return cached;
-  const raw = readRaw();
-
-  // env wins over JSON for secrets — keeps keys out of files you might commit by mistake.
-  const alchemyKey =
-    process.env.NEXT_PUBLIC_ALCHEMY_KEY?.trim() || raw.rpc?.alchemyKey?.trim() || null;
-  const wcId =
-    process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID?.trim() ||
-    raw.walletConnectProjectId?.trim() ||
-    null;
-  const execPk = asPk(process.env.EXECUTOR_PRIVATE_KEY ?? raw.executor?.privateKey ?? null);
+  const alchemyKey = process.env.NEXT_PUBLIC_ALCHEMY_KEY?.trim() || null;
+  const fullUrlOverride = process.env.VIRIO_RPC_URL?.trim() || null;
+  const wcId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID?.trim() || null;
+  const execPk = asPk(process.env.EXECUTOR_PRIVATE_KEY ?? null);
 
   cached = {
-    network: raw.network ?? "sepolia",
+    network: (process.env.VIRIO_NETWORK?.trim() as "sepolia" | "anvil" | undefined) ?? NETWORK,
     rpc: {
-      alchemyKey: alchemyKey && !alchemyKey.startsWith("REPLACE_") ? alchemyKey : null,
-      fullUrlOverride: raw.rpc?.fullUrlOverride ?? null,
+      alchemyKey,
+      fullUrlOverride,
     },
-    walletConnectProjectId: wcId && !wcId.startsWith("REPLACE_") ? wcId : null,
-    contracts: {
-      manager: asHex(raw.contracts?.manager, ZERO),
-      usdc: asHex(raw.contracts?.usdc, ZERO),
-      feeRecipient: asHex(raw.contracts?.feeRecipient, ZERO),
-      payrollManager: asHex(raw.contracts?.payrollManager, ZERO),
-      delegate: asHex(raw.contracts?.delegate, ZERO),
-    },
-    deploymentBlock: raw.deploymentBlock != null ? BigInt(raw.deploymentBlock) : 0n,
-    payrollDeploymentBlock:
-      raw.payrollDeploymentBlock != null ? BigInt(raw.payrollDeploymentBlock) : 0n,
-    merchant: {
-      address: asHex(raw.merchant?.address, ZERO),
-      label: raw.merchant?.label ?? "My Merchant",
-    },
+    walletConnectProjectId: wcId,
+    contracts: CONTRACTS,
+    deploymentBlock: DEPLOYMENT_BLOCK,
+    payrollDeploymentBlock: PAYROLL_DEPLOYMENT_BLOCK,
+    merchant: MERCHANT,
     executor: { privateKey: execPk },
-    testAddresses: (raw.testAddresses ?? [])
-      .map((a) => ({ label: a.label ?? "Address", address: asHex(a.address, ZERO) }))
-      .filter((a) => a.address !== ZERO),
+    testAddresses: [...TEST_ADDRESSES],
   };
   return cached;
 }
 
 export function getConfigLoadError(): string | null {
-  return cachedError;
+  return null;
 }
 
 /// Subset of the local config safe to expose to the browser (no private keys).

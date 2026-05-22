@@ -26,7 +26,7 @@ const virio = new Virio({
 });
 ```
 
-You can also build from a config object (`Virio.fromConfig(options)`) or a JSON file (`Virio.fromConfigFile({ path?, chain? })`, default `./virio.config.json`).
+You can also build from a config object (`Virio.fromConfig(options)`).
 
 ### Options
 
