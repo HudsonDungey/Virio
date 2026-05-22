@@ -3,8 +3,6 @@ import { Inter, Inter_Tight, JetBrains_Mono } from "next/font/google";
 import { ToastProvider } from "@/components/ui/toast";
 import { ConfirmProvider } from "@/components/ui/confirm";
 import { ThemeProvider, themeInitScript } from "@/components/theme-provider";
-import { Providers } from "./providers";
-import { getLocalConfig, publicView } from "@/lib/local-config";
 import "./globals.css";
 
 const inter = Inter({
@@ -32,7 +30,6 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const publicCfg = publicView(getLocalConfig());
   return (
     <html
       lang="en"
@@ -44,11 +41,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="min-h-screen bg-background font-sans">
         <ThemeProvider>
-          <Providers config={publicCfg}>
-            <ToastProvider>
-              <ConfirmProvider>{children}</ConfirmProvider>
-            </ToastProvider>
-          </Providers>
+          <ToastProvider>
+            <ConfirmProvider>{children}</ConfirmProvider>
+          </ToastProvider>
         </ThemeProvider>
       </body>
     </html>
