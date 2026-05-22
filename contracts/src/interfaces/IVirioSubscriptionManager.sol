@@ -98,6 +98,17 @@ interface IVirioSubscriptionManager {
         bool    active;
     }
 
+    /// Per-merchant aggregate, updated synchronously on every state change.
+    /// Lets the dashboard show overview metrics with a single eth_call instead
+    /// of replaying ChargeExecuted events from deploymentBlock.
+    struct MerchantStats {
+        uint256 totalEarned;    // sum of merchantAmount across successful charges
+        uint256 totalFeesPaid;  // sum of (executorFee + protocolFee) on this merchant's charges
+        uint256 totalCharges;   // count of successful charges
+        uint256 activePlans;    // currently-active plans owned by this merchant
+        uint256 activeSubs;     // currently-active subscriptions paying this merchant
+    }
+
     // ─── Functions ───────────────────────────────────────────────────────────
 
     /// @notice Permissionless executor fee in basis points (0.1%).
@@ -126,6 +137,9 @@ interface IVirioSubscriptionManager {
 
     function getSubscription(bytes32 subscriptionId)
         external view returns (Subscription memory);
+
+    function getMerchantStats(address merchant)
+        external view returns (MerchantStats memory);
 
     /// @notice Compute the deterministic subscription id for a (plan, customer) pair.
     function computeSubId(bytes32 planId, address customer)

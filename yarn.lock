@@ -1263,58 +1263,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@virio/dashboard@workspace:packages/dashboard":
-  version: 0.0.0-use.local
-  resolution: "@virio/dashboard@workspace:packages/dashboard"
-  dependencies:
-    "@rainbow-me/rainbowkit": "npm:^2.2.1"
-    "@tanstack/react-query": "npm:^5.59.0"
-    "@types/node": "npm:^20.0.0"
-    "@types/react": "npm:^18.3.3"
-    "@types/react-dom": "npm:^18.3.0"
-    autoprefixer: "npm:^10.4.20"
-    class-variance-authority: "npm:^0.7.0"
-    clsx: "npm:^2.1.1"
-    eslint: "npm:^8.57.0"
-    eslint-config-next: "npm:^14.2.5"
-    framer-motion: "npm:^12.38.0"
-    lucide-react: "npm:^0.451.0"
-    next: "npm:^14.2.5"
-    postcss: "npm:^8.4.41"
-    react: "npm:^18.3.1"
-    react-dom: "npm:^18.3.1"
-    tailwind-merge: "npm:^2.5.2"
-    tailwindcss: "npm:^3.4.10"
-    tailwindcss-animate: "npm:^1.0.7"
-    typescript: "npm:^5.4.0"
-    viem: "npm:^2.48.11"
-    wagmi: "npm:^2.13.5"
-  languageName: unknown
-  linkType: soft
-
-"@virio/scheduler@workspace:packages/scheduler":
-  version: 0.0.0-use.local
-  resolution: "@virio/scheduler@workspace:packages/scheduler"
-  dependencies:
-    "@virio/sdk": "npm:*"
-    "@types/node": "npm:^20.0.0"
-    hardhat: "npm:^2.22.0"
-    ts-node: "npm:^10.9.2"
-    typescript: "npm:^5.4.0"
-    viem: "npm:^2.0.0"
-  languageName: unknown
-  linkType: soft
-
-"@virio/sdk@npm:*, @virio/sdk@workspace:packages/sdk":
-  version: 0.0.0-use.local
-  resolution: "@virio/sdk@workspace:packages/sdk"
-  dependencies:
-    "@types/node": "npm:^20.0.0"
-    typescript: "npm:^5.4.0"
-    viem: "npm:^2.0.0"
-  languageName: unknown
-  linkType: soft
-
 "@rainbow-me/rainbowkit@npm:^2.2.1":
   version: 2.2.11
   resolution: "@rainbow-me/rainbowkit@npm:2.2.11"
@@ -2863,6 +2811,58 @@ __metadata:
   checksum: 10c0/d266fe1ab40dbf4136df4dab508b1d3e7d64cf2cd88c0f370b9de12f20027431fdd58c4a12b603c5ace72e50d416ee743944af98321c538218eadf9fceaf8023
   languageName: node
   linkType: hard
+
+"@virio/dashboard@workspace:packages/dashboard":
+  version: 0.0.0-use.local
+  resolution: "@virio/dashboard@workspace:packages/dashboard"
+  dependencies:
+    "@rainbow-me/rainbowkit": "npm:^2.2.1"
+    "@tanstack/react-query": "npm:^5.59.0"
+    "@types/node": "npm:^20.0.0"
+    "@types/react": "npm:^18.3.3"
+    "@types/react-dom": "npm:^18.3.0"
+    autoprefixer: "npm:^10.4.20"
+    class-variance-authority: "npm:^0.7.0"
+    clsx: "npm:^2.1.1"
+    eslint: "npm:^8.57.0"
+    eslint-config-next: "npm:^14.2.5"
+    framer-motion: "npm:^12.38.0"
+    lucide-react: "npm:^0.451.0"
+    next: "npm:^14.2.5"
+    postcss: "npm:^8.4.41"
+    react: "npm:^18.3.1"
+    react-dom: "npm:^18.3.1"
+    tailwind-merge: "npm:^2.5.2"
+    tailwindcss: "npm:^3.4.10"
+    tailwindcss-animate: "npm:^1.0.7"
+    typescript: "npm:^5.4.0"
+    viem: "npm:^2.48.11"
+    wagmi: "npm:^2.13.5"
+  languageName: unknown
+  linkType: soft
+
+"@virio/scheduler@workspace:packages/scheduler":
+  version: 0.0.0-use.local
+  resolution: "@virio/scheduler@workspace:packages/scheduler"
+  dependencies:
+    "@types/node": "npm:^20.0.0"
+    "@virio/sdk": "npm:*"
+    hardhat: "npm:^2.22.0"
+    ts-node: "npm:^10.9.2"
+    typescript: "npm:^5.4.0"
+    viem: "npm:^2.0.0"
+  languageName: unknown
+  linkType: soft
+
+"@virio/sdk@npm:*, @virio/sdk@workspace:packages/sdk":
+  version: 0.0.0-use.local
+  resolution: "@virio/sdk@workspace:packages/sdk"
+  dependencies:
+    "@types/node": "npm:^20.0.0"
+    typescript: "npm:^5.4.0"
+    viem: "npm:^2.0.0"
+  languageName: unknown
+  linkType: soft
 
 "@wagmi/connectors@npm:6.2.0":
   version: 6.2.0
@@ -7959,18 +7959,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"virio@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "virio@workspace:."
-  dependencies:
-    "@nomicfoundation/hardhat-toolbox": "npm:^5.0.0"
-    "@types/node": "npm:^20.0.0"
-    hardhat: "npm:^2.22.0"
-    ts-node: "npm:^10.9.2"
-    typescript: "npm:^5.4.0"
-  languageName: unknown
-  linkType: soft
-
 "pump@npm:^3.0.0":
   version: 3.0.4
   resolution: "pump@npm:3.0.4"
@@ -9780,6 +9768,18 @@ __metadata:
   checksum: 10c0/d2e529c61ae5321acb5b17bde0b99c812ebc12ebd80d828aefba0531395855ed05e64596e8af587b24894322f61a168fa66e805063f08062e5e1b8471b23a419
   languageName: node
   linkType: hard
+
+"virio@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "virio@workspace:."
+  dependencies:
+    "@nomicfoundation/hardhat-toolbox": "npm:^5.0.0"
+    "@types/node": "npm:^20.0.0"
+    hardhat: "npm:^2.22.0"
+    ts-node: "npm:^10.9.2"
+    typescript: "npm:^5.4.0"
+  languageName: unknown
+  linkType: soft
 
 "wagmi@npm:^2.13.5":
   version: 2.19.5

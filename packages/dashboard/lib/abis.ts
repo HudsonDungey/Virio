@@ -155,6 +155,24 @@ export const managerAbi = [
     stateMutability: "pure",
   },
   {
+    type: "function",
+    name: "getMerchantStats",
+    inputs: [{ name: "merchant", type: "address" }],
+    outputs: [
+      {
+        type: "tuple",
+        components: [
+          { name: "totalEarned",   type: "uint256" },
+          { name: "totalFeesPaid", type: "uint256" },
+          { name: "totalCharges",  type: "uint256" },
+          { name: "activePlans",   type: "uint256" },
+          { name: "activeSubs",    type: "uint256" },
+        ],
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
     type: "event",
     name: "PlanCreated",
     inputs: [

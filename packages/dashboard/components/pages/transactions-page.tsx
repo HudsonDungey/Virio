@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useAccount } from "wagmi";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -16,12 +17,17 @@ interface Props {
 }
 
 export function TransactionsPage({ visible }: Props) {
+  const { address } = useAccount();
   const [customer, setCustomer] = React.useState("");
   const [status, setStatus] = React.useState("");
   const [items, setItems] = React.useState<Transaction[]>([]);
 
   const fetchTx = React.useCallback(async () => {
-    const params = new URLSearchParams();
+    if (!address) {
+      setItems([]);
+      return;
+    }
+    const params = new URLSearchParams({ merchant: address });
     if (customer) params.set("customer", customer);
     if (status) params.set("status", status);
     try {
@@ -30,7 +36,7 @@ export function TransactionsPage({ visible }: Props) {
     } catch {
       /* ignore */
     }
-  }, [customer, status]);
+  }, [address, customer, status]);
 
   React.useEffect(() => {
     if (visible) fetchTx();

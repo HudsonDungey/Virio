@@ -52,6 +52,11 @@ contract VirioSubscriptionManager is IVirioSubscriptionManager {
     mapping(bytes32 => Plan)         public plans;
     mapping(bytes32 => Subscription) public subscriptions;
 
+    /// @dev Per-merchant aggregate counters. Updated synchronously alongside
+    /// the per-plan / per-subscription state so the dashboard can read all
+    /// overview numbers in a single eth_call instead of scanning events.
+    mapping(address => MerchantStats) private _merchantStats;
+
     // ─── Modifiers ────────────────────────────────────────────────────────────
 
     modifier nonReentrant() {
@@ -108,6 +113,8 @@ contract VirioSubscriptionManager is IVirioSubscriptionManager {
             active:   true
         });
 
+        _merchantStats[msg.sender].activePlans += 1;
+
         emit PlanCreated(planId, msg.sender, token, amount, period);
     }
 
@@ -120,6 +127,7 @@ contract VirioSubscriptionManager is IVirioSubscriptionManager {
         if (!plan.active)                revert PlanNotActive(planId);
 
         plan.active = false;
+        _merchantStats[msg.sender].activePlans -= 1;
         emit PlanDeactivated(planId, msg.sender);
     }
 
@@ -148,6 +156,8 @@ contract VirioSubscriptionManager is IVirioSubscriptionManager {
             active:        true
         });
 
+        _merchantStats[plan.merchant].activeSubs += 1;
+
         emit Subscribed(subscriptionId, planId, msg.sender, totalSpendCap);
     }
 
@@ -159,6 +169,7 @@ contract VirioSubscriptionManager is IVirioSubscriptionManager {
             revert NotSubscribed(subscriptionId);
 
         sub.active = false;
+        _merchantStats[sub.merchant].activeSubs -= 1;
         emit Cancelled(subscriptionId, msg.sender);
     }
 
@@ -187,6 +198,7 @@ contract VirioSubscriptionManager is IVirioSubscriptionManager {
         // succeeds and the subscription is cleaned up gracefully.
         if (sub.totalSpendCap != 0 && sub.totalSpent > sub.totalSpendCap) {
             sub.active = false;
+            _merchantStats[sub.merchant].activeSubs -= 1;
             emit Cancelled(subscriptionId, address(this));
             return;
         }
@@ -201,6 +213,11 @@ contract VirioSubscriptionManager is IVirioSubscriptionManager {
 
         if (amount < execFee + protocolFee) revert InvalidAmount();
         uint256 merchantAmt = amount - execFee - protocolFee;
+
+        MerchantStats storage stats = _merchantStats[merchant];
+        stats.totalEarned   += merchantAmt;
+        stats.totalFeesPaid += execFee + protocolFee;
+        stats.totalCharges  += 1;
 
         _safeTransferFrom(token, customer, merchant, merchantAmt);
         if (execFee     > 0) _safeTransferFrom(token, customer, executor,     execFee);
@@ -228,6 +245,12 @@ contract VirioSubscriptionManager is IVirioSubscriptionManager {
         external view returns (Subscription memory)
     {
         return subscriptions[subscriptionId];
+    }
+
+    function getMerchantStats(address merchant)
+        external view returns (MerchantStats memory)
+    {
+        return _merchantStats[merchant];
     }
 
     /// @notice Compute the deterministic subscription id for a (plan, customer) pair.

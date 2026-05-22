@@ -1,13 +1,20 @@
 import { NextResponse } from "next/server";
 import { ensureSchedulerStarted } from "@/lib/scheduler";
-import { listPlans } from "@/lib/chain-reads";
+import { plansByMerchant } from "@/lib/chain-reads";
+import type { Hex } from "viem";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+/// Plans are scoped to a merchant address. Merchants only see what they created;
+/// passing no merchant returns an empty list (UI prompts for wallet connection).
+export async function GET(req: Request) {
   ensureSchedulerStarted();
-  const plans = await listPlans();
+  const merchant = new URL(req.url).searchParams.get("merchant");
+  if (!merchant || !/^0x[0-9a-fA-F]{40}$/.test(merchant)) {
+    return NextResponse.json([]);
+  }
+  const plans = await plansByMerchant(merchant as Hex);
   return NextResponse.json(plans);
 }
 

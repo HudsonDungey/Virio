@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useAccount } from "wagmi";
 import {
   LayoutDashboard,
   Wallet,
@@ -50,6 +51,7 @@ const PAGE_TITLES: Record<PageKey, string> = {
 export function DashboardShell() {
   const { toast } = useToast();
   const { toggle: toggleTheme } = useTheme();
+  const { address } = useAccount();
   const [page, setPage] = React.useState<PageKey>("dashboard");
   const [cmdOpen, setCmdOpen] = React.useState(false);
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
@@ -75,9 +77,20 @@ export function DashboardShell() {
     }
   }, []);
 
+  /// All chain reads are scoped to the connected wallet. When no wallet is
+  /// connected we keep the local state empty so the UI shows a "connect"
+  /// prompt instead of leaking another merchant's data.
+  const merchantParam = address ? `?merchant=${address}` : null;
+
   const fetchStats = React.useCallback(async () => {
+    if (!merchantParam) {
+      setStats(null);
+      knownTxIdsRef.current = new Set();
+      setNewTxIds(new Set());
+      return;
+    }
     try {
-      const s = await api<Stats>("GET", "/api/stats");
+      const s = await api<Stats>("GET", `/api/stats${merchantParam}`);
       setStats(s);
       const incoming = s.recentTransactions.map((t) => t.id);
       const fresh = new Set<string>();
@@ -88,43 +101,46 @@ export function DashboardShell() {
     } catch (e) {
       console.error("stats load failed", e);
     }
-  }, []);
+  }, [merchantParam]);
 
   const fetchPlans = React.useCallback(async () => {
+    if (!merchantParam) {
+      setPlans([]);
+      return;
+    }
     try {
-      setPlans(await api<Plan[]>("GET", "/api/plans"));
+      setPlans(await api<Plan[]>("GET", `/api/plans${merchantParam}`));
     } catch (e) {
       console.error("plans load failed", e);
     }
-  }, []);
+  }, [merchantParam]);
 
   const fetchSubs = React.useCallback(async () => {
+    if (!merchantParam) {
+      setSubs([]);
+      return;
+    }
     try {
-      setSubs(await api<Subscription[]>("GET", "/api/subscriptions"));
+      setSubs(await api<Subscription[]>("GET", `/api/subscriptions${merchantParam}`));
     } catch (e) {
       console.error("subs load failed", e);
     }
-  }, []);
+  }, [merchantParam]);
 
   const refreshAll = React.useCallback(() => {
     fetchStats();
     fetchPlans();
-    if (page === "subscriptions") fetchSubs();
-  }, [fetchStats, fetchPlans, fetchSubs, page]);
+    fetchSubs();
+  }, [fetchStats, fetchPlans, fetchSubs]);
 
+  /// Fetch once when the connected wallet changes — never on page navigation.
+  /// Refreshes are explicit (post-mutation via refreshAll or a manual reload).
   React.useEffect(() => {
     fetchConfig();
     fetchStats();
     fetchPlans();
-  }, [fetchConfig, fetchStats, fetchPlans]);
-
-  React.useEffect(() => {
-    if (page === "products") fetchPlans();
-    if (page === "subscriptions") {
-      fetchPlans();
-      fetchSubs();
-    }
-  }, [page, fetchPlans, fetchSubs]);
+    fetchSubs();
+  }, [fetchConfig, fetchStats, fetchPlans, fetchSubs]);
 
   // No timed polling — initial fetch on mount, refreshAll is called by mutations
   // (createPlan, subscribe, cancel, deactivate) so the UI stays consistent.

@@ -12,14 +12,17 @@
   "walletConnectProjectId": "REPLACE_WITH_YOUR_WALLETCONNECT_PROJECT_ID",
 
   "contracts": {
-    "_comment": "Fill these in after `forge script script/Deploy.s.sol --rpc-url $SEPOLIA_RPC --broadcast` prints them.",
+    "_comment": "Fill these in after `yarn deploy:sepolia:etherscan` + `yarn deploy:payroll:sepolia:etherscan` print them.",
     "manager": "0x0000000000000000000000000000000000000000",
+    "delegate": "0x0000000000000000000000000000000000000000",
     "usdc": "0x0000000000000000000000000000000000000000",
-    "feeRecipient": "0x0000000000000000000000000000000000000000"
+    "feeRecipient": "0x0000000000000000000000000000000000000000",
+    "payrollManager": "0x0000000000000000000000000000000000000000"
   },
 
   "_deploymentBlockNote": "Sepolia block at/just before the manager deployment. Used as the start of the eth_getLogs scan so we don't crawl the whole chain. Alchemy/Etherscan show this number in your deploy tx.",
   "deploymentBlock": 0,
+  "payrollDeploymentBlock": 0,
 
   "merchant": {
     "_comment": "Your MetaMask address. Used as the default 'merchant' and shown in the UI as the connected merchant.",

@@ -160,6 +160,93 @@ export async function listPlans(): Promise<Plan[]> {
   return out.reverse(); // newest first
 }
 
+export async function plansByMerchant(address: Hex): Promise<Plan[]> {
+  await resyncIfReset();
+  await syncEvents();
+  const target = address.toLowerCase();
+  const wanted = new Set(
+    planEvents
+      .filter((p) => p.merchant.toLowerCase() === target)
+      .map((p) => p.planId.toLowerCase()),
+  );
+  if (wanted.size === 0) return [];
+  const all = await listPlans();
+  return all.filter((p) => wanted.has(p.id.toLowerCase()));
+}
+
+/// Single eth_call against the manager's `getMerchantStats` view. Returns the
+/// merchant's aggregate counters (revenue, fees, charges, active counts) so
+/// the dashboard overview can render without scanning the entire event log.
+export async function merchantStats(merchant: Hex): Promise<{
+  totalEarned: bigint;
+  totalFeesPaid: bigint;
+  totalCharges: bigint;
+  activePlans: bigint;
+  activeSubs: bigint;
+}> {
+  if (MANAGER_ADDRESS.toLowerCase() === ZERO_ADDR) {
+    return { totalEarned: 0n, totalFeesPaid: 0n, totalCharges: 0n, activePlans: 0n, activeSubs: 0n };
+  }
+  return await publicClient.readContract({
+    address: MANAGER_ADDRESS,
+    abi: managerAbi,
+    functionName: "getMerchantStats",
+    args: [merchant],
+  });
+}
+
+/// Charges paid to a specific merchant. Used to render the merchant-scoped
+/// recent transactions list without leaking other merchants' activity.
+export async function transactionsByMerchant(merchant: Hex): Promise<Transaction[]> {
+  await resyncIfReset();
+  await syncEvents();
+  const target = merchant.toLowerCase();
+  const merchantPlanIds = new Set(
+    planEvents.filter((p) => p.merchant.toLowerCase() === target).map((p) => p.planId.toLowerCase()),
+  );
+  if (merchantPlanIds.size === 0) return [];
+  const subPlan = new Map<string, Hex>();
+  for (const s of subEvents) subPlan.set(s.subId.toLowerCase(), s.planId);
+
+  const plans = await listPlans();
+  const planLookup = new Map(plans.map((p) => [p.id.toLowerCase(), p]));
+
+  const out: Transaction[] = [];
+  for (const c of chargeEvents) {
+    const planId = subPlan.get(c.subId.toLowerCase());
+    if (!planId || !merchantPlanIds.has(planId.toLowerCase())) continue;
+    const plan = planLookup.get(planId.toLowerCase());
+    out.push({
+      id: c.txHash,
+      subscriptionId: c.subId,
+      planId,
+      planName: plan?.name ?? "(deleted plan)",
+      customer: c.customer,
+      merchantAmount: usdcDisplay(c.merchantAmount),
+      fee: usdcDisplay(c.protocolFee + c.executorFee),
+      gross: usdcDisplay(c.gross),
+      direction: "in",
+      status: "success",
+      timestamp: new Date(c.timestamp * 1000).toISOString(),
+    });
+  }
+  return out.reverse();
+}
+
+export async function plansByCustomer(address: Hex): Promise<Plan[]> {
+  await resyncIfReset();
+  await syncEvents();
+  const target = address.toLowerCase();
+  const wanted = new Set(
+    subEvents
+      .filter((s) => s.customer.toLowerCase() === target)
+      .map((s) => s.planId.toLowerCase()),
+  );
+  if (wanted.size === 0) return [];
+  const all = await listPlans();
+  return all.filter((p) => wanted.has(p.id.toLowerCase()));
+}
+
 export async function listSubscriptions(): Promise<Subscription[]> {
   await resyncIfReset();
   await syncEvents();

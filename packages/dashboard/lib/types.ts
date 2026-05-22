@@ -23,6 +23,7 @@ export interface VirioLocalConfig {
     usdc: `0x${string}`;
     feeRecipient: `0x${string}`;
     payrollManager: `0x${string}`;
+    delegate: `0x${string}`;
   };
   deploymentBlock: bigint;
   payrollDeploymentBlock: bigint;

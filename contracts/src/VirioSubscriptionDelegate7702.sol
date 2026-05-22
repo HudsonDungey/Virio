@@ -24,7 +24,7 @@ interface IERC20Transfer {
     function transfer(address to, uint256 amount) external returns (bool);
 }
 
-contract SubscriptionDelegate7702 {
+contract VirioSubscriptionDelegate7702 {
     // ─── Errors ───────────────────────────────────────────────────────────────
 
     error NotManager();
@@ -73,7 +73,7 @@ contract SubscriptionDelegate7702 {
         "DelegateInit(address manager,address token,uint256 maxPerPeriod,uint256 periodDuration,uint256 nonce,uint256 expiry)"
     );
 
-    string public constant NAME    = "SubscriptionDelegate7702";
+    string public constant NAME    = "VirioSubscriptionDelegate7702";
     string public constant VERSION = "1";
 
     // ─── State ────────────────────────────────────────────────────────────────
