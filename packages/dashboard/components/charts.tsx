@@ -25,7 +25,7 @@ export function AreaChart({
   data,
   height = 200,
   className,
-  color = "#635bff",
+  color = "#3DD9A4",
   labels,
 }: AreaChartProps) {
   const id = useChartId("area");
@@ -150,7 +150,7 @@ export function BarChart({
   labels,
   height = 200,
   className,
-  color = "#635bff",
+  color = "#3DD9A4",
 }: BarChartProps) {
   const w = 600;
   const h = height;
@@ -284,7 +284,7 @@ export function Donut({
 export function Sparkline({
   data,
   className,
-  color = "#635bff",
+  color = "#3DD9A4",
 }: {
   data: number[];
   className?: string;

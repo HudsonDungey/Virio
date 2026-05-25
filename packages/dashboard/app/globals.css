@@ -4,38 +4,50 @@
 
 @layer base {
   :root {
-    /* ─── colour tokens ──────────────────────────────────────── */
-    --background: 220 14% 98%;
-    --foreground: 222 18% 11%;
+    /* ─── spec accent tokens (style guide) ───────────────────── */
+    --virio-emerald: #3DD9A4;
+    --virio-emerald-ink: #06291F;
+    --virio-blue: #5CAEFF;
+
+    /* ─── semantic tokens (HSL fragments, shadcn-compatible) ── */
+    --background: 0 0% 100%;            /* #FFFFFF */
+    --foreground: 0 0% 4%;              /* #0A0A0A */
     --card: 0 0% 100%;
-    --card-foreground: 222 18% 11%;
+    --card-foreground: 0 0% 4%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222 18% 11%;
-    --primary: 244 75% 60%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 220 14% 96%;
-    --secondary-foreground: 222 18% 11%;
+    --popover-foreground: 0 0% 4%;
+
+    /* Primary = the single emerald accent. Used only for CTAs / status. */
+    --primary: 158 67% 55%;             /* #3DD9A4 */
+    --primary-foreground: 161 70% 9%;   /* #06291F */
+
+    --secondary: 220 14% 96%;           /* #F1F3F5 */
+    --secondary-foreground: 0 0% 4%;
+
     --muted: 220 14% 96%;
-    --muted-foreground: 220 9% 46%;
+    --muted-foreground: 218 5% 39%;     /* #5F6368 */
+
     --accent: 220 14% 96%;
-    --accent-foreground: 222 18% 11%;
+    --accent-foreground: 0 0% 4%;
+
     --destructive: 354 70% 50%;
     --destructive-foreground: 0 0% 100%;
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 244 75% 60%;
-    --success: 152 60% 36%;
+
+    --border: 222 14% 92%;              /* #E7E9EE */
+    --input: 222 14% 92%;
+    --ring: 158 67% 55%;
+
+    --success: 158 67% 45%;
     --warning: 38 92% 50%;
 
-    --surface: 0 0% 100%;
-    --surface-2: 220 14% 97%;
-    --surface-3: 220 14% 95%;
-    --hairline: 220 13% 91%;
-    --hairline-strong: 220 13% 84%;
-    --text-strong: 222 18% 11%;
-    --text-soft: 220 9% 46%;
-    --sidebar-from: #0c1027;
-    --sidebar-to: #161b3d;
+    /* Surface system */
+    --surface: 0 0% 100%;               /* #FFFFFF */
+    --surface-2: 220 14% 98%;           /* #F7F8FA, bg-soft */
+    --surface-3: 220 14% 96%;
+    --hairline: 222 14% 92%;
+    --hairline-strong: 222 12% 84%;
+    --text-strong: 0 0% 4%;
+    --text-soft: 218 5% 39%;
 
     /* ─── spacing tokens (strict 4/8 scale) ─────────────────── */
     --space-1: 4px;
@@ -48,27 +60,71 @@
     --space-16: 64px;
 
     /* ─── radius tokens ─────────────────────────────────────── */
-    --radius-sm: 6px;
+    --radius-sm: 8px;
     --radius-md: 10px;
-    --radius-lg: 14px;
-    --radius-xl: 20px;
-    --radius-2xl: 24px;
-    --radius: 10px; /* shadcn default, kept for compat */
+    --radius-lg: 12px;
+    --radius-xl: 16px;
+    --radius-2xl: 22px;
+    --radius: 10px;
 
-    /* ─── elevation (monochrome) ────────────────────────────── */
-    --elevation-1: 0 1px 2px hsl(220 10% 10% / 0.04),
-      0 1px 1px hsl(220 10% 10% / 0.03);
-    --elevation-2: 0 4px 8px hsl(220 10% 10% / 0.04),
-      0 2px 4px hsl(220 10% 10% / 0.04);
-    --elevation-3: 0 12px 24px hsl(220 10% 10% / 0.08),
-      0 4px 8px hsl(220 10% 10% / 0.06);
+    /* ─── elevation (monochrome, per spec) ──────────────────── */
+    --elevation-1: 0 1px 2px rgba(10, 10, 10, 0.04);
+    --elevation-2: 0 1px 2px rgba(10, 10, 10, 0.04),
+      0 12px 32px -8px rgba(10, 10, 10, 0.08);
+    --elevation-3: 0 1px 2px rgba(10, 10, 10, 0.04),
+      0 18px 48px -12px rgba(10, 10, 10, 0.12);
 
     /* ─── motion tokens ─────────────────────────────────────── */
-    --motion-fast: 120ms;
-    --motion-base: 180ms;
-    --motion-slow: 280ms;
+    --motion-fast: 150ms;
+    --motion-base: 200ms;
+    --motion-slow: 250ms;
     --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
     --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .dark {
+    --background: 216 11% 5%;           /* #0B0D10 */
+    --foreground: 213 25% 97%;          /* #F5F7FA */
+    --card: 222 14% 8%;                 /* #111318 surface-dark */
+    --card-foreground: 213 25% 97%;
+    --popover: 220 14% 11%;             /* #171A21 elevated-dark */
+    --popover-foreground: 213 25% 97%;
+
+    --primary: 158 67% 55%;
+    --primary-foreground: 161 70% 9%;
+
+    --secondary: 222 13% 11%;
+    --secondary-foreground: 213 25% 97%;
+
+    --muted: 222 13% 11%;
+    --muted-foreground: 220 9% 65%;     /* #9CA3AF */
+
+    --accent: 222 13% 11%;
+    --accent-foreground: 213 25% 97%;
+
+    --destructive: 354 70% 55%;
+    --destructive-foreground: 213 25% 97%;
+
+    --border: 222 11% 16%;              /* #23262D */
+    --input: 222 11% 16%;
+    --ring: 158 67% 55%;
+
+    --success: 158 67% 55%;
+    --warning: 38 92% 55%;
+
+    --surface: 222 14% 8%;
+    --surface-2: 220 14% 11%;
+    --surface-3: 222 12% 14%;
+    --hairline: 222 11% 16%;
+    --hairline-strong: 222 10% 22%;
+    --text-strong: 213 25% 97%;
+    --text-soft: 220 9% 65%;
+
+    --elevation-1: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --elevation-2: 0 1px 2px rgba(0, 0, 0, 0.4),
+      0 12px 32px -8px rgba(0, 0, 0, 0.5);
+    --elevation-3: 0 1px 2px rgba(0, 0, 0, 0.4),
+      0 24px 48px -12px rgba(0, 0, 0, 0.6);
   }
 
   * {
@@ -80,22 +136,19 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11", "ss01";
-    letter-spacing: -0.01em;
+    -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
   }
   html {
     color-scheme: light;
   }
-
-  @property --angle {
-    syntax: "<angle>";
-    initial-value: 0deg;
-    inherits: false;
+  html.dark {
+    color-scheme: dark;
   }
 }
 
 @layer components {
-  /* Ripple bubble element produced by RippleButton */
+  /* Ripple bubble produced by RippleButton — kept, neutral tint only */
   .ripple-span {
     position: absolute;
     border-radius: 9999px;
@@ -105,92 +158,20 @@
     mix-blend-mode: screen;
     animation: ripple 0.65s cubic-bezier(0.16, 1, 0.3, 1);
   }
-  .ripple-span[data-tint="brand"] {
-    background: rgba(99, 91, 255, 0.28);
-    mix-blend-mode: normal;
-  }
   .ripple-span[data-tint="danger"] {
-    background: rgba(223, 27, 65, 0.28);
+    background: rgba(223, 27, 65, 0.24);
     mix-blend-mode: normal;
   }
 
   /* Chevron indicator for <select> */
   .select-chevron {
-    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23667085' stroke-width='1.5'%3E%3Cpath d='M5 8l5 5 5-5'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%235F6368' stroke-width='1.5'%3E%3Cpath d='M5 8l5 5 5-5'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 0.65rem center;
     background-size: 1rem;
   }
 
-  /* Sheen sweep used by primary buttons on hover */
-  .btn-sheen::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: -120%;
-    width: 60%;
-    height: 100%;
-    background: linear-gradient(
-      105deg,
-      transparent 30%,
-      rgba(255, 255, 255, 0.35) 50%,
-      transparent 70%
-    );
-    transition: left 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-    pointer-events: none;
-    z-index: 1;
-  }
-  .btn-sheen:hover::before {
-    left: 130%;
-  }
-
-  /* Rotating conic-gradient border highlight on hover (stat cards) */
-  .conic-ring::after {
-    content: "";
-    position: absolute;
-    inset: -1px;
-    border-radius: inherit;
-    background: conic-gradient(
-      from var(--angle, 0deg),
-      transparent 60%,
-      rgba(99, 91, 255, 0.4) 80%,
-      transparent 95%
-    );
-    opacity: 0;
-    z-index: -1;
-    animation: rotate-border 6s linear infinite;
-    transition: opacity 0.4s ease-out;
-  }
-  .conic-ring:hover::after {
-    opacity: 0.6;
-  }
-  @keyframes rotate-border {
-    to {
-      --angle: 360deg;
-    }
-  }
-
-  /* Active sidebar rail indicator */
-  .nav-rail::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 50%;
-    width: 3px;
-    height: 0;
-    background: linear-gradient(180deg, #7a73ff 0%, #635bff 50%, #4b3df2 100%);
-    border-radius: 0 3px 3px 0;
-    transform: translateY(-50%);
-    transition: height 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  }
-  .nav-rail:hover::before {
-    height: 18px;
-  }
-  .nav-rail[data-active="true"]::before {
-    height: 22px;
-  }
-
-  /* Surface tokens — usable on both themes */
+  /* Surface utility classes — usable on both themes */
   .surface {
     background-color: hsl(var(--surface));
   }
@@ -204,17 +185,16 @@
     border-color: hsl(var(--hairline));
   }
 
-  /* Marketing — animated grid backdrop */
+  /* Marketing — calm grid backdrop */
   .grid-fade {
     background-image:
-      linear-gradient(to right, hsl(var(--border) / 0.7) 1px, transparent 1px),
-      linear-gradient(to bottom, hsl(var(--border) / 0.7) 1px, transparent 1px);
+      linear-gradient(to right, hsl(var(--border) / 0.6) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(var(--border) / 0.6) 1px, transparent 1px);
     background-size: 56px 56px;
     -webkit-mask-image: radial-gradient(ellipse 75% 60% at 50% 0%, #000 30%, transparent 75%);
     mask-image: radial-gradient(ellipse 75% 60% at 50% 0%, #000 30%, transparent 75%);
   }
 
-  /* Marketing — subtle dotted backdrop */
   .dot-fade {
     background-image: radial-gradient(hsl(var(--border)) 1px, transparent 1px);
     background-size: 22px 22px;
@@ -222,43 +202,14 @@
     mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, #000 40%, transparent 80%);
   }
 
-  /* Gradient text */
-  .text-gradient {
-    background: linear-gradient(135deg, #8b85ff 0%, #635bff 45%, #0a84ff 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
-
-  /* Hairline gradient border for premium cards */
-  .ring-gradient {
-    position: relative;
-  }
-  .ring-gradient::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    padding: 1px;
-    background: linear-gradient(
-      150deg,
-      hsl(var(--border)) 0%,
-      hsl(var(--border) / 0.2) 40%,
-      rgba(99, 91, 255, 0.45) 100%
-    );
-    -webkit-mask:
-      linear-gradient(#000 0 0) content-box,
-      linear-gradient(#000 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    pointer-events: none;
-  }
-
-  /* Marquee for logo strip */
-  .marquee-track {
-    display: flex;
-    width: max-content;
-    animation: marquee 38s linear infinite;
+  /* Emerald status indicator — used for "active", "live", "settled" */
+  .status-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 9999px;
+    background: var(--virio-emerald);
+    box-shadow: 0 0 10px var(--virio-emerald);
   }
 
   /* Code block shell */
@@ -300,9 +251,4 @@
   .animation-delay-400 { animation-delay: 0.4s; }
   .animation-delay-500 { animation-delay: 0.5s; }
   .animation-delay-700 { animation-delay: 0.7s; }
-}
-
-@keyframes marquee {
-  from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
 }

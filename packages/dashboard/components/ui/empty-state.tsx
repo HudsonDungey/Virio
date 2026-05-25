@@ -17,13 +17,12 @@ export function EmptyState({ Icon, title, description, action, className }: Prop
         className,
       )}
     >
-      <div className="relative mb-4">
-        <span className="absolute inset-0 -z-10 animate-virio-ring rounded-2xl bg-brand-500/20" />
-        <span className="grid h-14 w-14 place-items-center rounded-2xl border border-border bg-secondary text-brand-600 dark:text-brand-300">
-          <Icon className="h-6 w-6" strokeWidth={1.75} />
-        </span>
-      </div>
-      <h3 className="font-display text-[15px] font-bold text-foreground">{title}</h3>
+      <span className="mb-4 grid h-12 w-12 place-items-center rounded-xl border border-border bg-secondary text-muted-foreground">
+        <Icon className="h-5 w-5" strokeWidth={1.5} />
+      </span>
+      <h3 className="font-display text-[15px] font-semibold tracking-tight text-foreground">
+        {title}
+      </h3>
       {description && (
         <p className="mt-1.5 max-w-[340px] text-[13px] leading-relaxed text-muted-foreground">
           {description}
