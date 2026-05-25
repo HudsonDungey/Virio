@@ -8,7 +8,7 @@ const badgeVariants = cva(
     variants: {
       variant: {
         active:
-          "bg-emerald-100 text-emerald-800 before:animate-virio-dot dark:bg-emerald-500/15 dark:text-emerald-300",
+          "bg-emerald-100 text-emerald-800 before:animate-pulse-soft dark:bg-emerald-500/15 dark:text-emerald-300",
         cancelled: "bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300",
         completed: "bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300",
         success: "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300",

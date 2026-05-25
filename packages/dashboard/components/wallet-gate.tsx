@@ -63,7 +63,7 @@ export function WalletGate({ children }: Props) {
               </p>
               <div className="mt-6 flex justify-center">
                 {checking ? (
-                  <div className="h-10 w-44 animate-virio rounded-md bg-secondary" />
+                  <div className="h-10 w-44 animate-pulse-soft rounded-md bg-secondary" />
                 ) : (
                   <ConnectButton
                     showBalance={false}

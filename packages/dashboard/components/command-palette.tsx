@@ -168,10 +168,8 @@ export function CommandPalette({ open, onOpenChange, commands }: Props) {
                     >
                       <span
                         className={cn(
-                          "grid h-7 w-7 flex-shrink-0 place-items-center rounded-md border border-border",
-                          isActive
-                            ? "bg-brand-500/10 text-brand-600 dark:text-brand-300"
-                            : "bg-card",
+                          "grid h-7 w-7 flex-shrink-0 place-items-center rounded-md border border-border bg-card text-muted-foreground",
+                          isActive && "text-foreground",
                         )}
                       >
                         <c.Icon className="h-3.5 w-3.5" />

@@ -3,14 +3,14 @@ import * as React from "react";
 /*
  * Hand-built, dependency-free SVG diagrams. Each is keyed by an id and embedded
  * from Markdown via a `:::diagram <id>` directive. Colors use CSS variables so
- * they adapt to light/dark automatically; the brand accent is #635bff.
+ * they adapt to light/dark automatically; the accent is the Virio emerald.
  */
 
 const FG = "hsl(var(--foreground))";
 const MUTED = "hsl(var(--muted-foreground))";
 const CARD = "hsl(var(--card))";
 const BORDER = "hsl(var(--border))";
-const BRAND = "#635bff";
+const ACCENT = "#3DD9A4";
 
 function Box({
   x,
@@ -38,7 +38,7 @@ function Box({
         height={h}
         rx={12}
         fill={CARD}
-        stroke={accent ? BRAND : BORDER}
+        stroke={accent ? ACCENT : BORDER}
         strokeWidth={accent ? 2 : 1}
       />
       <text
@@ -48,7 +48,7 @@ function Box({
         fontSize={13}
         fontWeight={600}
         fontFamily="var(--font-inter-tight), system-ui"
-        fill={accent ? BRAND : FG}
+        fill={accent ? ACCENT : FG}
       >
         {title}
       </text>
@@ -92,7 +92,7 @@ function Arrow({
         y1={y1}
         x2={x2}
         y2={y2}
-        stroke={BRAND}
+        stroke={ACCENT}
         strokeWidth={1.5}
         strokeDasharray={dashed ? "5 4" : undefined}
         markerEnd="url(#virio-arrow)"
@@ -135,7 +135,7 @@ function Frame({
             markerHeight={6}
             orient="auto-start-reverse"
           >
-            <path d="M 0 0 L 10 5 L 0 10 z" fill={BRAND} />
+            <path d="M 0 0 L 10 5 L 0 10 z" fill={ACCENT} />
           </marker>
         </defs>
         {children}

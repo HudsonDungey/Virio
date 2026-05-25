@@ -12,7 +12,7 @@ function Anchor({ id }: { id: string }) {
       aria-label="Link to this section"
       className="ml-2 inline-flex -translate-y-px opacity-0 transition-opacity group-hover:opacity-100"
     >
-      <Hash className="h-3.5 w-3.5 text-brand-500" />
+      <Hash className="h-3.5 w-3.5 text-muted-foreground" />
     </a>
   );
 }
@@ -88,11 +88,11 @@ export function Li({
   return (
     <li className="flex gap-3 text-[14.5px] leading-[1.7] text-muted-foreground">
       {ordered ? (
-        <span className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-brand-500/10 text-[11px] font-semibold text-brand-600 dark:text-brand-300">
+        <span className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border border-border bg-secondary text-[11px] font-semibold text-foreground">
           {(index ?? 0) + 1}
         </span>
       ) : (
-        <span className="mt-[9px] h-1.5 w-1.5 flex-shrink-0 rounded-full bg-brand-500/60" />
+        <span className="mt-[9px] h-1.5 w-1.5 flex-shrink-0 rounded-full bg-muted-foreground/50" />
       )}
       <span className="min-w-0">{children}</span>
     </li>
@@ -101,7 +101,7 @@ export function Li({
 
 export function InlineCode({ children }: { children: React.ReactNode }) {
   return (
-    <code className="rounded-md border border-border bg-secondary px-1.5 py-0.5 font-mono text-[12.5px] text-brand-600 dark:text-brand-300">
+    <code className="rounded-md border border-border bg-secondary px-1.5 py-0.5 font-mono text-[12.5px] text-foreground">
       {children}
     </code>
   );
@@ -110,7 +110,7 @@ export function InlineCode({ children }: { children: React.ReactNode }) {
 export function A({ href, children }: { href: string; children: React.ReactNode }) {
   const external = /^https?:\/\//.test(href);
   const className =
-    "font-medium text-brand-600 underline decoration-brand-500/30 underline-offset-2 transition-colors hover:decoration-brand-500 dark:text-brand-300";
+    "font-medium text-virio-emerald underline decoration-virio-emerald/30 underline-offset-2 transition-colors hover:decoration-virio-emerald";
   if (external) {
     return (
       <a href={href} target="_blank" rel="noopener noreferrer" className={className}>
@@ -142,7 +142,7 @@ export function Hr() {
 type CalloutVariant = "info" | "note" | "warning" | "success";
 
 const CALLOUT_STYLES: Record<CalloutVariant, string> = {
-  info: "border-brand-300/40 bg-brand-500/[0.06]",
+  info: "border-virio-emerald/30 bg-virio-emerald/[0.06]",
   note: "border-border bg-secondary/60",
   warning: "border-warning/40 bg-warning/[0.08]",
   success: "border-success/40 bg-success/[0.08]",

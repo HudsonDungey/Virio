@@ -63,20 +63,20 @@ function Toast({ item, onDismiss }: { item: ToastItem; onDismiss: () => void }) 
   const Icon = item.kind === "success" ? Check : item.kind === "error" ? X : item.kind === "warn" ? AlertTriangle : Info;
   const accent =
     item.kind === "success"
-      ? "before:bg-emerald-600"
+      ? "before:bg-virio-emerald"
       : item.kind === "error"
       ? "before:bg-rose-600"
       : item.kind === "warn"
       ? "before:bg-amber-500"
-      : "before:bg-brand-500";
+      : "before:bg-virio-blue";
   const iconBg =
     item.kind === "success"
-      ? "bg-emerald-600"
+      ? "bg-virio-emerald text-virio-emerald-ink"
       : item.kind === "error"
-      ? "bg-rose-600"
+      ? "bg-rose-600 text-white"
       : item.kind === "warn"
-      ? "bg-amber-500"
-      : "bg-brand-500";
+      ? "bg-amber-500 text-white"
+      : "bg-virio-blue text-[#062847]";
 
   return (
     <div
@@ -89,7 +89,7 @@ function Toast({ item, onDismiss }: { item: ToastItem; onDismiss: () => void }) 
     >
       <div
         className={cn(
-          "mt-0.5 grid h-[22px] w-[22px] flex-shrink-0 place-items-center rounded-full text-white",
+          "mt-0.5 grid h-[22px] w-[22px] flex-shrink-0 place-items-center rounded-full",
           iconBg,
         )}
       >

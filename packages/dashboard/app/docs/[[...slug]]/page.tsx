@@ -98,7 +98,7 @@ export default function DocsPage({ params }: PageProps) {
           {prev ? (
             <Link
               href={`/docs/${prev.slug}`}
-              className="group rounded-xl border border-border bg-card p-4 transition-colors hover:border-brand-300"
+              className="group rounded-xl border border-border bg-card p-4 transition-colors hover:border-[hsl(var(--hairline-strong))]"
             >
               <span className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                 <ArrowLeft className="h-3 w-3" /> Previous
@@ -113,7 +113,7 @@ export default function DocsPage({ params }: PageProps) {
           {next && (
             <Link
               href={`/docs/${next.slug}`}
-              className="group rounded-xl border border-border bg-card p-4 text-right transition-colors hover:border-brand-300"
+              className="group rounded-xl border border-border bg-card p-4 text-right transition-colors hover:border-[hsl(var(--hairline-strong))]"
             >
               <span className="flex items-center justify-end gap-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                 Next <ArrowRight className="h-3 w-3" />
@@ -139,8 +139,8 @@ function DocsIndex() {
   const groups = getNavTree();
   return (
     <div className="animate-fade-in">
-      <p className="text-[12px] font-semibold uppercase tracking-[0.1em] text-brand-600 dark:text-brand-300">
-        Documentation
+      <p className="text-[12px] font-medium uppercase tracking-[0.1em] text-muted-foreground">
+        documentation
       </p>
       <h1 className="mt-2 font-display text-[34px] font-bold leading-tight tracking-tight text-foreground">
         Build recurring stablecoin payments
@@ -148,9 +148,10 @@ function DocsIndex() {
       <p className="mt-3 max-w-2xl text-[15.5px] leading-relaxed text-muted-foreground">
         Virio is wallet-native recurring payments and programmable billing infrastructure for
         stablecoins. Everything is onchain, public, and permissionless — integrate with your own RPC
-        and the <code className="font-mono text-brand-600 dark:text-brand-300">@virio/sdk</code>{" "}
+        and the <code className="font-mono text-foreground">@virio/sdk</code>{" "}
         framework. No API keys, no accounts, no hosted services.
       </p>
+
 
       <div className="mt-10 space-y-10">
         {groups.map((group) => (
@@ -163,13 +164,13 @@ function DocsIndex() {
                 <Link
                   key={doc.slug}
                   href={`/docs/${doc.slug}`}
-                  className="group rounded-xl border border-border bg-card p-4 transition-all hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-lift"
+                  className="group rounded-xl border border-border bg-card p-4 transition-all hover:-translate-y-0.5 hover:border-[hsl(var(--hairline-strong))]"
                 >
                   <div className="flex items-center justify-between">
                     <span className="font-display text-[15px] font-bold text-foreground">
                       {doc.title}
                     </span>
-                    <ArrowRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-brand-500" />
+                    <ArrowRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-foreground" />
                   </div>
                   <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">
                     {doc.description}

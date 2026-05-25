@@ -71,9 +71,9 @@ function ApiKeysPanel() {
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-soft">
+    <div className="overflow-hidden rounded-2xl border border-border bg-card">
       <div className="flex items-center gap-2.5 border-b border-border px-5 py-3.5">
-        <KeyRound className="h-4 w-4 text-brand-500" />
+        <KeyRound className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
         <h3 className="font-display text-[14px] font-bold text-foreground">
           API keys
         </h3>
@@ -186,8 +186,8 @@ const ENDPOINTS: Endpoint[] = [
 ];
 
 const METHOD_TONE: Record<Endpoint["method"], string> = {
-  GET: "bg-emerald-500/12 text-emerald-600 dark:text-emerald-400",
-  POST: "bg-brand-500/12 text-brand-600 dark:text-brand-300",
+  GET: "bg-secondary text-foreground",
+  POST: "bg-virio-emerald/15 text-virio-emerald",
   DELETE: "bg-rose-500/12 text-rose-600 dark:text-rose-400",
 };
 
@@ -205,7 +205,7 @@ function ApiReference() {
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-soft">
+    <div className="overflow-hidden rounded-2xl border border-border bg-card">
       {ENDPOINTS.map((e) => {
         const isOpen = open === e.path;
         return (
@@ -243,7 +243,7 @@ function ApiReference() {
                   </span>
                   <button
                     onClick={() => run(e)}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-brand-gradient px-3 py-1.5 text-[12px] font-semibold text-white shadow-brand transition-transform hover:-translate-y-px"
+                    className="inline-flex items-center gap-1.5 rounded-md bg-virio-emerald px-3 py-1.5 text-[12px] font-semibold text-virio-emerald-ink transition-opacity duration-fast hover:opacity-90"
                   >
                     {running === e.path ? (
                       <RefreshCw className="h-3 w-3 animate-spin" />
@@ -254,11 +254,11 @@ function ApiReference() {
                   </button>
                 </div>
                 {done.has(e.path) && running !== e.path && (
-                  <div className="mt-3 rounded-lg border border-border bg-[#0b1020]">
-                    <div className="border-b border-white/8 px-3 py-1.5 font-mono text-[10.5px] text-white/45">
+                  <div className="mt-3 rounded-md border border-[#1c1f26] bg-[#0B0D10]">
+                    <div className="border-b border-white/[0.06] px-3 py-1.5 font-mono text-[10.5px] text-white/45">
                       200 OK · application/json
                     </div>
-                    <pre className="code-shell overflow-x-auto p-3 text-emerald-300">
+                    <pre className="code-shell overflow-x-auto p-3 text-[#E0B872]">
                       {JSON.stringify(e.response, null, 2)}
                     </pre>
                   </div>
@@ -368,32 +368,31 @@ export function DevView() {
     <div className="mx-auto max-w-[1100px] px-5 pb-24 pt-28 sm:px-8">
       {/* header */}
       <Reveal>
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1 text-[11.5px] font-semibold uppercase tracking-[0.1em] text-brand-600 shadow-soft dark:text-brand-300">
-          <Code2 className="h-3.5 w-3.5" />
-          Developer Portal
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1 text-[11px] font-medium uppercase tracking-[0.1em] text-muted-foreground">
+          <Code2 className="h-3.5 w-3.5" strokeWidth={1.5} />
+          developer portal
         </span>
-        <h1 className="mt-4 max-w-[640px] font-display text-[clamp(2rem,4.5vw,3.2rem)] font-extrabold leading-[1.08] tracking-[-0.025em] text-foreground">
-          Everything you need to build with{" "}
-          <span className="text-gradient">Virio</span>
+        <h1 className="mt-5 max-w-[640px] font-display text-[clamp(2rem,4.5vw,3rem)] font-semibold leading-[1.06] tracking-[-0.04em] text-foreground">
+          everything you need to build with virio
         </h1>
-        <p className="mt-4 max-w-[560px] text-[15.5px] leading-relaxed text-muted-foreground">
+        <p className="mt-4 max-w-[560px] text-[15px] leading-relaxed text-muted-foreground">
           SDKs, interactive API references, event schemas, and copy-paste
-          examples. Ship onchain billing without becoming a payments team.
+          examples. ship onchain billing without becoming a payments team.
         </p>
         <div className="mt-6 flex flex-wrap gap-3">
           <Link
             href="/docs"
-            className="inline-flex h-10 items-center gap-2 rounded-xl bg-brand-gradient px-5 text-[14px] font-semibold text-white shadow-brand transition-transform hover:-translate-y-0.5"
+            className="inline-flex h-10 items-center gap-2 rounded-[10px] bg-virio-emerald px-5 text-[14px] font-semibold text-virio-emerald-ink transition-opacity duration-fast hover:opacity-90"
           >
-            Read the docs
+            read the docs
             <ArrowRight className="h-4 w-4" />
           </Link>
           <Link
             href="/dashboard"
-            className="inline-flex h-10 items-center gap-2 rounded-xl border border-border bg-card px-5 text-[14px] font-semibold text-foreground shadow-soft transition-transform hover:-translate-y-0.5"
+            className="inline-flex h-10 items-center gap-2 rounded-[10px] border border-border bg-card px-5 text-[14px] font-medium text-foreground transition-colors duration-fast hover:border-[hsl(var(--hairline-strong))]"
           >
-            <Terminal className="h-4 w-4 text-muted-foreground" />
-            Open testing suite
+            <Terminal className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
+            open testing suite
           </Link>
         </div>
       </Reveal>
@@ -413,10 +412,10 @@ export function DevView() {
               {SDKS.map((s) => (
                 <div
                   key={s.name}
-                  className="flex items-center gap-3 rounded-xl border border-border bg-card p-3.5 shadow-soft"
+                  className="flex items-center gap-3 rounded-xl border border-border bg-card p-3.5"
                 >
-                  <span className="grid h-9 w-9 place-items-center rounded-lg bg-secondary text-brand-600 dark:text-brand-300">
-                    <Boxes className="h-4 w-4" />
+                  <span className="grid h-9 w-9 place-items-center rounded-lg border border-border bg-secondary text-muted-foreground">
+                    <Boxes className="h-4 w-4" strokeWidth={1.5} />
                   </span>
                   <div className="min-w-0 flex-1">
                     <code className="font-mono text-[12.5px] font-semibold text-foreground">
@@ -506,7 +505,7 @@ console.log("created", plan.id);`,
             <div className="mt-5 space-y-2">
               {LIFECYCLE.map((s, i) => (
                 <div key={s.label} className="flex items-center gap-3">
-                  <span className="grid h-9 w-9 flex-shrink-0 place-items-center rounded-xl bg-brand-gradient font-mono text-[12px] font-bold text-white shadow-brand">
+                  <span className="grid h-9 w-9 flex-shrink-0 place-items-center rounded-lg border border-border bg-secondary font-mono text-[12px] font-semibold text-foreground">
                     {i + 1}
                   </span>
                   <div className="flex-1 rounded-xl border border-border bg-card px-4 py-2.5">
@@ -528,13 +527,13 @@ console.log("created", plan.id);`,
             <p className="mt-2 text-[14px] leading-relaxed text-muted-foreground">
               Webhook event types delivered to your endpoint.
             </p>
-            <div className="mt-5 overflow-hidden rounded-2xl border border-border bg-card shadow-soft">
+            <div className="mt-5 overflow-hidden rounded-2xl border border-border bg-card">
               {EVENT_SCHEMA.map((e) => (
                 <div
                   key={e.event}
                   className="flex items-center gap-3 border-b border-border px-4 py-3 last:border-0"
                 >
-                  <Webhook className="h-3.5 w-3.5 flex-shrink-0 text-brand-500" />
+                  <Webhook className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground" strokeWidth={1.5} />
                   <code className="font-mono text-[12px] text-foreground">
                     {e.event}
                   </code>
@@ -562,9 +561,9 @@ console.log("created", plan.id);`,
           </div>
           <Link
             href="/dashboard"
-            className="inline-flex h-11 items-center gap-2 rounded-xl bg-brand-gradient px-6 text-[14px] font-semibold text-white shadow-brand transition-transform hover:-translate-y-0.5"
+            className="inline-flex h-11 items-center gap-2 rounded-[10px] bg-virio-emerald px-5 text-[14px] font-semibold text-virio-emerald-ink transition-opacity duration-fast hover:opacity-90"
           >
-            Launch dashboard
+            launch dashboard
             <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
