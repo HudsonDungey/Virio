@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ArrowRight, BookOpen, ShieldCheck } from "lucide-react";
+import { ArrowRight, BookOpen } from "lucide-react";
 import { DashboardPreview } from "./dashboard-preview";
 
 export function Hero() {
@@ -52,10 +52,6 @@ export function Hero() {
         </div>
 
         <div className="mt-6 flex animate-fade-up flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[12.5px] text-muted-foreground animation-delay-400">
-          <span className="inline-flex items-center gap-1.5">
-            <ShieldCheck className="h-3.5 w-3.5" />
-            audited contracts
-          </span>
           <span className="inline-flex items-center gap-1.5">
             <span className="status-dot" />
             live on testnet

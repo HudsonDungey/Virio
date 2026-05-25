@@ -4,144 +4,17 @@ import * as React from "react";
 import Link from "next/link";
 import {
   Code2,
-  Copy,
-  Check,
-  Eye,
-  EyeOff,
   RefreshCw,
   Download,
   Play,
   ArrowRight,
   Boxes,
   Webhook,
-  KeyRound,
   Terminal,
 } from "lucide-react";
 import { CodeWindow, type CodeTab } from "@/components/marketing/code-window";
 import { Reveal } from "@/components/marketing/reveal";
 import { cn } from "@/lib/utils";
-
-/* ---------- API keys panel ---------- */
-
-interface ApiKey {
-  id: string;
-  env: "test" | "live";
-  label: string;
-  value: string;
-}
-
-const INITIAL_KEYS: ApiKey[] = [
-  { id: "k1", env: "test", label: "Test mode", value: "pk_test_8f3c2a4c91d4e2a7b6c5d8e9" },
-  { id: "k2", env: "live", label: "Live mode", value: "pk_live_1b7d9d0e0a3c4b5d6e7f8091" },
-];
-
-function randomKey(env: "test" | "live") {
-  const r = Array.from({ length: 24 }, () =>
-    "0123456789abcdef"[Math.floor(Math.random() * 16)],
-  ).join("");
-  return `pk_${env}_${r}`;
-}
-
-function ApiKeysPanel() {
-  const [keys, setKeys] = React.useState<ApiKey[]>(INITIAL_KEYS);
-  const [revealed, setRevealed] = React.useState<Set<string>>(new Set());
-  const [copied, setCopied] = React.useState<string | null>(null);
-
-  function toggleReveal(id: string) {
-    setRevealed((s) => {
-      const n = new Set(s);
-      if (n.has(id)) n.delete(id);
-      else n.add(id);
-      return n;
-    });
-  }
-  async function copy(k: ApiKey) {
-    try {
-      await navigator.clipboard.writeText(k.value);
-      setCopied(k.id);
-      window.setTimeout(() => setCopied(null), 1500);
-    } catch {
-      /* ignore */
-    }
-  }
-  function rotate(k: ApiKey) {
-    setKeys((ks) =>
-      ks.map((x) => (x.id === k.id ? { ...x, value: randomKey(x.env) } : x)),
-    );
-  }
-
-  return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-card">
-      <div className="flex items-center gap-2.5 border-b border-border px-5 py-3.5">
-        <KeyRound className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
-        <h3 className="font-display text-[14px] font-bold text-foreground">
-          API keys
-        </h3>
-        <span className="ml-auto text-[12px] text-muted-foreground">
-          rotate anytime — old keys revoke instantly
-        </span>
-      </div>
-      <div className="divide-y divide-border">
-        {keys.map((k) => (
-          <div key={k.id} className="flex items-center gap-3 px-5 py-3.5">
-            <span
-              className={cn(
-                "rounded-full px-2 py-0.5 text-[10.5px] font-semibold uppercase tracking-wide",
-                k.env === "live"
-                  ? "bg-emerald-500/12 text-emerald-600 dark:text-emerald-400"
-                  : "bg-amber-500/12 text-amber-600 dark:text-amber-400",
-              )}
-            >
-              {k.label}
-            </span>
-            <code className="flex-1 truncate font-mono text-[12.5px] text-foreground">
-              {revealed.has(k.id)
-                ? k.value
-                : k.value.slice(0, 11) + "•".repeat(16)}
-            </code>
-            <button
-              onClick={() => toggleReveal(k.id)}
-              className="grid h-8 w-8 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-              aria-label="Reveal"
-            >
-              {revealed.has(k.id) ? (
-                <EyeOff className="h-3.5 w-3.5" />
-              ) : (
-                <Eye className="h-3.5 w-3.5" />
-              )}
-            </button>
-            <button
-              onClick={() => copy(k)}
-              className="grid h-8 w-8 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-              aria-label="Copy"
-            >
-              {copied === k.id ? (
-                <Check className="h-3.5 w-3.5 text-emerald-500" />
-              ) : (
-                <Copy className="h-3.5 w-3.5" />
-              )}
-            </button>
-            <button
-              onClick={() => rotate(k)}
-              className="grid h-8 w-8 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-              aria-label="Rotate"
-            >
-              <RefreshCw className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        ))}
-      </div>
-      <div className="border-t border-border bg-secondary/40 px-5 py-3">
-        <p className="text-[11.5px] font-semibold uppercase tracking-wide text-muted-foreground">
-          Environment variables
-        </p>
-        <pre className="code-shell mt-1.5 text-muted-foreground">
-          {`VIRIO_KEY=${keys[0].value}\nVIRIO_WEBHOOK_SECRET=whsec_3d44b8e1a2b3c4d5\nVIRIO_ENV=test`}
-        </pre>
-      </div>
-    </div>
-  );
-}
 
 /* ---------- interactive API reference ---------- */
 
@@ -405,8 +278,8 @@ export function DevView() {
               Quickstart
             </h2>
             <p className="mt-2 text-[14px] leading-relaxed text-muted-foreground">
-              Install a package, drop in your key, and make your first call.
-              Every SDK is typed end-to-end and tree-shakeable.
+              Install a package, point it at the manager contract, and make
+              your first call. Every SDK is typed end-to-end and tree-shakeable.
             </p>
             <div className="mt-5 space-y-2.5">
               {SDKS.map((s) => (
@@ -440,7 +313,7 @@ export function DevView() {
               {
                 label: "Install",
                 language: "bash",
-                code: "npm install @virio/sdk @virio/react\n\n# then set your key\nexport VIRIO_KEY=pk_test_8f3c2a4c91d4e2a7b6c5d8e9",
+                code: "npm install @virio/sdk @virio/react",
               },
               {
                 label: "First call",
@@ -448,33 +321,34 @@ export function DevView() {
                 filename: "index.ts",
                 code: `import { Virio } from "@virio/sdk";
 
-const virio = new Virio({ apiKey: process.env.VIRIO_KEY });
+const virio = new Virio({
+  contractAddress: "0x9d0e4e88A2b3C4d5E6F7a8B9c0D1e2F3A8b97f12",
+  chain: "base",
+});
 
-const plan = await virio.products.create({
+const plan = await virio.plans.create({
   name: "Pro",
   price: 49,
   token: "USDC",
   interval: "month",
 });
 
-console.log("created", plan.id);`,
+console.log("created", plan.planId);`,
               },
             ]}
           />
         </div>
       </Reveal>
 
-      {/* API keys + reference */}
+      {/* API reference */}
       <Reveal className="mt-14" delay={60}>
         <h2 className="font-display text-[20px] font-bold tracking-tight text-foreground">
-          Keys &amp; API reference
+          API reference
         </h2>
         <p className="mt-2 max-w-[560px] text-[14px] leading-relaxed text-muted-foreground">
-          Manage keys, copy your environment variables, and try every endpoint
-          live — responses are returned inline.
+          Try every endpoint live — responses are returned inline.
         </p>
-        <div className="mt-5 grid gap-6 lg:grid-cols-2">
-          <ApiKeysPanel />
+        <div className="mt-5">
           <ApiReference />
         </div>
       </Reveal>

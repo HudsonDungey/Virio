@@ -1,6 +1,6 @@
 import * as React from "react";
 import Link from "next/link";
-import { Github, Twitter, ShieldCheck } from "lucide-react";
+import { Github, Twitter } from "lucide-react";
 import { Logo } from "@/components/logo";
 
 const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
@@ -54,7 +54,9 @@ export function Footer() {
                 <Github className="h-4 w-4" />
               </a>
               <a
-                href="https://twitter.com"
+                href="https://x.com/usevirio"
+                target="_blank"
+                rel="noreferrer"
                 aria-label="X"
                 className="grid h-9 w-9 place-items-center rounded-md border border-border bg-card text-muted-foreground transition-colors hover:text-foreground"
               >
@@ -89,10 +91,6 @@ export function Footer() {
             © {new Date().getFullYear()} Virio Labs. All rights reserved.
           </p>
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[12.5px] text-muted-foreground">
-            <span className="inline-flex items-center gap-1.5">
-              <ShieldCheck className="h-3.5 w-3.5 text-virio-emerald" />
-              audited by spearbit &amp; openzeppelin
-            </span>
             <Link href="/#" className="transition-colors hover:text-foreground">
               Privacy
             </Link>

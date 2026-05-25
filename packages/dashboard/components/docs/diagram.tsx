@@ -156,7 +156,7 @@ function Architecture() {
         w={170}
         h={80}
         title="SubscriptionManager"
-        subtitle="onchain · audited"
+        subtitle="onchain"
         accent
       />
       <Box x={540} y={30} w={150} h={56} title="Merchant" subtitle="net amount" />

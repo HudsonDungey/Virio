@@ -12,10 +12,13 @@ const TABS: CodeTab[] = [
     filename: "billing.ts",
     code: `import { Virio } from "@virio/sdk";
 
-const virio = new Virio({ apiKey: process.env.VIRIO_KEY });
+const virio = new Virio({
+  contractAddress: "0x9d0e4e88A2b3C4d5E6F7a8B9c0D1e2F3A8b97f12",
+  chain: "base",
+});
 
-// Create a recurring product
-const plan = await virio.products.create({
+// Create a recurring plan
+const plan = await virio.plans.create({
   name: "Pro plan",
   price: 49,
   token: "USDC",
@@ -24,7 +27,7 @@ const plan = await virio.products.create({
 
 // Subscribe a customer — they sign once
 const sub = await virio.subscriptions.subscribe({
-  planId: plan.id,
+  planId: plan.planId,
   customer: "0x8f3c...2a4c",
 });`,
   },
