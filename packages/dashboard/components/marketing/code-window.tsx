@@ -35,7 +35,7 @@ export function CodeWindow({ tabs, className }: Props) {
   return (
     <div
       className={cn(
-        "ring-gradient overflow-hidden rounded-2xl border border-border bg-[#0b1020] shadow-lift",
+        "overflow-hidden rounded-2xl border border-[#1c1f26] bg-[#0B0D10] shadow-e2",
         className,
       )}
     >

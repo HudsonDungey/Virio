@@ -46,7 +46,7 @@ export function DocsToc({ headings }: { headings: TocHeading[] }) {
                 "-ml-px block border-l-2 py-0.5 text-[12.5px] leading-snug transition-colors",
                 h.depth === 3 ? "pl-5" : "pl-3",
                 activeId === h.id
-                  ? "border-brand-500 font-medium text-brand-600 dark:text-brand-300"
+                  ? "border-foreground font-medium text-foreground"
                   : "border-transparent text-muted-foreground hover:text-foreground",
               )}
             >

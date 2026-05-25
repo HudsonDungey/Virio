@@ -64,7 +64,7 @@ export function DocsSidebar({ groups }: { groups: SidebarGroup[] }) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search docs…"
-          className="h-9 w-full rounded-lg border border-border bg-card pl-9 pr-3 text-[13px] text-foreground outline-none placeholder:text-muted-foreground focus-visible:border-brand-500"
+          className="h-9 w-full rounded-md border border-border bg-card pl-9 pr-3 text-[13px] text-foreground outline-none placeholder:text-muted-foreground focus-visible:border-virio-emerald"
         />
       </div>
 
@@ -73,7 +73,7 @@ export function DocsSidebar({ groups }: { groups: SidebarGroup[] }) {
         className={cn(
           "mb-4 flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-[13px] transition-colors",
           pathname === "/docs"
-            ? "bg-brand-500/10 font-semibold text-brand-600 dark:text-brand-300"
+            ? "bg-accent font-semibold text-foreground"
             : "text-muted-foreground hover:bg-accent hover:text-foreground",
         )}
       >
@@ -97,8 +97,8 @@ export function DocsSidebar({ groups }: { groups: SidebarGroup[] }) {
                 className={cn(
                   "flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-[13px] transition-colors",
                   active
-                    ? "bg-brand-500/10 font-semibold text-brand-600 dark:text-brand-300"
-                    : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                    ? "bg-accent font-semibold text-foreground"
+                    : "text-muted-foreground hover:bg-accent/60 hover:text-foreground",
                 )}
               >
                 <Icon className="h-3.5 w-3.5 flex-shrink-0" />

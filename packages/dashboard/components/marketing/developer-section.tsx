@@ -83,48 +83,42 @@ contract VirioPayroll {
 const POINTS = [
   {
     icon: Terminal,
-    title: "One-line install",
+    title: "one-line install",
     body: "npm install @virio/sdk — typed end to end, zero config.",
   },
   {
     icon: Boxes,
-    title: "Framework adapters",
-    body: "First-class hooks for React, Next.js, and a Solidity integration library.",
+    title: "framework adapters",
+    body: "first-class hooks for react, next.js, and a solidity integration library.",
   },
   {
     icon: GitBranch,
-    title: "Test before mainnet",
-    body: "A full sandbox with mock wallets, executor simulation, and webhook replay.",
+    title: "test before mainnet",
+    body: "a full sandbox with mock wallets, executor simulation, and webhook replay.",
   },
 ];
 
 export function DeveloperSection() {
   return (
-    <section className="relative scroll-mt-24 border-y border-border bg-secondary/30 py-24 sm:py-32">
-      <div className="pointer-events-none absolute inset-0 -z-10 dot-fade opacity-50" />
+    <section className="relative scroll-mt-24 border-y border-border bg-secondary/40 py-24 sm:py-32">
       <div className="mx-auto max-w-[1200px] px-5 sm:px-8">
         <div className="grid items-center gap-12 lg:grid-cols-[0.92fr_1.08fr]">
           <div>
             <SectionHeading
               align="left"
-              eyebrow="Developer-first"
-              title={
-                <>
-                  Billing that disappears into{" "}
-                  <span className="text-gradient">your stack</span>
-                </>
-              }
-              description="Typed SDKs, predictable webhooks, and a sandbox that mirrors mainnet. Ship onchain billing without becoming a payments team."
+              eyebrow="developer-first"
+              title="billing that disappears into your stack"
+              description="typed SDKs, predictable webhooks, and a sandbox that mirrors mainnet. ship onchain billing without becoming a payments team."
             />
             <div className="mt-8 space-y-4">
               {POINTS.map((p, i) => (
-                <Reveal key={p.title} delay={i * 80}>
+                <Reveal key={p.title} delay={i * 70}>
                   <div className="flex gap-4">
-                    <span className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-xl border border-border bg-card text-brand-600 shadow-soft dark:text-brand-300">
-                      <p.icon className="h-5 w-5" strokeWidth={2} />
+                    <span className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-lg border border-border bg-card text-muted-foreground">
+                      <p.icon className="h-[18px] w-[18px]" strokeWidth={1.5} />
                     </span>
                     <div>
-                      <h3 className="font-display text-[15px] font-bold text-foreground">
+                      <h3 className="font-display text-[14.5px] font-semibold tracking-[-0.02em] text-foreground">
                         {p.title}
                       </h3>
                       <p className="mt-0.5 text-[13.5px] leading-relaxed text-muted-foreground">
@@ -137,14 +131,14 @@ export function DeveloperSection() {
             </div>
             <Link
               href="/dev"
-              className="group mt-8 inline-flex items-center gap-1.5 text-[14px] font-semibold text-brand-600 dark:text-brand-300"
+              className="group mt-8 inline-flex items-center gap-1.5 text-[13.5px] font-medium text-foreground"
             >
-              Explore the developer portal
+              explore the developer portal
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </Link>
           </div>
 
-          <Reveal delay={120} className="min-w-0 w-full">
+          <Reveal delay={100} className="min-w-0 w-full">
             <CodeWindow tabs={TABS} />
           </Reveal>
         </div>

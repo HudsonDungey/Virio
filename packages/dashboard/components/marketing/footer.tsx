@@ -40,23 +40,23 @@ export function Footer() {
       <div className="mx-auto max-w-[1200px] px-5 py-16 sm:px-8">
         <div className="grid gap-10 lg:grid-cols-[1.5fr_1fr_1fr_1fr]">
           <div>
-            <Logo size={32} />
+            <Logo size={28} />
             <p className="mt-4 max-w-[260px] text-[13px] leading-relaxed text-muted-foreground">
-              Onchain subscription &amp; payroll infrastructure for modern
-              internet businesses.
+              wallet-native subscription &amp; payroll infrastructure for
+              programmable money.
             </p>
             <div className="mt-5 flex items-center gap-2">
               <a
                 href="https://github.com"
                 aria-label="GitHub"
-                className="grid h-9 w-9 place-items-center rounded-lg border border-border bg-card text-muted-foreground transition-colors hover:text-foreground"
+                className="grid h-9 w-9 place-items-center rounded-md border border-border bg-card text-muted-foreground transition-colors hover:text-foreground"
               >
                 <Github className="h-4 w-4" />
               </a>
               <a
                 href="https://twitter.com"
                 aria-label="X"
-                className="grid h-9 w-9 place-items-center rounded-lg border border-border bg-card text-muted-foreground transition-colors hover:text-foreground"
+                className="grid h-9 w-9 place-items-center rounded-md border border-border bg-card text-muted-foreground transition-colors hover:text-foreground"
               >
                 <Twitter className="h-4 w-4" />
               </a>
@@ -90,8 +90,8 @@ export function Footer() {
           </p>
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[12.5px] text-muted-foreground">
             <span className="inline-flex items-center gap-1.5">
-              <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
-              Audited by Spearbit &amp; OpenZeppelin
+              <ShieldCheck className="h-3.5 w-3.5 text-virio-emerald" />
+              audited by spearbit &amp; openzeppelin
             </span>
             <Link href="/#" className="transition-colors hover:text-foreground">
               Privacy
