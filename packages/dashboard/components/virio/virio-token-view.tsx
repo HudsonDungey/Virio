@@ -136,13 +136,13 @@ const BUCKETS: Bucket[] = [
 const GROUP_META: Record<Bucket["group"], { label: string; color: string; chip: string }> = {
   community: {
     label: "Community-aligned",
-    color: "from-brand-500 to-brand-400",
-    chip: "bg-brand-500/15 text-brand-600 dark:text-brand-300",
+    color: "from-virio-emerald/80 to-virio-emerald",
+    chip: "bg-secondary text-foreground",
   },
   insider: {
     label: "Insiders",
-    color: "from-electric-500 to-electric-400",
-    chip: "bg-electric-500/15 text-electric-600 dark:text-electric-300",
+    color: "from-muted-foreground/60 to-muted-foreground",
+    chip: "bg-secondary text-foreground",
   },
   public: {
     label: "Public sale",
@@ -233,13 +233,13 @@ function Stat({
 }) {
   const toneCls =
     tone === "brand"
-      ? "text-brand-600 dark:text-brand-300"
+      ? "text-foreground"
       : tone === "emerald"
-      ? "text-emerald-600 dark:text-emerald-400"
+      ? "text-virio-emerald"
       : "text-foreground";
   return (
-    <div className="rounded-2xl border border-border bg-card p-5 shadow-soft">
-      <div className={cn("font-display text-[26px] font-extrabold tracking-tight tabular-nums", toneCls)}>
+    <div className="rounded-2xl border border-border bg-card p-5">
+      <div className={cn("font-display text-[26px] font-semibold tracking-tight tabular-nums", toneCls)}>
         {value}
       </div>
       <div className="mt-1 text-[12.5px] font-semibold text-foreground">{label}</div>
@@ -257,10 +257,10 @@ function Pill({
 }) {
   const cls =
     tone === "electric"
-      ? "bg-electric-500/15 text-electric-600 dark:text-electric-300"
+      ? "bg-secondary text-foreground"
       : tone === "emerald"
-      ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
-      : "bg-brand-500/15 text-brand-600 dark:text-brand-300";
+      ? "bg-emerald-500/15 text-virio-emerald"
+      : "bg-secondary text-foreground";
   return (
     <span className={cn("inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold", cls)}>
       {children}
@@ -270,10 +270,10 @@ function Pill({
 
 function PlainEnglish({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mt-4 flex items-start gap-2.5 rounded-xl border border-brand-300/40 bg-brand-500/[0.06] px-4 py-3 text-[13.5px] leading-relaxed text-foreground">
-      <Sparkles className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-brand-500" />
+    <div className="mt-4 flex items-start gap-2.5 rounded-xl border border-virio-emerald/25 bg-secondary/50 px-4 py-3 text-[13.5px] leading-relaxed text-foreground">
+      <Sparkles className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-muted-foreground" />
       <span>
-        <span className="font-semibold text-brand-600 dark:text-brand-300">In plain English: </span>
+        <span className="font-semibold text-foreground">In plain English: </span>
         {children}
       </span>
     </div>
@@ -287,13 +287,13 @@ function Hero() {
     <section className="relative overflow-hidden pt-28 sm:pt-36 lg:pt-44">
       <div className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute inset-0 grid-fade opacity-70" />
-        <div className="absolute left-1/2 top-[-180px] h-[460px] w-[820px] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(99,91,255,0.28),transparent_65%)] blur-3xl" />
+        
       </div>
 
       <div className="mx-auto max-w-[1200px] px-6 sm:px-8">
         <div className="flex justify-center">
-          <span className="inline-flex animate-fade-up items-center gap-2 rounded-full border border-border bg-card/80 py-1.5 pl-1.5 pr-3.5 text-[12.5px] font-medium text-muted-foreground shadow-soft backdrop-blur">
-            <span className="inline-flex items-center gap-1 rounded-full bg-brand-gradient px-2 py-0.5 text-[11px] font-semibold text-white">
+          <span className="inline-flex animate-fade-up items-center gap-2 rounded-full border border-border bg-card/80 py-1.5 pl-1.5 pr-3.5 text-[12.5px] font-medium text-muted-foreground backdrop-blur">
+            <span className="inline-flex items-center gap-1 rounded-full bg-virio-emerald px-2 py-0.5 text-[11px] font-semibold text-virio-emerald-ink">
               <Coins className="h-3 w-3" />
               Tokenomics
             </span>
@@ -301,8 +301,8 @@ function Hero() {
           </span>
         </div>
 
-        <h1 className="mx-auto mt-7 max-w-[920px] animate-fade-up text-balance text-center font-display text-[clamp(2.5rem,6vw,4.5rem)] font-extrabold leading-[1.04] tracking-[-0.03em] text-foreground animation-delay-100">
-          The token that <span className="text-gradient">powers Virio</span>.
+        <h1 className="mx-auto mt-7 max-w-[920px] animate-fade-up text-balance text-center font-display text-[clamp(2.5rem,6vw,4.5rem)] font-semibold leading-[1.04] tracking-[-0.03em] text-foreground animation-delay-100">
+          The token that <span className="text-virio-emerald">powers Virio</span>.
         </h1>
 
         <p className="mx-auto mt-6 max-w-[680px] animate-fade-up text-balance text-center text-[16.5px] leading-relaxed text-muted-foreground animation-delay-200">
@@ -314,16 +314,16 @@ function Hero() {
         <div className="mt-9 flex animate-fade-up flex-col items-center justify-center gap-3 animation-delay-300 sm:flex-row">
           <Link
             href="#allocation"
-            className="btn-sheen group relative inline-flex h-12 w-full items-center justify-center gap-2 overflow-hidden rounded-xl bg-brand-gradient px-7 text-[15px] font-semibold text-white shadow-brand transition-all duration-200 ease-soft hover:-translate-y-0.5 hover:shadow-brand-lg sm:w-auto"
+            className="group inline-flex h-12 w-full items-center justify-center gap-2 overflow-hidden rounded-xl bg-virio-emerald px-7 text-[15px] font-semibold text-virio-emerald-ink transition-all duration-200 ease-out hover:-translate-y-0.5  sm:w-auto"
           >
             <span className="relative z-[2]">See the breakdown</span>
             <ArrowRight className="relative z-[2] h-4 w-4 transition-transform group-hover:translate-x-0.5" />
           </Link>
           <Link
             href="#launch"
-            className="group inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-border bg-card px-7 text-[15px] font-semibold text-foreground shadow-soft transition-all duration-200 ease-soft hover:-translate-y-0.5 hover:border-brand-400 sm:w-auto"
+            className="group inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-border bg-card px-7 text-[15px] font-semibold text-foreground transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-[hsl(var(--hairline-strong))] sm:w-auto"
           >
-            <BookOpen className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-brand-500" />
+            <BookOpen className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-muted-foreground" />
             How to buy
           </Link>
         </div>
@@ -371,17 +371,17 @@ function TLDR() {
       <div className="mx-auto max-w-[1100px] px-6 sm:px-8">
         <SectionHeading
           eyebrow="The 30-second version"
-          title={<>Four things to <span className="text-gradient">remember</span>.</>}
+          title={<>four things to <span className="text-virio-emerald">remember</span></>}
           description="If you only read one section, read this one."
         />
         <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {cards.map((c, i) => (
             <Reveal key={c.title} delay={i * 80}>
-              <div className="h-full rounded-2xl border border-border bg-card p-5 shadow-soft transition-all duration-300 hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-lift">
-                <div className="grid h-10 w-10 place-items-center rounded-xl bg-brand-gradient text-white shadow-brand">
+              <div className="h-full rounded-2xl border border-border bg-card p-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-[hsl(var(--hairline-strong))] hover:shadow-lift">
+                <div className="grid h-10 w-10 place-items-center rounded-xl bg-virio-emerald text-virio-emerald-ink">
                   <c.Icon className="h-5 w-5" />
                 </div>
-                <h3 className="mt-4 font-display text-[15px] font-bold text-foreground">{c.title}</h3>
+                <h3 className="mt-4 font-display text-[15px] font-semibold text-foreground">{c.title}</h3>
                 <p className="mt-1.5 text-[13.5px] leading-relaxed text-muted-foreground">{c.body}</p>
               </div>
             </Reveal>
@@ -409,13 +409,13 @@ function Allocation() {
       <div className="mx-auto max-w-[1200px] px-6 sm:px-8">
         <SectionHeading
           eyebrow="Allocation"
-          title={<>Where every <span className="text-gradient">$VIRIO</span> goes.</>}
+          title={<>where every <span className="text-virio-emerald">$VIRIO</span> goes</>}
           description="One billion tokens, split across ten buckets. The community gets the majority — by design."
         />
 
         {/* stacked bar */}
         <Reveal>
-          <div className="mt-12 rounded-2xl border border-border bg-card p-6 shadow-soft sm:p-7">
+          <div className="mt-12 rounded-2xl border border-border bg-card p-6 sm:p-7">
             <div className="flex items-center justify-between text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
               <span>1,000,000,000 VIRIO</span>
               <span className="tabular-nums">100%</span>
@@ -423,25 +423,25 @@ function Allocation() {
             <div className="mt-3 flex h-4 w-full overflow-hidden rounded-full ring-1 ring-border">
               <div
                 style={{ width: `${totals.community}%` }}
-                className="bg-gradient-to-r from-brand-600 via-brand-500 to-brand-400"
+                className="bg-gradient-to-r from-virio-emerald to-virio-emerald/70"
               />
               <div
                 style={{ width: `${totals.insider}%` }}
-                className="bg-gradient-to-r from-electric-600 via-electric-500 to-electric-400"
+                className="bg-gradient-to-r from-muted-foreground to-muted-foreground/60"
               />
               <div
                 style={{ width: `${totals.public}%` }}
-                className="bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-400"
+                className="bg-gradient-to-r from-virio-blue to-virio-blue/70"
               />
             </div>
             <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-3 text-[13px]">
               <span className="inline-flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded-full bg-brand-500" />
+                <span className="h-2.5 w-2.5 rounded-full bg-foreground" />
                 <span className="font-semibold text-foreground">{totals.community}%</span>
                 <span className="text-muted-foreground">Community</span>
               </span>
               <span className="inline-flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded-full bg-electric-500" />
+                <span className="h-2.5 w-2.5 rounded-full bg-muted-foreground" />
                 <span className="font-semibold text-foreground">{totals.insider}%</span>
                 <span className="text-muted-foreground">Insiders</span>
               </span>
@@ -460,21 +460,21 @@ function Allocation() {
             const meta = GROUP_META[b.group];
             return (
               <Reveal key={b.label} delay={(i % 2) * 80}>
-                <div className="group h-full rounded-2xl border border-border bg-card p-5 shadow-soft transition-all duration-300 hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-lift">
+                <div className="group h-full rounded-2xl border border-border bg-card p-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-[hsl(var(--hairline-strong))] hover:shadow-lift">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3">
                       <div className="grid h-10 w-10 place-items-center rounded-xl border border-border bg-secondary/60 text-foreground">
                         <b.Icon className="h-[18px] w-[18px]" />
                       </div>
                       <div>
-                        <div className="font-display text-[15px] font-bold text-foreground">{b.label}</div>
+                        <div className="font-display text-[15px] font-semibold text-foreground">{b.label}</div>
                         <span className={cn("mt-1 inline-flex rounded-full px-2 py-0.5 text-[10.5px] font-semibold", meta.chip)}>
                           {meta.label}
                         </span>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="font-display text-[22px] font-extrabold tabular-nums text-foreground">
+                      <div className="font-display text-[22px] font-semibold tabular-nums text-foreground">
                         {b.pct}%
                       </div>
                       <div className="text-[11px] tabular-nums text-muted-foreground">{b.tokens}</div>
@@ -492,7 +492,7 @@ function Allocation() {
                   <p className="mt-4 text-[13px] leading-relaxed text-muted-foreground">{b.blurb}</p>
 
                   <div className="mt-3 inline-flex items-center gap-1.5 text-[11.5px] font-medium text-foreground">
-                    <Calendar className="h-3.5 w-3.5 text-brand-500" />
+                    <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
                     <span className="text-muted-foreground">Vesting:</span>
                     {b.vesting}
                   </div>
@@ -528,7 +528,7 @@ function MultiChain() {
       <div className="mx-auto max-w-[1200px] px-6 sm:px-8">
         <SectionHeading
           eyebrow="Multichain"
-          title={<>One token, <span className="text-gradient">every chain</span>.</>}
+          title={<>one token, <span className="text-virio-emerald">every chain</span></>}
           description="$VIRIO follows the xERC20 standard. There's no 'wrapped' or 'bridged' version — every VIRIO is the canonical VIRIO, just temporarily resident on whichever chain you're on. Bridging burns on the source and mints on the destination, so total supply across every chain is always exactly 1,000,000,000."
         />
 
@@ -536,20 +536,20 @@ function MultiChain() {
         <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           {CHAINS.map((c, i) => (
             <Reveal key={c.name} delay={i * 80}>
-              <div className="flex h-full flex-col gap-2 rounded-2xl border border-border bg-card p-5 shadow-soft">
+              <div className="flex h-full flex-col gap-2 rounded-2xl border border-border bg-card p-5">
                 <div className="flex items-center justify-between gap-2">
                   <div className="inline-flex items-center gap-2">
-                    <div className="grid h-9 w-9 place-items-center rounded-xl bg-brand-gradient text-white shadow-brand">
+                    <div className="grid h-9 w-9 place-items-center rounded-xl bg-virio-emerald text-virio-emerald-ink">
                       <Globe className="h-4 w-4" />
                     </div>
-                    <div className="font-display text-[16px] font-bold text-foreground">{c.name}</div>
+                    <div className="font-display text-[16px] font-semibold text-foreground">{c.name}</div>
                   </div>
                   <span
                     className={cn(
                       "rounded-full px-2 py-0.5 text-[10.5px] font-semibold uppercase tracking-wider",
                       c.role === "Home"
-                        ? "bg-brand-500/15 text-brand-600 dark:text-brand-300"
-                        : "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
+                        ? "bg-secondary text-foreground"
+                        : "bg-emerald-500/15 text-virio-emerald",
                     )}
                   >
                     {c.role}
@@ -564,12 +564,12 @@ function MultiChain() {
         {/* burn-and-mint flow */}
         <Reveal>
           <div className="mt-8 grid gap-5 lg:grid-cols-[1.2fr_1fr]">
-            <div className="rounded-3xl border border-border bg-card p-6 shadow-soft sm:p-8">
-              <div className="inline-flex items-center gap-2 rounded-full bg-electric-500/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-electric-600 dark:text-electric-300">
+            <div className="rounded-3xl border border-border bg-card p-6 sm:p-8">
+              <div className="inline-flex items-center gap-2 rounded-full bg-secondary px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-foreground">
                 <ArrowLeftRight className="h-3 w-3" />
                 Bridging = burn + mint
               </div>
-              <h3 className="mt-4 font-display text-[20px] font-bold text-foreground">
+              <h3 className="mt-4 font-display text-[20px] font-semibold text-foreground">
                 How VIRIO moves between chains
               </h3>
 
@@ -578,23 +578,23 @@ function MultiChain() {
                   <div className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground">
                     Source chain
                   </div>
-                  <div className="mt-1 font-display text-[15px] font-bold text-foreground">Burn 1,000 VIRIO</div>
+                  <div className="mt-1 font-display text-[15px] font-semibold text-foreground">Burn 1,000 VIRIO</div>
                   <div className="mt-1 text-[12px] text-muted-foreground tabular-nums">total supply −1,000</div>
                 </div>
                 <div className="hidden items-center justify-center sm:flex">
-                  <ArrowRight className="h-5 w-5 text-brand-500" />
+                  <ArrowRight className="h-5 w-5 text-muted-foreground" />
                 </div>
                 <div className="rounded-xl border border-border bg-secondary/40 p-4">
                   <div className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground">
                     Destination chain
                   </div>
-                  <div className="mt-1 font-display text-[15px] font-bold text-foreground">Mint 1,000 VIRIO</div>
+                  <div className="mt-1 font-display text-[15px] font-semibold text-foreground">Mint 1,000 VIRIO</div>
                   <div className="mt-1 text-[12px] text-muted-foreground tabular-nums">total supply +1,000</div>
                 </div>
               </div>
 
               <div className="mt-5 rounded-xl border border-border bg-secondary/40 p-4 font-mono text-[12px] text-foreground">
-                Σ totalSupply across every chain = <span className="text-brand-600 dark:text-brand-300">1,000,000,000</span>
+                Σ totalSupply across every chain = <span className="text-foreground">1,000,000,000</span>
                 <span className="ml-2 text-muted-foreground">(always)</span>
               </div>
 
@@ -604,12 +604,12 @@ function MultiChain() {
               </PlainEnglish>
             </div>
 
-            <div className="flex h-full flex-col rounded-3xl border border-border bg-card p-6 shadow-soft sm:p-8">
-              <div className="inline-flex items-center gap-2 rounded-full bg-brand-500/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-brand-600 dark:text-brand-300">
+            <div className="flex h-full flex-col rounded-3xl border border-border bg-card p-6 sm:p-8">
+              <div className="inline-flex items-center gap-2 rounded-full bg-secondary px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-foreground">
                 <Wallet className="h-3 w-3" />
                 Stake locally
               </div>
-              <h3 className="mt-4 font-display text-[20px] font-bold text-foreground">
+              <h3 className="mt-4 font-display text-[20px] font-semibold text-foreground">
                 Earn where you stake
               </h3>
               <p className="mt-2 text-[13.5px] leading-relaxed text-muted-foreground">
@@ -619,19 +619,19 @@ function MultiChain() {
               </p>
               <ul className="mt-5 space-y-2.5 text-[13px] text-foreground">
                 <li className="flex items-start gap-2.5">
-                  <span className="mt-0.5 grid h-4 w-4 flex-shrink-0 place-items-center rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+                  <span className="mt-0.5 grid h-4 w-4 flex-shrink-0 place-items-center rounded-full bg-emerald-500/15 text-virio-emerald">
                     <CheckCircle2 className="h-3 w-3" />
                   </span>
                   Stake on Base → earn Base&apos;s USDC
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <span className="mt-0.5 grid h-4 w-4 flex-shrink-0 place-items-center rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+                  <span className="mt-0.5 grid h-4 w-4 flex-shrink-0 place-items-center rounded-full bg-emerald-500/15 text-virio-emerald">
                     <CheckCircle2 className="h-3 w-3" />
                   </span>
                   Stake on Arbitrum → earn Arbitrum&apos;s USDC
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <span className="mt-0.5 grid h-4 w-4 flex-shrink-0 place-items-center rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+                  <span className="mt-0.5 grid h-4 w-4 flex-shrink-0 place-items-center rounded-full bg-emerald-500/15 text-virio-emerald">
                     <CheckCircle2 className="h-3 w-3" />
                   </span>
                   Split across chains for diversified yield
@@ -658,27 +658,27 @@ function Emission() {
       <div className="mx-auto max-w-[1100px] px-6 sm:px-8">
         <SectionHeading
           eyebrow="Unlock schedule"
-          title={<>How many tokens are actually <span className="text-gradient">in the wild</span>.</>}
+          title={<>how many tokens are actually <span className="text-virio-emerald">in the wild</span></>}
           description="Just because a billion exist doesn't mean a billion are floating around. Here's roughly what's circulating, when."
         />
 
         <Reveal>
-          <div className="mt-12 rounded-2xl border border-border bg-card p-6 shadow-soft sm:p-8">
+          <div className="mt-12 rounded-2xl border border-border bg-card p-6 sm:p-8">
             <div className="relative">
               <div className="absolute left-0 right-0 top-[78px] h-px bg-border" />
               <div className="grid grid-cols-5 gap-4">
                 {EMISSION.map((e, i) => (
                   <div key={e.label} className="flex flex-col items-center text-center">
-                    <div className="font-display text-[22px] font-extrabold tracking-tight tabular-nums text-foreground">
+                    <div className="font-display text-[22px] font-semibold tracking-tight tabular-nums text-foreground">
                       {e.pct}%
                     </div>
                     <div className="mt-1 text-[11px] text-muted-foreground">circulating</div>
                     <div className="relative mt-4 grid h-6 w-6 place-items-center">
-                      <span className="absolute inset-0 rounded-full bg-brand-500/20" />
+                      <span className="absolute inset-0 rounded-full bg-secondary" />
                       <span
                         className={cn(
                           "absolute inset-1 rounded-full",
-                          i === 0 ? "bg-brand-gradient" : "bg-brand-500",
+                          i === 0 ? "bg-virio-emerald" : "bg-foreground",
                         )}
                       />
                     </div>
@@ -707,21 +707,21 @@ function ValueAccrual() {
       <div className="mx-auto max-w-[1200px] px-6 sm:px-8">
         <SectionHeading
           eyebrow="How $VIRIO makes money"
-          title={<>Stake it. <span className="text-gradient">Earn real fees.</span></>}
+          title={<>stake it. <span className="text-virio-emerald">earn real fees</span></>}
           description="Staking is a simple 1:1 swap. Drop in VIRIO, get back stVIRIO — a regular ERC-20 you can hold, trade, or use as collateral. While you hold it, you earn a pro-rata share of every fee Virio collects on that chain."
         />
 
         <div className="mt-12 grid gap-5 lg:grid-cols-[1.1fr_1fr]">
           {/* stVIRIO explainer */}
           <Reveal>
-            <div className="ring-gradient relative h-full overflow-hidden rounded-3xl border border-border bg-card p-6 shadow-lift sm:p-8">
-              <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(99,91,255,0.22),transparent_70%)] blur-2xl" />
+            <div className="relative h-full overflow-hidden rounded-3xl border border-border bg-card p-6 sm:p-8">
+              
               <div className="relative">
-                <div className="inline-flex items-center gap-2 rounded-full bg-brand-500/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-brand-600 dark:text-brand-300">
+                <div className="inline-flex items-center gap-2 rounded-full bg-secondary px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-foreground">
                   <Repeat className="h-3 w-3" />
                   stVIRIO
                 </div>
-                <h3 className="mt-4 font-display text-[22px] font-bold text-foreground">The 1:1 stake receipt</h3>
+                <h3 className="mt-4 font-display text-[22px] font-semibold text-foreground">The 1:1 stake receipt</h3>
                 <p className="mt-2 text-[14px] leading-relaxed text-muted-foreground">
                   Stake VIRIO → mint stVIRIO 1:1. Burn stVIRIO → redeem VIRIO 1:1. That&apos;s the whole
                   thing. stVIRIO is a transferable ERC-20 with voting power, so you can stack it on top of
@@ -729,26 +729,26 @@ function ValueAccrual() {
                 </p>
 
                 <div className="mt-5 rounded-xl border border-border bg-secondary/40 p-4 font-mono text-[12.5px] text-foreground">
-                  stake(<span className="text-brand-600 dark:text-brand-300">10,000 VIRIO</span>) → <span className="text-emerald-600 dark:text-emerald-400">10,000 stVIRIO</span>
+                  stake(<span className="text-foreground">10,000 VIRIO</span>) → <span className="text-virio-emerald">10,000 stVIRIO</span>
                   <br />
-                  unstake(<span className="text-emerald-600 dark:text-emerald-400">10,000 stVIRIO</span>) → <span className="text-brand-600 dark:text-brand-300">10,000 VIRIO</span>
+                  unstake(<span className="text-virio-emerald">10,000 stVIRIO</span>) → <span className="text-foreground">10,000 VIRIO</span>
                 </div>
 
                 <ul className="mt-5 space-y-3 text-[13.5px] text-foreground">
                   <li className="flex items-start gap-2.5">
-                    <span className="mt-0.5 grid h-4 w-4 flex-shrink-0 place-items-center rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+                    <span className="mt-0.5 grid h-4 w-4 flex-shrink-0 place-items-center rounded-full bg-emerald-500/15 text-virio-emerald">
                       <CheckCircle2 className="h-3 w-3" />
                     </span>
                     Pro-rata <strong>fee-token yield</strong> (USDC and any other token Virio collects)
                   </li>
                   <li className="flex items-start gap-2.5">
-                    <span className="mt-0.5 grid h-4 w-4 flex-shrink-0 place-items-center rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+                    <span className="mt-0.5 grid h-4 w-4 flex-shrink-0 place-items-center rounded-full bg-emerald-500/15 text-virio-emerald">
                       <CheckCircle2 className="h-3 w-3" />
                     </span>
                     <strong>Governance votes</strong> via ERC20Votes on stVIRIO
                   </li>
                   <li className="flex items-start gap-2.5">
-                    <span className="mt-0.5 grid h-4 w-4 flex-shrink-0 place-items-center rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+                    <span className="mt-0.5 grid h-4 w-4 flex-shrink-0 place-items-center rounded-full bg-emerald-500/15 text-virio-emerald">
                       <CheckCircle2 className="h-3 w-3" />
                     </span>
                     Unstake any time (a short cooldown can be added later if needed)
@@ -765,12 +765,12 @@ function ValueAccrual() {
 
           {/* fee split diagram */}
           <Reveal delay={120}>
-            <div className="flex h-full flex-col rounded-3xl border border-border bg-card p-6 shadow-soft sm:p-8">
-              <div className="inline-flex items-center gap-2 rounded-full bg-electric-500/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-electric-600 dark:text-electric-300">
+            <div className="flex h-full flex-col rounded-3xl border border-border bg-card p-6 sm:p-8">
+              <div className="inline-flex items-center gap-2 rounded-full bg-secondary px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-foreground">
                 <TrendingUp className="h-3 w-3" />
                 Fee split
               </div>
-              <h3 className="mt-4 font-display text-[22px] font-bold text-foreground">
+              <h3 className="mt-4 font-display text-[22px] font-semibold text-foreground">
                 Where every fee ends up
               </h3>
               <p className="mt-2 text-[14px] leading-relaxed text-muted-foreground">
@@ -809,10 +809,10 @@ function FeeRow({
 }) {
   const grad =
     tone === "electric"
-      ? "from-electric-500 to-electric-400"
+      ? "from-muted-foreground/60 to-muted-foreground"
       : tone === "emerald"
       ? "from-emerald-500 to-emerald-400"
-      : "from-brand-500 to-brand-400";
+      : "from-virio-emerald/80 to-virio-emerald";
   return (
     <div>
       <div className="flex items-baseline justify-between text-[13px]">
@@ -820,7 +820,7 @@ function FeeRow({
           <span className="font-semibold text-foreground">{label}</span>
           <span className="ml-2 text-muted-foreground">{sub}</span>
         </div>
-        <span className="font-display text-[16px] font-bold tabular-nums text-foreground">{pct}%</span>
+        <span className="font-display text-[16px] font-semibold tabular-nums text-foreground">{pct}%</span>
       </div>
       <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-secondary/80">
         <div
@@ -840,12 +840,12 @@ function MerchantDiscounts() {
       <div className="mx-auto max-w-[1100px] px-6 sm:px-8">
         <SectionHeading
           eyebrow="For merchants"
-          title={<>Stake $VIRIO, <span className="text-gradient">pay less in fees</span>.</>}
+          title={<>stake $VIRIO, <span className="text-virio-emerald">pay less in fees</span></>}
           description="The more $VIRIO a merchant stakes, the cheaper Virio becomes for them. At 1M staked, the flat fee is waived entirely."
         />
 
         <Reveal>
-          <div className="mt-12 overflow-hidden rounded-2xl border border-border bg-card shadow-soft">
+          <div className="mt-12 overflow-hidden rounded-2xl border border-border bg-card">
             <div className="grid grid-cols-3 border-b border-border bg-secondary/40 px-5 py-3 text-[11.5px] font-semibold uppercase tracking-wider text-muted-foreground">
               <span>Staked $VIRIO</span>
               <span className="text-center">Protocol fee</span>
@@ -859,7 +859,7 @@ function MerchantDiscounts() {
                   className={cn(
                     "grid grid-cols-3 items-center px-5 py-4 text-[14px]",
                     i !== FEE_DISCOUNTS.length - 1 && "border-b border-border",
-                    isWaived && "bg-brand-500/[0.06]",
+                    isWaived && "bg-secondary/50",
                   )}
                 >
                   <span className="font-semibold text-foreground">{row.stakeLabel}</span>
@@ -869,7 +869,7 @@ function MerchantDiscounts() {
                   </span>
                   <span className="text-right">
                     {isWaived ? (
-                      <span className="rounded-full bg-emerald-500/15 px-2.5 py-1 text-[12px] font-semibold text-emerald-600 dark:text-emerald-400">
+                      <span className="rounded-full bg-emerald-500/15 px-2.5 py-1 text-[12px] font-semibold text-virio-emerald">
                         Waived
                       </span>
                     ) : (
@@ -899,12 +899,12 @@ function Revenue() {
       <div className="mx-auto max-w-[1100px] px-6 sm:px-8">
         <SectionHeading
           eyebrow="What Virio will earn"
-          title={<>The revenue <span className="text-gradient">that gets shared</span>.</>}
+          title={<>the revenue <span className="text-virio-emerald">that gets shared</span></>}
           description="These are the assumptions feeding holder earnings. Average charge $50, 1.5 charges per relationship per month."
         />
 
         <Reveal>
-          <div className="mt-12 overflow-x-auto rounded-2xl border border-border bg-card shadow-soft">
+          <div className="mt-12 overflow-x-auto rounded-2xl border border-border bg-card">
             <div className="min-w-[640px]">
               <div className="grid grid-cols-5 border-b border-border bg-secondary/40 px-5 py-3 text-[11.5px] font-semibold uppercase tracking-wider text-muted-foreground">
                 <span>Year</span>
@@ -919,7 +919,7 @@ function Revenue() {
                   className={cn(
                     "grid grid-cols-5 items-center px-5 py-4 text-[14px]",
                     i !== REVENUE.length - 1 && "border-b border-border",
-                    r.tone === "brand" && "bg-brand-500/[0.04]",
+                    r.tone === "brand" && "bg-secondary/30",
                     r.tone === "emerald" && "bg-emerald-500/[0.05]",
                   )}
                 >
@@ -929,7 +929,7 @@ function Revenue() {
                       className={cn(
                         "rounded-full px-2 py-0.5 text-[11px] font-semibold",
                         r.scenario === "Bull"
-                          ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+                          ? "bg-emerald-500/15 text-virio-emerald"
                           : "bg-muted text-muted-foreground",
                       )}
                     >
@@ -938,7 +938,7 @@ function Revenue() {
                   </span>
                   <span className="text-right tabular-nums text-muted-foreground">{r.active}</span>
                   <span className="text-right tabular-nums text-foreground">{r.tpv}</span>
-                  <span className="text-right font-display text-[16px] font-bold tabular-nums text-foreground">
+                  <span className="text-right font-display text-[16px] font-semibold tabular-nums text-foreground">
                     {r.rev}
                   </span>
                 </div>
@@ -959,17 +959,17 @@ function HolderEarnings() {
       <div className="mx-auto max-w-[1200px] px-6 sm:px-8">
         <SectionHeading
           eyebrow="What you could earn"
-          title={<>Two ways $VIRIO <span className="text-gradient">pays you</span>.</>}
+          title={<>two ways $VIRIO <span className="text-virio-emerald">pays you</span></>}
           description="Real USDC yield from fees, plus the token's own appreciation as Virio grows. Numbers below are illustrative scenarios — not promises."
         />
 
         <div className="mt-12 grid gap-5 lg:grid-cols-2">
           {/* USDC yield */}
           <Reveal className="min-w-0">
-            <div className="h-full rounded-2xl border border-border bg-card p-5 shadow-soft sm:p-7">
+            <div className="h-full rounded-2xl border border-border bg-card p-5 sm:p-7">
               <div className="flex items-center gap-2">
-                <Wallet className="h-4 w-4 flex-shrink-0 text-brand-500" />
-                <h3 className="font-display text-[15px] font-bold leading-tight text-foreground sm:text-[16px]">
+                <Wallet className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+                <h3 className="font-display text-[15px] font-semibold leading-tight text-foreground sm:text-[16px]">
                   USDC yield per 10,000 stVIRIO / year
                 </h3>
               </div>
@@ -984,7 +984,7 @@ function HolderEarnings() {
                       <div className="text-[13.5px] font-semibold text-foreground">{row.label}</div>
                       <div className="text-[11.5px] text-muted-foreground">Protocol rev {row.rev}</div>
                     </div>
-                    <div className="font-display text-[20px] font-extrabold tabular-nums text-emerald-600 dark:text-emerald-400">
+                    <div className="font-display text-[20px] font-semibold tabular-nums text-virio-emerald">
                       {row.yieldVal}
                     </div>
                   </div>
@@ -1000,10 +1000,10 @@ function HolderEarnings() {
 
           {/* Token price */}
           <Reveal delay={120} className="min-w-0">
-            <div className="h-full rounded-2xl border border-border bg-card p-5 shadow-soft sm:p-7">
+            <div className="h-full rounded-2xl border border-border bg-card p-5 sm:p-7">
               <div className="flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 flex-shrink-0 text-brand-500" />
-                <h3 className="font-display text-[15px] font-bold leading-tight text-foreground sm:text-[16px]">
+                <TrendingUp className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+                <h3 className="font-display text-[15px] font-semibold leading-tight text-foreground sm:text-[16px]">
                   Token price at price-to-fees multiples
                 </h3>
               </div>
@@ -1032,7 +1032,7 @@ function HolderEarnings() {
                     </span>
                     <span className="text-right tabular-nums text-foreground">{row.px20}</span>
                     <span className="text-right tabular-nums font-semibold text-foreground">{row.px40}</span>
-                    <span className="text-right tabular-nums text-brand-600 dark:text-brand-300">{row.px80}</span>
+                    <span className="text-right tabular-nums text-foreground">{row.px80}</span>
                   </div>
                 ))}
               </div>
@@ -1042,10 +1042,10 @@ function HolderEarnings() {
 
         {/* worked example */}
         <Reveal>
-          <div className="mt-8 overflow-hidden rounded-3xl border border-brand-300/50 bg-brand-500/[0.05] p-6 shadow-soft sm:p-8">
+          <div className="mt-8 overflow-hidden rounded-3xl border border-virio-emerald/25 bg-secondary/40 p-6 sm:p-8">
             <div className="flex flex-wrap items-center gap-2">
               <Pill tone="brand">Worked example</Pill>
-              <h3 className="font-display text-[18px] font-bold text-foreground">
+              <h3 className="font-display text-[18px] font-semibold text-foreground">
                 Buy 100k $VIRIO at $0.30 → stake all of it
               </h3>
             </div>
@@ -1058,8 +1058,8 @@ function HolderEarnings() {
                   Year 3 · Base case
                 </div>
                 <div className="mt-2 flex items-baseline gap-2">
-                  <span className="font-display text-[28px] font-extrabold tabular-nums text-foreground">$108k</span>
-                  <span className="text-[12.5px] font-semibold text-emerald-600 dark:text-emerald-400">≈ 3.6×</span>
+                  <span className="font-display text-[28px] font-semibold tabular-nums text-foreground">$108k</span>
+                  <span className="text-[12.5px] font-semibold text-virio-emerald">≈ 3.6×</span>
                 </div>
                 <p className="mt-2 text-[12.5px] text-muted-foreground">
                   Token value $96k + ~$12k accumulated USDC yield
@@ -1070,8 +1070,8 @@ function HolderEarnings() {
                   Year 3 · Bull case
                 </div>
                 <div className="mt-2 flex items-baseline gap-2">
-                  <span className="font-display text-[28px] font-extrabold tabular-nums text-foreground">$549k</span>
-                  <span className="text-[12.5px] font-semibold text-emerald-600 dark:text-emerald-400">≈ 18×</span>
+                  <span className="font-display text-[28px] font-semibold tabular-nums text-foreground">$549k</span>
+                  <span className="text-[12.5px] font-semibold text-virio-emerald">≈ 18×</span>
                 </div>
                 <p className="mt-2 text-[12.5px] text-muted-foreground">
                   Token value $488k + ~$61k accumulated USDC yield
@@ -1119,18 +1119,18 @@ function Launch() {
       <div className="mx-auto max-w-[1100px] px-6 sm:px-8">
         <SectionHeading
           eyebrow="Launch"
-          title={<>How $VIRIO goes <span className="text-gradient">live</span>.</>}
+          title={<>how $VIRIO goes <span className="text-virio-emerald">live</span></>}
           description="Public sale only. No private rounds, no sweetheart pricing."
         />
         <div className="mt-12 grid gap-4 md:grid-cols-2">
           {items.map((it, i) => (
             <Reveal key={it.label} delay={(i % 2) * 80}>
-              <div className="flex h-full gap-3 rounded-2xl border border-border bg-card p-5 shadow-soft">
-                <div className="mt-0.5 grid h-6 w-6 flex-shrink-0 place-items-center rounded-full bg-brand-500/15 text-brand-600 dark:text-brand-300">
-                  <span className="font-display text-[12px] font-bold tabular-nums">{i + 1}</span>
+              <div className="flex h-full gap-3 rounded-2xl border border-border bg-card p-5">
+                <div className="mt-0.5 grid h-6 w-6 flex-shrink-0 place-items-center rounded-full bg-secondary text-foreground">
+                  <span className="font-display text-[12px] font-semibold tabular-nums">{i + 1}</span>
                 </div>
                 <div>
-                  <div className="font-display text-[15px] font-bold text-foreground">{it.label}</div>
+                  <div className="font-display text-[15px] font-semibold text-foreground">{it.label}</div>
                   <p className="mt-1 text-[13.5px] leading-relaxed text-muted-foreground">{it.body}</p>
                 </div>
               </div>
@@ -1150,18 +1150,18 @@ function Risks() {
       <div className="mx-auto max-w-[1100px] px-6 sm:px-8">
         <SectionHeading
           eyebrow="Safeguards"
-          title={<>Why this is built to <span className="text-gradient">not blow up</span>.</>}
+          title={<>why this is built to <span className="text-virio-emerald">not blow up</span></>}
           description="Every common token launch failure mode has a specific mitigation. Here they are."
         />
         <div className="mt-12 grid gap-4 md:grid-cols-2">
           {RISKS.map((r, i) => (
             <Reveal key={r.title} delay={(i % 2) * 80}>
-              <div className="flex h-full gap-3.5 rounded-2xl border border-border bg-card p-5 shadow-soft transition-all duration-300 hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-lift">
-                <div className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+              <div className="flex h-full gap-3.5 rounded-2xl border border-border bg-card p-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-[hsl(var(--hairline-strong))] hover:shadow-lift">
+                <div className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-xl bg-emerald-500/15 text-virio-emerald">
                   <r.Icon className="h-5 w-5" />
                 </div>
                 <div>
-                  <div className="font-display text-[15px] font-bold text-foreground">{r.title}</div>
+                  <div className="font-display text-[15px] font-semibold text-foreground">{r.title}</div>
                   <p className="mt-1 text-[13.5px] leading-relaxed text-muted-foreground">{r.body}</p>
                 </div>
               </div>
@@ -1217,7 +1217,7 @@ const FAQ = [
 function FaqItem({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = React.useState(false);
   return (
-    <div className="rounded-2xl border border-border bg-card transition-colors hover:border-brand-300">
+    <div className="rounded-2xl border border-border bg-card transition-colors hover:border-[hsl(var(--hairline-strong))]">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
@@ -1227,7 +1227,7 @@ function FaqItem({ q, a }: { q: string; a: string }) {
         <ChevronDown
           className={cn(
             "h-4 w-4 flex-shrink-0 text-muted-foreground transition-transform",
-            open && "rotate-180 text-brand-500",
+            open && "rotate-180 text-muted-foreground",
           )}
         />
       </button>
@@ -1246,7 +1246,7 @@ function Faq() {
       <div className="mx-auto max-w-[900px] px-6 sm:px-8">
         <SectionHeading
           eyebrow="Frequently asked"
-          title={<>Still <span className="text-gradient">have questions?</span></>}
+          title={<>still <span className="text-virio-emerald">have questions?</span></>}
         />
         <div className="mt-12 space-y-3">
           {FAQ.map((item) => (
@@ -1265,11 +1265,11 @@ function CtaFooter() {
     <section className="pb-24 pt-10">
       <div className="mx-auto max-w-[1100px] px-6 sm:px-8">
         <Reveal>
-          <div className="ring-gradient relative overflow-hidden rounded-3xl border border-border bg-card p-8 text-center shadow-lift sm:p-12">
-            <div className="pointer-events-none absolute -inset-x-10 -top-20 h-[260px] bg-[radial-gradient(ellipse_at_top,rgba(99,91,255,0.30),transparent_65%)] blur-3xl" />
+          <div className="relative overflow-hidden rounded-3xl border border-border bg-card p-8 text-center sm:p-12">
+            
             <div className="relative">
-              <h2 className="mx-auto max-w-[640px] text-balance font-display text-[clamp(1.7rem,3.2vw,2.4rem)] font-extrabold leading-[1.1] tracking-[-0.025em] text-foreground">
-                Be there at <span className="text-gradient">launch</span>.
+              <h2 className="mx-auto max-w-[640px] text-balance font-display text-[clamp(1.7rem,3.2vw,2.4rem)] font-semibold leading-[1.1] tracking-[-0.04em] text-foreground">
+                be there at <span className="text-virio-emerald">launch</span>
               </h2>
               <p className="mx-auto mt-3 max-w-[520px] text-[14.5px] leading-relaxed text-muted-foreground">
                 Watch the docs for the sale date. No allowlist, no private rounds — anyone can
@@ -1278,14 +1278,14 @@ function CtaFooter() {
               <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
                 <Link
                   href="/docs"
-                  className="btn-sheen group relative inline-flex h-12 items-center justify-center gap-2 overflow-hidden rounded-xl bg-brand-gradient px-7 text-[15px] font-semibold text-white shadow-brand transition-all duration-200 ease-soft hover:-translate-y-0.5 hover:shadow-brand-lg"
+                  className="group inline-flex h-12 items-center justify-center gap-2 overflow-hidden rounded-xl bg-virio-emerald px-7 text-[15px] font-semibold text-virio-emerald-ink transition-all duration-200 ease-out hover:-translate-y-0.5 "
                 >
                   <span className="relative z-[2]">Read the docs</span>
                   <ArrowRight className="relative z-[2] h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                 </Link>
                 <Link
                   href="/dashboard"
-                  className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-border bg-card px-7 text-[15px] font-semibold text-foreground shadow-soft transition-all duration-200 ease-soft hover:-translate-y-0.5 hover:border-brand-400"
+                  className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-border bg-card px-7 text-[15px] font-semibold text-foreground transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-[hsl(var(--hairline-strong))]"
                 >
                   Open the app
                 </Link>
