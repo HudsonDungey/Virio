@@ -228,10 +228,11 @@ export async function transactionsByMerchant(merchant: Hex): Promise<Transaction
     const plan = planLookup.get(planId.toLowerCase());
     out.push({
       id: c.txHash,
+      type: "subscription",
       subscriptionId: c.subId,
       planId,
       planName: plan?.name ?? "(deleted plan)",
-      customer: c.customer,
+      counterparty: c.customer,
       merchantAmount: usdcDisplay(c.merchantAmount),
       fee: usdcDisplay(c.protocolFee + c.executorFee),
       gross: usdcDisplay(c.gross),
@@ -263,6 +264,7 @@ export async function listSubscriptions(): Promise<Subscription[]> {
   const store = getStore();
   const plans = await listPlans();
   const planLookup = new Map(plans.map((p) => [p.id.toLowerCase(), p]));
+  const planMerchant = new Map(planEvents.map((p) => [p.planId.toLowerCase(), p.merchant]));
 
   const out: Subscription[] = [];
   for (const s of subEvents) {
@@ -300,6 +302,7 @@ export async function listSubscriptions(): Promise<Subscription[]> {
       id: s.subId,
       planId: s.planId,
       planName: plan.name,
+      merchant: planMerchant.get(s.planId.toLowerCase()) ?? "0x0",
       customer: s.customer,
       spendCap: s.totalSpendCap === 0n ? null : usdcDisplay(s.totalSpendCap),
       chargeCount,
@@ -307,6 +310,52 @@ export async function listSubscriptions(): Promise<Subscription[]> {
       nextChargeAt,
       status,
       createdAt: meta?.createdAt ?? new Date(0).toISOString(),
+    });
+  }
+  return out.reverse();
+}
+
+export async function subscriptionsByWallet(wallet: Hex): Promise<Subscription[]> {
+  const target = wallet.toLowerCase();
+  const all = await listSubscriptions();
+  return all.filter(
+    (s) => s.customer.toLowerCase() === target || s.merchant.toLowerCase() === target,
+  );
+}
+
+export async function transactionsByWallet(wallet: Hex): Promise<Transaction[]> {
+  await resyncIfReset();
+  await syncEvents();
+  const target = wallet.toLowerCase();
+  const planMerchant = new Map(planEvents.map((p) => [p.planId.toLowerCase(), p.merchant.toLowerCase()]));
+  const subPlan = new Map<string, Hex>();
+  for (const s of subEvents) subPlan.set(s.subId.toLowerCase(), s.planId);
+  const plans = await listPlans();
+  const planLookup = new Map(plans.map((p) => [p.id.toLowerCase(), p]));
+
+  const out: Transaction[] = [];
+  for (const c of chargeEvents) {
+    const planId = subPlan.get(c.subId.toLowerCase());
+    if (!planId) continue;
+    const merchant = planMerchant.get(planId.toLowerCase());
+    if (!merchant) continue;
+    const isMerchant = merchant === target;
+    const isCustomer = c.customer.toLowerCase() === target;
+    if (!isMerchant && !isCustomer) continue;
+    const plan = planLookup.get(planId.toLowerCase());
+    out.push({
+      id: c.txHash,
+      type: "subscription",
+      subscriptionId: c.subId,
+      planId,
+      planName: plan?.name ?? "(deleted plan)",
+      counterparty: isMerchant ? c.customer : merchant,
+      merchantAmount: usdcDisplay(c.merchantAmount),
+      fee: usdcDisplay(c.protocolFee + c.executorFee),
+      gross: usdcDisplay(c.gross),
+      direction: isMerchant ? "in" : "out",
+      status: "success",
+      timestamp: new Date(c.timestamp * 1000).toISOString(),
     });
   }
   return out.reverse();
@@ -326,10 +375,11 @@ export async function listTransactions(): Promise<Transaction[]> {
     const plan = planId ? planLookup.get(planId.toLowerCase()) : undefined;
     out.push({
       id: c.txHash,
+      type: "subscription",
       subscriptionId: c.subId,
       planId: planId ?? ("0x" as Hex),
       planName: plan?.name ?? "(deleted plan)",
-      customer: c.customer,
+      counterparty: c.customer,
       merchantAmount: usdcDisplay(c.merchantAmount),
       fee: usdcDisplay(c.protocolFee + c.executorFee),
       gross: usdcDisplay(c.gross),

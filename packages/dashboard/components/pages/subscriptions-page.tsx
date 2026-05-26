@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { Plus, RefreshCw } from "lucide-react";
+import { useAccount } from "wagmi";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,16 +29,27 @@ export function SubscriptionsPage({ subscriptions, refresh, onCreate }: Props) {
   const { toast } = useToast();
   const confirm = useConfirm();
   const actions = useVirioActions();
+  const { address } = useAccount();
   const [search, setSearch] = React.useState("");
   const [statusF, setStatusF] = React.useState("");
+  const [roleF, setRoleF] = React.useState("");
   const [pendingId, setPendingId] = React.useState<string | null>(null);
+
+  const connectedAddr = address?.toLowerCase();
 
   let filtered = subscriptions;
   if (search)
-    filtered = filtered.filter((s) =>
-      s.customer.toLowerCase().includes(search.toLowerCase()),
+    filtered = filtered.filter(
+      (s) =>
+        s.customer.toLowerCase().includes(search.toLowerCase()) ||
+        s.merchant.toLowerCase().includes(search.toLowerCase()) ||
+        s.planName.toLowerCase().includes(search.toLowerCase()),
     );
   if (statusF) filtered = filtered.filter((s) => s.status === statusF);
+  if (roleF === "merchant")
+    filtered = filtered.filter((s) => s.merchant.toLowerCase() === connectedAddr);
+  if (roleF === "customer")
+    filtered = filtered.filter((s) => s.customer.toLowerCase() === connectedAddr);
 
   async function cancel(id: string, customer: string) {
     if (!actions.account.address) return toast("Connect your wallet first", "error");
@@ -86,9 +98,18 @@ export function SubscriptionsPage({ subscriptions, refresh, onCreate }: Props) {
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Filter by customer…"
+            placeholder="Filter by address or plan…"
             className="h-9 w-full sm:w-60"
           />
+          <Select
+            value={roleF}
+            onChange={(e) => setRoleF(e.target.value)}
+            className="h-9 w-full sm:w-40"
+          >
+            <option value="">All roles</option>
+            <option value="customer">Subscribed to</option>
+            <option value="merchant">Merchant of</option>
+          </Select>
           <Select
             value={statusF}
             onChange={(e) => setStatusF(e.target.value)}
@@ -122,7 +143,8 @@ export function SubscriptionsPage({ subscriptions, refresh, onCreate }: Props) {
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead>Customer</TableHead>
+                <TableHead>Role</TableHead>
+                <TableHead>Counterparty</TableHead>
                 <TableHead>Plan</TableHead>
                 <TableHead>Charges</TableHead>
                 <TableHead>Total Paid</TableHead>
@@ -134,14 +156,20 @@ export function SubscriptionsPage({ subscriptions, refresh, onCreate }: Props) {
             <TableBody>
               {filtered.map((s, i) => {
                 const nc = s.status === "active" ? fmtNextCharge(s.nextChargeAt) : null;
+                const isMerchant = s.merchant.toLowerCase() === connectedAddr;
                 return (
                   <TableRow
                     key={s.id}
                     className="animate-row-in"
                     style={{ animationDelay: `${i * 30}ms` }}
                   >
+                    <TableCell>
+                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ring-1 ring-inset ${isMerchant ? "bg-emerald-50 text-emerald-700 ring-emerald-600/20 dark:bg-emerald-950 dark:text-emerald-400 dark:ring-emerald-500/30" : "bg-blue-50 text-blue-700 ring-blue-600/20 dark:bg-blue-950 dark:text-blue-400 dark:ring-blue-500/30"}`}>
+                        {isMerchant ? "merchant" : "subscriber"}
+                      </span>
+                    </TableCell>
                     <TableCell className="font-mono text-xs">
-                      {fmtAddr(s.customer)}
+                      {isMerchant ? fmtAddr(s.customer) : fmtAddr(s.merchant)}
                     </TableCell>
                     <TableCell>{s.planName}</TableCell>
                     <TableCell>{s.chargeCount}</TableCell>

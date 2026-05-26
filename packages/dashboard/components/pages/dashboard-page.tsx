@@ -157,7 +157,7 @@ export function DashboardPage({
               recent.map((t) => (
                 <TableRow key={t.id}>
                   <TableCell className="font-mono text-xs text-muted-foreground">
-                    {fmtAddr(t.customer)}
+                    {fmtAddr(t.counterparty)}
                   </TableCell>
                   <TableCell className="font-medium">{t.planName}</TableCell>
                   <TableCell className="text-right tabular-nums">

@@ -17,6 +17,7 @@ import type {
   PayrollRecipient,
   PayrollExecution,
   PayrollStats,
+  Transaction,
 } from "./types";
 
 const ZERO_ADDR = "0x0000000000000000000000000000000000000000";
@@ -307,6 +308,36 @@ export async function listPayrollExecutions(
       timestamp: e.timestamp,
     }))
     .reverse(); // newest first
+}
+
+export async function payrollTransactionsByWallet(wallet: string): Promise<Transaction[]> {
+  await resyncIfReset();
+  await syncEvents();
+  const target = wallet.toLowerCase();
+  const planEmployer = new Map(planEvents.map((p) => [p.planId.toLowerCase(), p.employer.toLowerCase()]));
+
+  const out: Transaction[] = [];
+  for (const e of executions) {
+    const employer = planEmployer.get(e.planId.toLowerCase());
+    if (!employer) continue;
+    const isEmployer = employer === target;
+    const isRecipient = e.recipient.toLowerCase() === target;
+    if (!isEmployer && !isRecipient) continue;
+    out.push({
+      id: `${e.txHash}-${e.logIndex}`,
+      type: "payroll",
+      planId: e.planId,
+      planName: `Payroll ${e.planId.slice(0, 10)}`,
+      counterparty: isEmployer ? e.recipient : employer,
+      merchantAmount: usdcDisplay(e.recipientAmount),
+      fee: usdcDisplay(e.executorFee + e.protocolFee),
+      gross: usdcDisplay(e.grossAmount),
+      direction: isEmployer ? "out" : "in",
+      status: "success",
+      timestamp: new Date(e.timestamp * 1000).toISOString(),
+    });
+  }
+  return out.reverse();
 }
 
 export async function payrollStats(employer?: string): Promise<PayrollStats> {

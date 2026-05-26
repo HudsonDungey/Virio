@@ -74,10 +74,8 @@ export function DashboardShell() {
     }
   }, []);
 
-  /// All chain reads are scoped to the connected wallet. When no wallet is
-  /// connected we keep the local state empty so the UI shows a "connect"
-  /// prompt instead of leaking another merchant's data.
   const merchantParam = address ? `?merchant=${address}` : null;
+  const walletParam   = address ? `?wallet=${address}`   : null;
 
   const fetchStats = React.useCallback(async () => {
     if (!merchantParam) {
@@ -113,16 +111,16 @@ export function DashboardShell() {
   }, [merchantParam]);
 
   const fetchSubs = React.useCallback(async () => {
-    if (!merchantParam) {
+    if (!walletParam) {
       setSubs([]);
       return;
     }
     try {
-      setSubs(await api<Subscription[]>("GET", `/api/subscriptions${merchantParam}`));
+      setSubs(await api<Subscription[]>("GET", `/api/subscriptions${walletParam}`));
     } catch (e) {
       console.error("subs load failed", e);
     }
-  }, [merchantParam]);
+  }, [walletParam]);
 
   const refreshAll = React.useCallback(() => {
     fetchStats();

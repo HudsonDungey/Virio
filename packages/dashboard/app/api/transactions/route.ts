@@ -1,27 +1,27 @@
 import { NextResponse } from "next/server";
 import { ensureSchedulerStarted } from "@/lib/scheduler";
-import { transactionsByMerchant } from "@/lib/chain-reads";
+import { transactionsByWallet } from "@/lib/chain-reads";
+import { payrollTransactionsByWallet } from "@/lib/payroll-reads";
 import type { Hex } from "viem";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/// Transactions are scoped to the connected merchant. Without a merchant param,
-/// returns an empty list so the UI prompts for wallet connection.
+/// Returns all transactions (subscription charges + payroll executions) where the
+/// wallet is involved, as either payer (out) or payee (in). No wallet param → empty list.
 export async function GET(req: Request) {
   ensureSchedulerStarted();
   const url = new URL(req.url);
-  const merchant = url.searchParams.get("merchant");
-  if (!merchant || !/^0x[0-9a-fA-F]{40}$/.test(merchant)) {
+  const wallet = url.searchParams.get("wallet");
+  if (!wallet || !/^0x[0-9a-fA-F]{40}$/.test(wallet)) {
     return NextResponse.json([]);
   }
-  const planId = url.searchParams.get("planId")?.toLowerCase();
-  const customer = url.searchParams.get("customer")?.toLowerCase();
-  const status = url.searchParams.get("status");
-
-  let result = await transactionsByMerchant(merchant as Hex);
-  if (planId)   result = result.filter((t) => t.planId.toLowerCase() === planId);
-  if (customer) result = result.filter((t) => t.customer.toLowerCase().includes(customer));
-  if (status)   result = result.filter((t) => t.status === status);
-  return NextResponse.json(result);
+  const [subTxns, payrollTxns] = await Promise.all([
+    transactionsByWallet(wallet as Hex),
+    payrollTransactionsByWallet(wallet),
+  ]);
+  const merged = [...subTxns, ...payrollTxns].sort(
+    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+  );
+  return NextResponse.json(merged);
 }
