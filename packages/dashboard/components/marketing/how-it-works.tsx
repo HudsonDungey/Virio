@@ -15,7 +15,7 @@ const STEPS = [
     n: "02",
     icon: Fingerprint,
     title: "user approves once",
-    body: "the customer signs a single onchain approval. no re-signing every cycle — the agreement is enforced by audited contracts.",
+    body: "the customer signs a single onchain approval. no re-signing every cycle — the agreement is enforced by the contracts themselves.",
     code: "await virio.subscriptions.subscribe(planId)",
   },
   {
@@ -100,7 +100,7 @@ export function HowItWorks() {
                       <span className="mt-1 w-px flex-1 bg-gradient-to-b from-border to-transparent" />
                     )}
                   </div>
-                  <div className="pb-1">
+                  <div className="min-w-0 flex-1 pb-1">
                     <div className="flex items-center gap-2.5">
                       <span className="font-mono text-[11px] font-semibold text-muted-foreground">
                         {s.n}
@@ -112,9 +112,9 @@ export function HowItWorks() {
                     <p className="mt-1.5 text-[13.5px] leading-relaxed text-muted-foreground">
                       {s.body}
                     </p>
-                    <code className="mt-3 inline-flex items-center gap-2 rounded-md border border-border bg-background px-3 py-1.5 font-mono text-[11.5px] text-foreground">
-                      <ArrowRight className="h-3 w-3 text-muted-foreground" />
-                      {s.code}
+                    <code className="mt-3 flex max-w-full items-center gap-2 overflow-x-auto rounded-md border border-border bg-background px-3 py-1.5 font-mono text-[11.5px] text-foreground">
+                      <ArrowRight className="h-3 w-3 flex-shrink-0 text-muted-foreground" />
+                      <span className="whitespace-nowrap">{s.code}</span>
                     </code>
                   </div>
                 </div>

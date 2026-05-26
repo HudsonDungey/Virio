@@ -207,11 +207,6 @@ const RISKS = [
     body: "A 48-hour timelock sits in front of every spend.",
   },
   {
-    Icon: CheckCircle2,
-    title: "Audits before launch",
-    body: "Code4rena and Once review every contract pre-TGE. Reports published.",
-  },
-  {
     Icon: Users,
     title: "Sybil filters on the airdrop",
     body: "Per-month claim filters are tunable, so farmers can't drain the community bucket.",
