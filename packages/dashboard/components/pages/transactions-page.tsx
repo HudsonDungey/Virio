@@ -82,8 +82,15 @@ export function TransactionsPage({ visible }: Props) {
               </TableRow>
             ) : (
               items.map((t, i) => (
-                <TableRow key={t.id} className="animate-row-in" style={{ animationDelay: `${i * 22}ms` }}>
-                  <TableCell className="font-mono text-[11px]">{t.id.slice(0, 8)}…</TableCell>
+                <TableRow
+                  key={t.id}
+                  className="animate-row-in cursor-pointer"
+                  style={{ animationDelay: `${i * 22}ms` }}
+                  onClick={() => window.location.href = `/transaction/${t.id}`}
+                >
+                  <TableCell className="font-mono text-[11px] text-muted-foreground hover:text-foreground hover:underline">
+                    {t.id.slice(0, 8)}…
+                  </TableCell>
                   <TableCell className="font-mono text-xs">{fmtAddr(t.customer)}</TableCell>
                   <TableCell>{t.planName}</TableCell>
                   <TableCell className="font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">{fmt$(t.gross)}</TableCell>

@@ -16,7 +16,7 @@ pragma solidity ^0.8.24;
 //   5. Subscriptions are denormalized at subscribe() time: merchant, token,
 //      amount, period, feeBps are copied from the plan so the subscription
 //      remains valid even if the plan is later modified.
-//   6. nextChargeAt += period (additive, no timestamp drift).
+//   6. nextChargeAt = block.timestamp + period — resets from charge time, one charge per period regardless of backlog.
 //   7. planId includes block.chainid to prevent cross-chain replay.
 //   8. Spend cap exceeded → auto-cancel (emit Cancelled), NOT revert.
 //   9. cancel() callable by customer OR merchant.
@@ -190,7 +190,7 @@ contract VirioSubscriptionManager is IVirioSubscriptionManager {
 
         // ── EFFECTS (all state mutations before any external call) ────────────
 
-        uint256 nextChargeAt = sub.nextChargeAt + sub.period;
+        uint256 nextChargeAt = block.timestamp + sub.period;
         sub.nextChargeAt  = nextChargeAt;
         sub.totalSpent   += amount;
 
