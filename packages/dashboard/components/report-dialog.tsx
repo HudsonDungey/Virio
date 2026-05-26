@@ -1,32 +1,12 @@
 "use client";
 
 import * as React from "react";
-import { Download, ArrowDownLeft, ArrowUpRight, Landmark, Receipt } from "lucide-react";
+import { Download, ChevronDown, Loader2 } from "lucide-react";
 import { useAccount } from "wagmi";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogBody,
-  DialogFooter,
-} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
-} from "@/components/ui/table";
 import { api } from "@/lib/api";
-import { fmt$, fmtAddr } from "@/lib/format";
+import { fmtAddr } from "@/lib/format";
 import type { TaxReport, ReportRange } from "@/lib/types";
-
-interface Props {
-  open: boolean;
-  onOpenChange: (o: boolean) => void;
-}
 
 const RANGES: { key: ReportRange; label: string }[] = [
   { key: "1m",       label: "1 Month"  },
@@ -34,18 +14,6 @@ const RANGES: { key: ReportRange; label: string }[] = [
   { key: "1y",       label: "1 Year"   },
   { key: "lifetime", label: "Lifetime" },
 ];
-
-function fmtDate(iso: string): string {
-  return new Date(iso).toLocaleDateString([], {
-    year: "numeric", month: "short", day: "numeric",
-    hour: "2-digit", minute: "2-digit",
-  });
-}
-
-function fmtPeriod(start: string, range: ReportRange): string {
-  if (range === "lifetime") return "All time";
-  return `${fmtDate(start)} → now`;
-}
 
 function toCsv(report: TaxReport): string {
   const header = [
@@ -65,7 +33,7 @@ function toCsv(report: TaxReport): string {
     [
       new Date(e.timestamp).toISOString(),
       e.type,
-      `"${e.planName}"`,
+      `"${e.planName.replace(/"/g, '""')}"`,
       e.counterparty,
       e.direction,
       e.gross.toFixed(2),
@@ -80,8 +48,7 @@ function toCsv(report: TaxReport): string {
 }
 
 function downloadCsv(report: TaxReport): void {
-  const csv = toCsv(report);
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const blob = new Blob([toCsv(report)], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
@@ -90,220 +57,175 @@ function downloadCsv(report: TaxReport): void {
   URL.revokeObjectURL(url);
 }
 
-export function ReportDialog({ open, onOpenChange }: Props) {
+function printPdf(report: TaxReport): void {
+  const periodLabel =
+    report.range === "lifetime"
+      ? "All time"
+      : `${new Date(report.periodStart).toLocaleDateString()} – ${new Date(report.periodEnd).toLocaleDateString()}`;
+
+  const rows = report.entries
+    .map(
+      (e) => `
+      <tr>
+        <td>${new Date(e.timestamp).toLocaleString()}</td>
+        <td>${e.type}</td>
+        <td>${e.planName}</td>
+        <td class="mono">${e.counterparty}</td>
+        <td>${e.direction}</td>
+        <td class="num">$${e.gross.toFixed(2)}</td>
+        <td class="num">$${e.netAmount.toFixed(2)}</td>
+        <td class="num">$${e.protocolFee.toFixed(2)}</td>
+        <td class="num">$${e.executorFee.toFixed(2)}</td>
+      </tr>`,
+    )
+    .join("");
+
+  const html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Virio Report – ${report.wallet}</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, sans-serif; font-size: 11px; color: #111; padding: 32px; }
+  h1 { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+  .meta { color: #555; font-size: 11px; margin-bottom: 24px; }
+  .summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+  .card { border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; }
+  .card-label { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
+  .card-value { font-size: 16px; font-weight: 700; }
+  table { width: 100%; border-collapse: collapse; font-size: 10px; }
+  th { background: #f8fafc; text-align: left; padding: 6px 8px; border-bottom: 1px solid #e2e8f0; font-weight: 600; color: #555; }
+  td { padding: 5px 8px; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .mono { font-family: monospace; font-size: 9px; }
+  @media print { body { padding: 16px; } }
+</style>
+</head>
+<body>
+<h1>Virio Transaction Report</h1>
+<div class="meta">
+  Wallet: ${report.wallet} &nbsp;·&nbsp;
+  Period: ${periodLabel} &nbsp;·&nbsp;
+  Generated: ${new Date().toLocaleString()}
+</div>
+<div class="summary">
+  <div class="card"><div class="card-label">Gross in</div><div class="card-value">$${report.grossIn.toFixed(2)}</div></div>
+  <div class="card"><div class="card-label">Net income</div><div class="card-value">$${report.netIn.toFixed(2)}</div></div>
+  <div class="card"><div class="card-label">Total out</div><div class="card-value">$${report.grossOut.toFixed(2)}</div></div>
+  <div class="card"><div class="card-label">Fees deducted</div><div class="card-value">$${report.feesOnInflows.toFixed(2)}</div></div>
+</div>
+<table>
+  <thead>
+    <tr>
+      <th>Date</th><th>Type</th><th>Plan</th><th>Counterparty</th>
+      <th>Dir</th><th class="num">Gross</th><th class="num">Net</th>
+      <th class="num">Protocol fee</th><th class="num">Executor fee</th>
+    </tr>
+  </thead>
+  <tbody>${rows}</tbody>
+</table>
+</body>
+</html>`;
+
+  const win = window.open("", "_blank");
+  if (!win) return;
+  win.document.write(html);
+  win.document.close();
+  win.focus();
+  win.print();
+}
+
+export function ReportMenu() {
   const { address } = useAccount();
+  const [open, setOpen] = React.useState(false);
   const [range, setRange] = React.useState<ReportRange>("1m");
-  const [report, setReport] = React.useState<TaxReport | null>(null);
   const [loading, setLoading] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
+  const ref = React.useRef<HTMLDivElement>(null);
 
-  // Fetch whenever range or wallet changes while open.
   React.useEffect(() => {
-    if (!open || !address) return;
-    let cancelled = false;
-    setLoading(true);
-    setError(null);
-    api<TaxReport>("GET", `/api/report?wallet=${address}&range=${range}`)
-      .then((r) => { if (!cancelled) setReport(r); })
-      .catch((e) => { if (!cancelled) setError((e as Error).message); })
-      .finally(() => { if (!cancelled) setLoading(false); });
-    return () => { cancelled = true; };
-  }, [open, address, range]);
-
-  // Reset on close.
-  React.useEffect(() => {
-    if (!open) { setReport(null); setError(null); }
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
   }, [open]);
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[min(96vw,960px)]">
-        <DialogHeader title="Transaction report" onClose={() => onOpenChange(false)} />
+  async function download(format: "csv" | "pdf") {
+    if (!address || loading) return;
+    setOpen(false);
+    setLoading(true);
+    try {
+      const report = await api<TaxReport>("GET", `/api/report?wallet=${address}&range=${range}`);
+      if (format === "csv") downloadCsv(report);
+      else printPdf(report);
+    } finally {
+      setLoading(false);
+    }
+  }
 
-        <DialogBody className="space-y-5">
-          {/* Range picker */}
-          <div className="flex gap-2">
+  if (!address) return null;
+
+  return (
+    <div ref={ref} className="relative">
+      <Button
+        variant="ghost"
+        onClick={() => setOpen((o) => !o)}
+        disabled={loading}
+      >
+        {loading ? (
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+        ) : (
+          <Download className="h-3.5 w-3.5" />
+        )}
+        {loading ? "Generating…" : "Download report"}
+        {!loading && <ChevronDown className="h-3 w-3 opacity-50" />}
+      </Button>
+
+      {open && (
+        <div className="absolute right-0 top-full z-50 mt-1.5 w-52 rounded-xl border border-border bg-popover p-3 shadow-xl">
+          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+            Period
+          </p>
+          <div className="mb-3 grid grid-cols-2 gap-1.5">
             {RANGES.map(({ key, label }) => (
               <button
                 key={key}
                 onClick={() => setRange(key)}
                 className={[
-                  "rounded-lg border px-3.5 py-1.5 text-sm font-medium transition-colors duration-150",
+                  "rounded-lg border px-2 py-1.5 text-xs font-medium transition-colors duration-150",
                   range === key
                     ? "border-foreground bg-foreground text-background"
-                    : "border-border bg-transparent text-muted-foreground hover:border-foreground/40 hover:text-foreground",
+                    : "border-border text-muted-foreground hover:border-foreground/40 hover:text-foreground",
                 ].join(" ")}
               >
                 {label}
               </button>
             ))}
           </div>
-
-          {loading && (
-            <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
-              Loading…
-            </div>
-          )}
-
-          {error && !loading && (
-            <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-              {error}
-            </div>
-          )}
-
-          {!loading && !error && report && (
-            <>
-              {/* Period label */}
-              <p className="text-xs text-muted-foreground">
-                {fmtPeriod(report.periodStart, report.range)}
-                {" · "}
-                {report.totalTx} transaction{report.totalTx !== 1 ? "s" : ""}
-                {" · "}
-                {address ? fmtAddr(address) : ""}
-              </p>
-
-              {/* Summary cards */}
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <SummaryCard
-                  label="Gross in"
-                  value={report.grossIn}
-                  icon={<ArrowDownLeft className="h-3.5 w-3.5 text-emerald-500" />}
-                />
-                <SummaryCard
-                  label="Net income"
-                  value={report.netIn}
-                  icon={<Receipt className="h-3.5 w-3.5 text-emerald-400" />}
-                  sub="after fees"
-                />
-                <SummaryCard
-                  label="Total out"
-                  value={report.grossOut}
-                  icon={<ArrowUpRight className="h-3.5 w-3.5 text-rose-400" />}
-                />
-                <SummaryCard
-                  label="Fees deducted"
-                  value={report.feesOnInflows}
-                  icon={<Landmark className="h-3.5 w-3.5 text-muted-foreground" />}
-                  sub="protocol + executor"
-                />
-              </div>
-
-              {/* Transaction table */}
-              {report.entries.length === 0 ? (
-                <p className="py-10 text-center text-sm text-muted-foreground">
-                  No protocol interactions in this period.
-                </p>
-              ) : (
-                <div className="overflow-x-auto rounded-lg border border-border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead>Plan</TableHead>
-                        <TableHead>Counterparty</TableHead>
-                        <TableHead className="text-right">Gross</TableHead>
-                        <TableHead className="text-right">Net</TableHead>
-                        <TableHead className="text-right">Protocol fee</TableHead>
-                        <TableHead className="text-right">Executor fee</TableHead>
-                        <TableHead>Dir</TableHead>
-                        <TableHead>Tx</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {report.entries.map((e) => (
-                        <TableRow key={e.txHash}>
-                          <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
-                            {fmtDate(e.timestamp)}
-                          </TableCell>
-                          <TableCell className="text-xs capitalize text-muted-foreground">
-                            {e.type}
-                          </TableCell>
-                          <TableCell className="max-w-[140px] truncate text-sm font-medium">
-                            {e.planName}
-                          </TableCell>
-                          <TableCell className="font-mono text-xs text-muted-foreground">
-                            {fmtAddr(e.counterparty)}
-                          </TableCell>
-                          <TableCell className="text-right tabular-nums">
-                            {fmt$(e.gross)}
-                          </TableCell>
-                          <TableCell className="text-right tabular-nums">
-                            {fmt$(e.netAmount)}
-                          </TableCell>
-                          <TableCell className="text-right tabular-nums text-muted-foreground">
-                            {fmt$(e.protocolFee)}
-                          </TableCell>
-                          <TableCell className="text-right tabular-nums text-muted-foreground">
-                            {fmt$(e.executorFee)}
-                          </TableCell>
-                          <TableCell>
-                            <span
-                              className={[
-                                "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
-                                e.direction === "in"
-                                  ? "bg-emerald-500/10 text-emerald-500"
-                                  : "bg-rose-500/10 text-rose-400",
-                              ].join(" ")}
-                            >
-                              {e.direction === "in" ? (
-                                <ArrowDownLeft className="h-3 w-3" />
-                              ) : (
-                                <ArrowUpRight className="h-3 w-3" />
-                              )}
-                              {e.direction}
-                            </span>
-                          </TableCell>
-                          <TableCell className="font-mono text-xs text-muted-foreground">
-                            {e.txHash.slice(0, 10)}…
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-            </>
-          )}
-        </DialogBody>
-
-        <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>
-            Close
-          </Button>
-          {report && report.entries.length > 0 && (
-            <Button variant="brand" onClick={() => downloadCsv(report)}>
-              <Download className="h-3.5 w-3.5" />
-              Download CSV
-            </Button>
-          )}
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function SummaryCard({
-  label,
-  value,
-  icon,
-  sub,
-}: {
-  label: string;
-  value: number;
-  icon: React.ReactNode;
-  sub?: string;
-}) {
-  return (
-    <div className="rounded-lg border border-border bg-card p-4">
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-medium text-muted-foreground">{label}</span>
-        {icon}
-      </div>
-      <div className="mt-2 font-display text-xl font-semibold tabular-nums text-foreground">
-        {fmt$(value)}
-      </div>
-      {sub && <div className="mt-0.5 text-xs text-muted-foreground">{sub}</div>}
+          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+            Format
+          </p>
+          <div className="flex gap-1.5">
+            <button
+              onClick={() => download("csv")}
+              className="flex-1 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors duration-150 hover:border-foreground/40 hover:text-foreground"
+            >
+              CSV
+            </button>
+            <button
+              onClick={() => download("pdf")}
+              className="flex-1 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors duration-150 hover:border-foreground/40 hover:text-foreground"
+            >
+              PDF
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
+// Keep alias so nothing else breaks if imported as ReportDialog
+export { ReportMenu as ReportDialog };

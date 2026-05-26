@@ -9,7 +9,6 @@ import {
   Plus,
   CheckCircle2,
   AlertTriangle,
-  FileText,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useAccount } from "wagmi";
@@ -20,7 +19,7 @@ import { StatusBadge } from "@/components/ui/badge";
 import { PageHeader, LiveBadge } from "@/components/page-header";
 import { StatCard } from "@/components/stat-card";
 import { IncomeChart } from "@/components/income-chart";
-import { ReportDialog } from "@/components/report-dialog";
+import { ReportMenu } from "@/components/report-dialog";
 import { fmt$, fmtAddr, fmtTime } from "@/lib/format";
 import { listContainer, pageVariants } from "@/lib/motion";
 import type { PageKey } from "@/components/sidebar";
@@ -42,7 +41,6 @@ export function DashboardPage({
   onCreateSubscription: _onCreateSubscription,
 }: Props) {
   const { address } = useAccount();
-  const [reportOpen, setReportOpen] = React.useState(false);
   const recent: Transaction[] = stats?.recentTransactions ?? [];
   const revenue = stats?.totalRevenue ?? 0;
   const fees = stats?.totalFees ?? 0;
@@ -69,12 +67,7 @@ export function DashboardPage({
         action={
           <>
             <LiveBadge />
-            {address && (
-              <Button variant="ghost" onClick={() => setReportOpen(true)}>
-                <FileText className="h-3.5 w-3.5" />
-                Report
-              </Button>
-            )}
+            <ReportMenu />
             <Button variant="brand" onClick={onCreateProduct}>
               <Plus className="h-3.5 w-3.5" />
               Create product
@@ -82,8 +75,6 @@ export function DashboardPage({
           </>
         }
       />
-
-      <ReportDialog open={reportOpen} onOpenChange={setReportOpen} />
 
       <motion.div
         variants={listContainer}
