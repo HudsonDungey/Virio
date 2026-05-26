@@ -170,6 +170,13 @@ export async function listPlans(): Promise<Plan[]> {
   return out.reverse(); // newest first
 }
 
+export async function planById(id: Hex): Promise<Plan | null> {
+  await resyncIfReset();
+  await syncEvents();
+  const all = await listPlans();
+  return all.find((p) => p.id.toLowerCase() === id.toLowerCase()) ?? null;
+}
+
 export async function plansByMerchant(address: Hex): Promise<Plan[]> {
   await resyncIfReset();
   await syncEvents();

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { ensureSchedulerStarted } from "@/lib/scheduler";
-import { plansByMerchant } from "@/lib/chain-reads";
+import { plansByMerchant, planById } from "@/lib/chain-reads";
 import type { Hex } from "viem";
 
 export const runtime = "nodejs";
@@ -10,7 +10,18 @@ export const dynamic = "force-dynamic";
 /// passing no merchant returns an empty list (UI prompts for wallet connection).
 export async function GET(req: Request) {
   ensureSchedulerStarted();
-  const merchant = new URL(req.url).searchParams.get("merchant");
+  const params = new URL(req.url).searchParams;
+
+  const id = params.get("id");
+  if (id) {
+    if (!/^0x[0-9a-fA-F]{64}$/.test(id)) {
+      return NextResponse.json({ error: "invalid plan id" }, { status: 400 });
+    }
+    const plan = await planById(id as Hex);
+    return plan ? NextResponse.json(plan) : NextResponse.json({ error: "not found" }, { status: 404 });
+  }
+
+  const merchant = params.get("merchant");
   if (!merchant || !/^0x[0-9a-fA-F]{40}$/.test(merchant)) {
     return NextResponse.json([]);
   }
