@@ -10,6 +10,7 @@ const LINKS: { label: string; href: string }[] = [
   { label: "product", href: "/#features" },
   { label: "how it works", href: "/#how" },
   { label: "pricing", href: "/#pricing" },
+  { label: "pitch", href: "/pitch" },
   { label: "$virio", href: "/virio" },
   { label: "docs", href: "/docs" },
   { label: "developers", href: "/dev" },
