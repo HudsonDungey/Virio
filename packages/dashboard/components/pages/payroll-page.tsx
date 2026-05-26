@@ -109,6 +109,25 @@ export function PayrollPage({ testIntervals, productionIntervals }: PayrollPageP
     }
   }
 
+  async function executeAll(plan: PayrollPlan) {
+    if (!actions.account.address) return toast("Connect your wallet first", "error");
+    const allActive = (recipients[plan.id] ?? [])
+      .filter((r) => r.active)
+      .map((r) => r.id as Hex);
+    if (allActive.length === 0) return toast("No active recipients", "error");
+    setPendingAction(`execute-${plan.id}`);
+    try {
+      toast(`Confirm payroll for ${allActive.length} recipient${allActive.length === 1 ? "" : "s"}…`, "success");
+      await actions.executePayrollBatch(plan.id as Hex, allActive);
+      toast(`Payroll executed`, "success");
+      refresh();
+    } catch (e) {
+      toast((e as Error).message, "error");
+    } finally {
+      setPendingAction(null);
+    }
+  }
+
   async function payAllDue(plan: PayrollPlan) {
     if (!actions.account.address) return toast("Connect your wallet first", "error");
     const due =
@@ -249,6 +268,18 @@ export function PayrollPage({ testIntervals, productionIntervals }: PayrollPageP
                     >
                       <Plus className="h-3.5 w-3.5" />
                       Add recipient
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => executeAll(plan)}
+                      disabled={
+                        pendingAction === `execute-${plan.id}` ||
+                        (recipients[plan.id] ?? []).filter((r) => r.active).length === 0
+                      }
+                    >
+                      <Zap className="h-3.5 w-3.5" />
+                      {pendingAction === `execute-${plan.id}` ? "Confirming…" : "Execute"}
                     </Button>
                     <Button
                       size="sm"
