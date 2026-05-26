@@ -49,6 +49,7 @@ export interface Subscription {
   id: string;
   planId: string;
   planName: string;
+  merchant: string;
   customer: string;
   spendCap: number | null;
   chargeCount: number;
@@ -60,14 +61,16 @@ export interface Subscription {
 
 export interface Transaction {
   id: string;
-  subscriptionId: string;
+  type: "subscription" | "payroll";
+  subscriptionId?: string;
   planId: string;
   planName: string;
-  customer: string;
+  /** The other party: subscriber (when wallet=merchant), merchant (when wallet=customer), etc. */
+  counterparty: string;
   merchantAmount: number;
   fee: number;
   gross: number;
-  direction: "in";
+  direction: "in" | "out";
   status: "success" | "failed";
   failReason?: string;
   timestamp: string;

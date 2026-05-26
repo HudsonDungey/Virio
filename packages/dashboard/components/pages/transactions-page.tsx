@@ -27,8 +27,8 @@ export function TransactionsPage({ visible }: Props) {
       setItems([]);
       return;
     }
-    const params = new URLSearchParams({ merchant: address });
-    if (customer) params.set("customer", customer);
+    const params = new URLSearchParams({ wallet: address });
+    if (customer) params.set("counterparty", customer);
     if (status) params.set("status", status);
     try {
       const r = await api<Transaction[]>("GET", "/api/transactions?" + params.toString());
@@ -51,7 +51,7 @@ export function TransactionsPage({ visible }: Props) {
           <Input
             value={customer}
             onChange={(e) => setCustomer(e.target.value)}
-            placeholder="Filter by customer…"
+            placeholder="Filter by counterparty…"
             className="h-9 w-full sm:w-60"
           />
           <Select value={status} onChange={(e) => setStatus(e.target.value)} className="h-9 w-full sm:w-44">
@@ -64,10 +64,10 @@ export function TransactionsPage({ visible }: Props) {
           <TableHeader>
             <TableRow className="hover:bg-transparent">
               <TableHead>ID</TableHead>
-              <TableHead>Customer</TableHead>
+              <TableHead>Type</TableHead>
+              <TableHead>Counterparty</TableHead>
               <TableHead>Plan</TableHead>
-              <TableHead>Gross</TableHead>
-              <TableHead>Merchant</TableHead>
+              <TableHead>Amount</TableHead>
               <TableHead>Fee</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Time</TableHead>
@@ -91,10 +91,14 @@ export function TransactionsPage({ visible }: Props) {
                   <TableCell className="font-mono text-[11px] text-muted-foreground hover:text-foreground hover:underline">
                     {t.id.slice(0, 8)}…
                   </TableCell>
-                  <TableCell className="font-mono text-xs">{fmtAddr(t.customer)}</TableCell>
+                  <TableCell>
+                    <span className="text-xs text-muted-foreground capitalize">{t.type}</span>
+                  </TableCell>
+                  <TableCell className="font-mono text-xs">{fmtAddr(t.counterparty)}</TableCell>
                   <TableCell>{t.planName}</TableCell>
-                  <TableCell className="font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">{fmt$(t.gross)}</TableCell>
-                  <TableCell>{fmt$(t.merchantAmount)}</TableCell>
+                  <TableCell className={`font-semibold tabular-nums ${t.direction === "in" ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}`}>
+                    {t.direction === "in" ? "+" : "−"}{fmt$(t.gross)}
+                  </TableCell>
                   <TableCell className="text-muted-foreground">{fmt$(t.fee)}</TableCell>
                   <TableCell>
                     <StatusBadge status={t.status} />

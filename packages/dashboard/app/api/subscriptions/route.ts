@@ -1,24 +1,20 @@
 import { NextResponse } from "next/server";
 import { ensureSchedulerStarted } from "@/lib/scheduler";
-import { listSubscriptions, plansByMerchant } from "@/lib/chain-reads";
+import { subscriptionsByWallet } from "@/lib/chain-reads";
 import type { Hex } from "viem";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/// Returns subscriptions paying the given merchant. With no merchant param,
-/// returns an empty list — the UI prompts for a wallet connection.
+/// Returns all subscriptions where the wallet is either the merchant (plan creator)
+/// or the customer (subscriber). With no wallet param, returns an empty list.
 export async function GET(req: Request) {
   ensureSchedulerStarted();
-  const merchant = new URL(req.url).searchParams.get("merchant");
-  if (!merchant || !/^0x[0-9a-fA-F]{40}$/.test(merchant)) {
+  const wallet = new URL(req.url).searchParams.get("wallet");
+  if (!wallet || !/^0x[0-9a-fA-F]{40}$/.test(wallet)) {
     return NextResponse.json([]);
   }
-  const merchantPlans = await plansByMerchant(merchant as Hex);
-  if (merchantPlans.length === 0) return NextResponse.json([]);
-  const planIds = new Set(merchantPlans.map((p) => p.id.toLowerCase()));
-  const allSubs = await listSubscriptions();
-  return NextResponse.json(allSubs.filter((s) => planIds.has(s.planId.toLowerCase())));
+  return NextResponse.json(await subscriptionsByWallet(wallet as Hex));
 }
 
 /// On Sepolia, subscribing must be signed by the customer's connected wallet.
