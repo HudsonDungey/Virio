@@ -18,6 +18,7 @@ import type {
   PayrollExecution,
   PayrollStats,
   Transaction,
+  TaxReportEntry,
 } from "./types";
 
 const ZERO_ADDR = "0x0000000000000000000000000000000000000000";
@@ -338,6 +339,39 @@ export async function payrollTransactionsByWallet(wallet: string): Promise<Trans
     });
   }
   return out.reverse();
+}
+
+/// All payroll executions for a wallet (as employer or recipient), filtered to sinceUnix,
+/// with fees broken out for tax reporting.
+export async function payrollReportEntriesByWallet(wallet: string, sinceUnix: number): Promise<TaxReportEntry[]> {
+  await resyncIfReset();
+  await syncEvents();
+  const target = wallet.toLowerCase();
+  const planEmployer = new Map(planEvents.map((p) => [p.planId.toLowerCase(), p.employer.toLowerCase()]));
+
+  const out: TaxReportEntry[] = [];
+  for (const e of executions) {
+    if (e.timestamp < sinceUnix) continue;
+    const employer = planEmployer.get(e.planId.toLowerCase());
+    if (!employer) continue;
+    const isEmployer = employer === target;
+    const isRecipient = e.recipient.toLowerCase() === target;
+    if (!isEmployer && !isRecipient) continue;
+    out.push({
+      txHash: `${e.txHash}-${e.logIndex}`,
+      timestamp: new Date(e.timestamp * 1000).toISOString(),
+      type: "payroll",
+      planId: e.planId,
+      planName: `Payroll ${e.planId.slice(0, 10)}`,
+      counterparty: isEmployer ? e.recipient : employer,
+      gross: usdcDisplay(e.grossAmount),
+      netAmount: isEmployer ? usdcDisplay(e.grossAmount) : usdcDisplay(e.recipientAmount),
+      protocolFee: usdcDisplay(e.protocolFee),
+      executorFee: usdcDisplay(e.executorFee),
+      direction: isEmployer ? "out" : "in",
+    });
+  }
+  return out.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 }
 
 export async function payrollStats(employer?: string): Promise<PayrollStats> {
