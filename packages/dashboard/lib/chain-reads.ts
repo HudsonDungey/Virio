@@ -50,7 +50,17 @@ const MAX_LOG_RANGE = NETWORK === "sepolia" ? 500n : 50_000n;
 
 const ZERO_ADDR = "0x0000000000000000000000000000000000000000";
 
-async function syncEvents() {
+// Concurrent callers share one in-flight sync rather than each running their own,
+// which would cause the same log range to be ingested multiple times.
+let syncInFlight: Promise<void> | null = null;
+
+function syncEvents(): Promise<void> {
+  if (syncInFlight) return syncInFlight;
+  syncInFlight = doSyncEvents().finally(() => { syncInFlight = null; });
+  return syncInFlight;
+}
+
+async function doSyncEvents(): Promise<void> {
   // Don't try to scan if the user hasn't configured the manager address yet.
   // Returns silently — the UI will just show empty plans/subs/transactions.
   if (MANAGER_ADDRESS.toLowerCase() === ZERO_ADDR) return;
