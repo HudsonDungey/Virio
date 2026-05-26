@@ -316,6 +316,28 @@ export const payrollAbi = [
   },
   {
     type: "function",
+    name: "getRecipient",
+    inputs: [
+      { name: "planId", type: "bytes32" },
+      { name: "recipientId", type: "bytes32" },
+    ],
+    outputs: [
+      {
+        type: "tuple",
+        components: [
+          { name: "wallet", type: "address" },
+          { name: "amount", type: "uint256" },
+          { name: "nextPayAt", type: "uint256" },
+          { name: "totalPaid", type: "uint256" },
+          { name: "spendCap", type: "uint256" },
+          { name: "active", type: "bool" },
+        ],
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
     name: "getPlanRecipients",
     inputs: [{ name: "planId", type: "bytes32" }],
     outputs: [
