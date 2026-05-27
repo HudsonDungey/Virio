@@ -9,7 +9,7 @@ import {
   NETWORK,
 } from "./chain";
 import { getStore } from "./store";
-import type { Plan, Subscription, Transaction } from "./types";
+import type { Plan, Subscription, Transaction, TaxReportEntry } from "./types";
 
 // Cache the start block. On Sepolia we start from the configured deploymentBlock to
 // avoid scanning ~7M blocks of pre-deployment history. On anvil we start from 0.
@@ -396,6 +396,46 @@ export async function listTransactions(): Promise<Transaction[]> {
     });
   }
   return out.reverse();
+}
+
+/// All charge events for a wallet (as merchant or customer), filtered to sinceUnix,
+/// with fees broken out individually for tax reporting.
+export async function reportEntriesByWallet(wallet: Hex, sinceUnix: number): Promise<TaxReportEntry[]> {
+  await resyncIfReset();
+  await syncEvents();
+  const target = wallet.toLowerCase();
+  const planMerchant = new Map(planEvents.map((p) => [p.planId.toLowerCase(), p.merchant.toLowerCase()]));
+  const subPlan = new Map<string, Hex>();
+  for (const s of subEvents) subPlan.set(s.subId.toLowerCase(), s.planId);
+  const plans = await listPlans();
+  const planLookup = new Map(plans.map((p) => [p.id.toLowerCase(), p]));
+
+  const out: TaxReportEntry[] = [];
+  for (const c of chargeEvents) {
+    if (c.timestamp < sinceUnix) continue;
+    const planId = subPlan.get(c.subId.toLowerCase());
+    if (!planId) continue;
+    const merchant = planMerchant.get(planId.toLowerCase());
+    if (!merchant) continue;
+    const isMerchant = merchant === target;
+    const isCustomer = c.customer.toLowerCase() === target;
+    if (!isMerchant && !isCustomer) continue;
+    const plan = planLookup.get(planId.toLowerCase());
+    out.push({
+      txHash: c.txHash,
+      timestamp: new Date(c.timestamp * 1000).toISOString(),
+      type: "subscription",
+      planId,
+      planName: plan?.name ?? "(deleted plan)",
+      counterparty: isMerchant ? c.customer : merchant,
+      gross: usdcDisplay(c.gross),
+      netAmount: isMerchant ? usdcDisplay(c.merchantAmount) : usdcDisplay(c.gross),
+      protocolFee: usdcDisplay(c.protocolFee),
+      executorFee: usdcDisplay(c.executorFee),
+      direction: isMerchant ? "in" : "out",
+    });
+  }
+  return out.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 }
 
 /// Compute subscriptions that are due for charging right now (nextChargeAt <= now).

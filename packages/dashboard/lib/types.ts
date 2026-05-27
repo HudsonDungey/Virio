@@ -130,3 +130,34 @@ export interface PayrollStats {
   failedRecent: number;     // batches with failCount > 0 in recent window
   recentExecutions: PayrollExecution[];
 }
+
+/// ── Tax report types ──────────────────────────────────────────────────────
+
+export type ReportRange = "1m" | "6m" | "1y" | "lifetime";
+
+export interface TaxReportEntry {
+  txHash: string;
+  timestamp: string;        // ISO 8601
+  type: "subscription" | "payroll";
+  planId: string;
+  planName: string;
+  counterparty: string;     // the other party's address
+  gross: number;            // total amount pulled from payer (USDC)
+  netAmount: number;        // received after fees (in) or gross paid (out)
+  protocolFee: number;      // to Virio protocol (USDC)
+  executorFee: number;      // to charge executor (USDC)
+  direction: "in" | "out";
+}
+
+export interface TaxReport {
+  wallet: string;
+  range: ReportRange;
+  periodStart: string;      // ISO 8601
+  periodEnd: string;        // ISO 8601
+  grossIn: number;          // sum of gross for inflows
+  netIn: number;            // sum of netAmount for inflows (after fees)
+  grossOut: number;         // sum of gross for outflows
+  feesOnInflows: number;    // protocol + executor fees deducted from inflows
+  totalTx: number;
+  entries: TaxReportEntry[];
+}

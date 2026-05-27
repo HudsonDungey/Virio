@@ -19,6 +19,7 @@ import { StatusBadge } from "@/components/ui/badge";
 import { PageHeader, LiveBadge } from "@/components/page-header";
 import { StatCard } from "@/components/stat-card";
 import { IncomeChart } from "@/components/income-chart";
+import { ReportMenu } from "@/components/report-dialog";
 import { fmt$, fmtAddr, fmtTime } from "@/lib/format";
 import { listContainer, pageVariants } from "@/lib/motion";
 import type { PageKey } from "@/components/sidebar";
@@ -66,6 +67,7 @@ export function DashboardPage({
         action={
           <>
             <LiveBadge />
+            <ReportMenu />
             <Button variant="brand" onClick={onCreateProduct}>
               <Plus className="h-3.5 w-3.5" />
               Create product
