@@ -41,9 +41,9 @@ interface IERC20 {
 contract VirioPayrollManager is IVirioPayrollManager {
     // ─── Constants / Config ───────────────────────────────────────────────────
 
-    uint16  public executorFeeBps  = 10;   // 0.1 %
-    uint16  public protocolFeeBps  = 25;   // 0.25 %
-    uint256 public protocolFlatFee = 1e6;  // 1 USDC (6 decimals)
+    uint16  public executorFeeBps  = 1;    // 0.01 %
+    uint16  public protocolFeeBps  = 1;    // 0.01 %
+    uint256 public protocolFlatFee = 0;    // no flat fee on payroll
 
     // ─── State ────────────────────────────────────────────────────────────────
 
