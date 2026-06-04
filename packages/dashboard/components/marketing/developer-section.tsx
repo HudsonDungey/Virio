@@ -13,8 +13,7 @@ const TABS: CodeTab[] = [
     code: `import { Virio } from "@virio/sdk";
 
 const virio = new Virio({
-  contractAddress: "0x9d0e4e88A2b3C4d5E6F7a8B9c0D1e2F3A8b97f12",
-  chain: "base",
+  rpcUrl: "https://base-mainnet.g.alchemy.com/v2/Yk3p9_aF2dQ",
 });
 
 // Create a recurring plan
@@ -23,6 +22,7 @@ const plan = await virio.plans.create({
   price: 49,
   token: "USDC",
   interval: "month",
+  chain: "base",
 });
 
 // Subscribe a customer — they sign once
