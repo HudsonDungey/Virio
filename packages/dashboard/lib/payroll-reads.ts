@@ -67,15 +67,6 @@ interface ExecutionEvent {
 }
 const executions: ExecutionEvent[] = [];
 
-interface BatchEvent {
-  planId: Hex;
-  executor: Hex;
-  successCount: bigint;
-  failCount: bigint;
-  blockNumber: bigint;
-}
-const batchEvents: BatchEvent[] = [];
-
 const blockTimestamps = new Map<bigint, number>();
 async function timestampOf(blockNumber: bigint): Promise<number> {
   const cached = blockTimestamps.get(blockNumber);
@@ -161,14 +152,6 @@ async function ingestLogs(logs: unknown[]) {
         logIndex: log.logIndex ?? 0,
         timestamp: ts,
       });
-    } else if (name === "BatchPayrollExecuted") {
-      batchEvents.push({
-        planId: a.planId as Hex,
-        executor: a.executor as Hex,
-        successCount: a.successCount as bigint,
-        failCount: a.failCount as bigint,
-        blockNumber,
-      });
     }
   }
 }
@@ -184,7 +167,6 @@ async function resyncIfReset() {
       recipientRemovals.clear();
       recipientUpdates.clear();
       executions.length = 0;
-      batchEvents.length = 0;
     }
   } catch {
     /* ignore — RPC briefly down */
@@ -394,15 +376,10 @@ export async function payrollStats(employer?: string): Promise<PayrollStats> {
     (e) => !employer || planIds.has(e.planId.toLowerCase()),
   );
   const totalVolume = relevantExecs.reduce((s, e) => s + usdcDisplay(e.grossAmount), 0);
-  const failedRecent = batchEvents
-    .filter((b) => !employer || planIds.has(b.planId.toLowerCase()))
-    .filter((b) => b.failCount > 0n).length;
-
   return {
     totalVolume,
     totalRecipients,
     activePlans: plans.filter((p) => p.active).length,
-    failedRecent,
     recentExecutions: (await listPayrollExecutions({ employer })).slice(0, 10),
   };
 }

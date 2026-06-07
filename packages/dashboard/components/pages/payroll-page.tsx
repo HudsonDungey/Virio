@@ -5,7 +5,6 @@ import {
   Wallet,
   Users,
   CalendarClock,
-  AlertTriangle,
   Plus,
   Zap,
   Trash2,
@@ -109,46 +108,6 @@ export function PayrollPage({ testIntervals, productionIntervals }: PayrollPageP
     }
   }
 
-  async function executeAll(plan: PayrollPlan) {
-    if (!actions.account.address) return toast("Connect your wallet first", "error");
-    const allActive = (recipients[plan.id] ?? [])
-      .filter((r) => r.active)
-      .map((r) => r.id as Hex);
-    if (allActive.length === 0) return toast("No active recipients", "error");
-    setPendingAction(`execute-${plan.id}`);
-    try {
-      toast(`Confirm payroll for ${allActive.length} recipient${allActive.length === 1 ? "" : "s"}…`, "success");
-      await actions.executePayrollBatch(plan.id as Hex, allActive);
-      toast(`Payroll executed`, "success");
-      refresh();
-    } catch (e) {
-      toast((e as Error).message, "error");
-    } finally {
-      setPendingAction(null);
-    }
-  }
-
-  async function payAllDue(plan: PayrollPlan) {
-    if (!actions.account.address) return toast("Connect your wallet first", "error");
-    const due =
-      (recipients[plan.id] ?? []).filter(
-        (r) => r.active && r.nextPayAt <= Math.floor(Date.now() / 1000),
-      ).map((r) => r.id as Hex);
-    if (due.length === 0) return toast("No recipients due", "error");
-
-    setPendingAction(`batch-${plan.id}`);
-    try {
-      toast(`Confirm batch payroll for ${due.length} recipients…`, "success");
-      await actions.executePayrollBatch(plan.id as Hex, due);
-      toast(`Batch payroll executed (${due.length} recipients)`, "success");
-      refresh();
-    } catch (e) {
-      toast((e as Error).message, "error");
-    } finally {
-      setPendingAction(null);
-    }
-  }
-
   async function removeRecipient(planId: Hex, recipientId: Hex) {
     setPendingAction(recipientId);
     try {
@@ -217,13 +176,6 @@ export function PayrollPage({ testIntervals, productionIntervals }: PayrollPageP
           sub="Accepting recipients"
           icon={<CalendarClock className="h-4 w-4" />}
         />
-        <StatCard
-          label="Failed batches"
-          value={stats?.failedRecent ?? 0}
-          format="int"
-          sub="Recent partial-fail runs"
-          icon={<AlertTriangle className="h-4 w-4" />}
-        />
       </motion.div>
 
       {!hasPlans ? (
@@ -242,9 +194,6 @@ export function PayrollPage({ testIntervals, productionIntervals }: PayrollPageP
         <div className="mt-8 space-y-6">
           {plans.map((plan) => {
             const planRecipients = recipients[plan.id] ?? [];
-            const dueNow = planRecipients.filter(
-              (r) => r.active && r.nextPayAt <= Math.floor(Date.now() / 1000),
-            );
             return (
               <Card key={plan.id}>
                 <CardHeader>
@@ -268,32 +217,6 @@ export function PayrollPage({ testIntervals, productionIntervals }: PayrollPageP
                     >
                       <Plus className="h-3.5 w-3.5" />
                       Add recipient
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => executeAll(plan)}
-                      disabled={
-                        pendingAction === `execute-${plan.id}` ||
-                        (recipients[plan.id] ?? []).filter((r) => r.active).length === 0
-                      }
-                    >
-                      <Zap className="h-3.5 w-3.5" />
-                      {pendingAction === `execute-${plan.id}` ? "Confirming…" : "Execute"}
-                    </Button>
-                    <Button
-                      size="sm"
-                      onClick={() => payAllDue(plan)}
-                      disabled={
-                        pendingAction === `batch-${plan.id}` || dueNow.length === 0
-                      }
-                    >
-                      <Zap className="h-3.5 w-3.5" />
-                      {pendingAction === `batch-${plan.id}`
-                        ? "Confirming…"
-                        : dueNow.length > 0
-                          ? `Pay ${dueNow.length} due`
-                          : "Nothing due"}
                     </Button>
                   </div>
                 </CardHeader>

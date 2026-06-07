@@ -127,7 +127,6 @@ export interface PayrollStats {
   totalVolume: number;      // sum of gross payments
   totalRecipients: number;  // active recipients across all plans
   activePlans: number;
-  failedRecent: number;     // batches with failCount > 0 in recent window
   recentExecutions: PayrollExecution[];
 }
 

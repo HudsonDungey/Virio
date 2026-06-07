@@ -8,8 +8,8 @@ pragma solidity ^0.8.24;
 //
 // A business owner (employer) creates a Plan, adds Recipients (employees /
 // contractors), and pre-approves the contract's token spend. Keeper bots call
-// executePayroll() or executePayrollBatch() once each pay period and earn
-// executorFeeBps as incentive. Funds flow directly from employer → recipient
+// executePayroll() once each pay period and earn executorFeeBps as incentive.
+// Funds flow directly from employer → recipient
 // with no intermediate custody.
 //
 // Key design invariants:
@@ -26,8 +26,7 @@ pragma solidity ^0.8.24;
 //   9.  removeRecipient() callable by employer only.
 //  10.  Direct transferFrom: employer → recipient / executor / feeRecipient
 //       (no intermediate custody — employer must approve this contract).
-//  11.  Batch operations for gas-efficient multi-recipient management.
-//  12.  Enumerable recipient list per plan for easy off-chain indexing.
+//  11.  Enumerable recipient list per plan for easy off-chain indexing.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import {IVirioPayrollManager} from "./interfaces/IVirioPayrollManager.sol";
@@ -58,7 +57,7 @@ contract VirioPayrollManager is IVirioPayrollManager {
     /// @dev planId → recipientId → Recipient
     mapping(bytes32 => mapping(bytes32 => Recipient))  public recipients;
 
-    /// @dev planId → ordered list of recipientIds (for enumeration / batch ops)
+    /// @dev planId → ordered list of recipientIds (for enumeration)
     mapping(bytes32 => bytes32[])                       internal _planRecipientIds;
 
     /// @dev planId → recipientId → index in _planRecipientIds (for O(1) removal)
@@ -155,28 +154,6 @@ contract VirioPayrollManager is IVirioPayrollManager {
         recipientId = _addRecipient(planId, wallet, amount, spendCap);
     }
 
-    /// @notice Batch-add multiple recipients in a single tx.
-    function addRecipientsBatch(
-        bytes32   planId,
-        address[] calldata wallets,
-        uint256[] calldata amounts,
-        uint256[] calldata spendCaps
-    ) external onlyEmployer(planId) returns (bytes32[] memory recipientIds) {
-        if (!plans[planId].active) revert PlanNotActive(planId);
-
-        uint256 len = wallets.length;
-        if (len != amounts.length || len != spendCaps.length)
-            revert ArrayLengthMismatch();
-
-        recipientIds = new bytes32[](len);
-        for (uint256 i; i < len; ) {
-            recipientIds[i] = _addRecipient(
-                planId, wallets[i], amounts[i], spendCaps[i]
-            );
-            unchecked { ++i; }
-        }
-    }
-
     /// @notice Remove a recipient. Only employer can call.
     function removeRecipient(
         bytes32 planId,
@@ -214,30 +191,6 @@ contract VirioPayrollManager is IVirioPayrollManager {
         bytes32 recipientId
     ) external nonReentrant {
         _executePayroll(planId, recipientId);
-    }
-
-    /// @notice Execute payroll for multiple recipients in one tx.
-    ///         Individual failures emit no event; the batch event tracks
-    ///         success/fail counts. This lets bots pay the whole roster in
-    ///         one transaction without a single bad recipient reverting all.
-    function executePayrollBatch(
-        bytes32   planId,
-        bytes32[] calldata recipientIds
-    ) external nonReentrant {
-        if (!plans[planId].active) revert PlanNotActive(planId);
-
-        uint256 len     = recipientIds.length;
-        uint256 success = 0;
-        uint256 fail    = 0;
-
-        for (uint256 i; i < len; ) {
-            bool ok = _tryExecutePayroll(planId, recipientIds[i]);
-            if (ok) { unchecked { ++success; } }
-            else    { unchecked { ++fail; } }
-            unchecked { ++i; }
-        }
-
-        emit BatchPayrollExecuted(planId, msg.sender, success, fail);
     }
 
     // ═════════════════════════════════════════════════════════════════════════
@@ -458,70 +411,6 @@ contract VirioPayrollManager is IVirioPayrollManager {
         );
     }
 
-    /// @dev Try-catch wrapper for batch execution. Returns false on failure
-    ///      instead of reverting, so one bad recipient doesn't block the rest.
-    function _tryExecutePayroll(bytes32 planId, bytes32 recipientId)
-        internal returns (bool)
-    {
-        // Cache plan once — 3 SLOADs → 1.
-        Plan storage plan   = plans[planId];
-        Recipient storage r = recipients[planId][recipientId];
-
-        // Pre-flight checks (skip silently rather than revert)
-        if (!r.active)                        return false;
-        if (block.timestamp < r.nextPayAt)    return false;
-
-        uint256 amount = r.amount;
-        uint256 period = plan.period;
-
-        // ── EFFECTS ─────────────────────────────────────────────────────────
-        uint256 nextPayAt = r.nextPayAt + period;
-        r.nextPayAt   = nextPayAt;
-        r.totalPaid  += amount;
-
-        if (r.spendCap != 0 && r.totalPaid > r.spendCap) {
-            _removeRecipient(planId, recipientId, address(this));
-            return true; // state changed, count as "processed"
-        }
-
-        address employer = plan.employer;
-        address token    = plan.token;
-        address executor = msg.sender;
-
-        uint256 execFee     = (amount * executorFeeBps)  / 10_000;
-        uint256 protocolFee = (amount * protocolFeeBps)  / 10_000 + protocolFlatFee;
-
-        if (amount < execFee + protocolFee) return false;
-        uint256 recipientAmt = amount - execFee - protocolFee;
-
-        // ── INTERACTIONS (with try-style low-level calls) ───────────────────
-        bool ok1 = _tryTransferFrom(token, employer, r.wallet,      recipientAmt);
-        if (!ok1) {
-            // Rollback effects — transfer failed (e.g. insufficient allowance)
-            r.nextPayAt  = nextPayAt - period;
-            r.totalPaid -= amount;
-            return false;
-        }
-
-        // Executor + protocol fees — if these fail we still paid the recipient
-        if (execFee     > 0) _tryTransferFrom(token, employer, executor,     execFee);
-        if (protocolFee > 0) _tryTransferFrom(token, employer, feeRecipient, protocolFee);
-
-        emit PayrollExecuted(
-            planId,
-            recipientId,
-            executor,
-            r.wallet,
-            amount,
-            recipientAmt,
-            execFee,
-            protocolFee,
-            nextPayAt
-        );
-
-        return true;
-    }
-
     // ─── Safe Transfer Helpers ────────────────────────────────────────────────
 
     /// @dev Reverts on failure (used in single executePayroll).
@@ -540,16 +429,4 @@ contract VirioPayrollManager is IVirioPayrollManager {
         );
     }
 
-    /// @dev Returns false on failure (used in batch to skip gracefully).
-    function _tryTransferFrom(
-        address token,
-        address from,
-        address to,
-        uint256 amount
-    ) internal returns (bool) {
-        (bool ok, bytes memory data) = token.call(
-            abi.encodeWithSelector(0x23b872dd, from, to, amount)
-        );
-        return ok && (data.length == 0 || abi.decode(data, (bool)));
-    }
 }

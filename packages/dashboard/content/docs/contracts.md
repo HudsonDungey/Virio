@@ -133,22 +133,11 @@ Automated, bot-executable ERC-20 payroll. An employer creates a plan, adds recip
 | --- | --- | --- |
 | `createPlan(token, period) → planId` | any | Caller becomes employer. |
 | `addRecipient(planId, wallet, amount, spendCap) → recipientId` | employer | Add one recipient. |
-| `addRecipientsBatch(planId, wallets[], amounts[], spendCaps[])` | employer | Add many in one tx. |
 | `updateRecipient(planId, recipientId, newAmount, newSpendCap)` | employer | Effective next cycle. |
 | `removeRecipient(planId, recipientId)` | employer | Remove a recipient. |
 | `executePayroll(planId, recipientId)` | **permissionless** | Pay one due recipient. |
-| `executePayrollBatch(planId, recipientIds[])` | **permissionless** | Pay many; failures skip, don't revert. |
 | `getDueRecipients(planId) → bytes32[]` | view | Recipients currently payable. |
 | `getPlanRecipients(planId) → Recipient[]` | view | Full roster. |
-
-### Batch & failure behavior
-
-`executePayrollBatch` is **fail-soft**: a recipient with insufficient allowance is skipped (state rolled back for that recipient) while the rest are paid. It emits `BatchPayrollExecuted(planId, executor, successCount, failCount)`. A breached spend cap **auto-removes** the recipient instead of reverting.
-
-```ts
-const due = await read("getDueRecipients", [planId]);
-await wallet.writeContract({ address, abi, functionName: "executePayrollBatch", args: [planId, due] });
-```
 
 ## SubscriptionDelegate7702
 

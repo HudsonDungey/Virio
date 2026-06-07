@@ -7,8 +7,8 @@ import {IVirioPayrollManager} from "../src/interfaces/IVirioPayrollManager.sol";
 import {MockUSDC} from "../src/test-helpers/MockUSDC.sol";
 
 /// Smoke tests for VirioPayrollManager.
-/// Covers: plan create / deactivate, add (single + batch), update, remove,
-/// single payroll execute, batch execute with partial fail, spend-cap auto-remove,
+/// Covers: plan create / deactivate, add, update, remove,
+/// single payroll execute, spend-cap auto-remove,
 /// owner-only setters, and full event capture on the happy path.
 contract VirioPayrollManagerTest is Test {
     VirioPayrollManager internal mgr;
@@ -149,34 +149,6 @@ contract VirioPayrollManagerTest is Test {
         mgr.addRecipient(planId, alice, 0, 0);
     }
 
-    // ─── addRecipientsBatch ──────────────────────────────────────────────────
-
-    function test_addRecipientsBatch_addsAll() public {
-        address[] memory wallets = new address[](3);
-        uint256[] memory amounts = new uint256[](3);
-        uint256[] memory caps    = new uint256[](3);
-        (wallets[0], amounts[0], caps[0]) = (alice, ALICE_AMOUNT, 0);
-        (wallets[1], amounts[1], caps[1]) = (bob,   BOB_AMOUNT,   0);
-        (wallets[2], amounts[2], caps[2]) = (carol, CAROL_AMOUNT, 0);
-
-        vm.prank(EMPLOYER);
-        bytes32[] memory rids = mgr.addRecipientsBatch(planId, wallets, amounts, caps);
-        assertEq(rids.length, 3);
-        assertEq(mgr.getPlanRecipientIds(planId).length, 3);
-    }
-
-    function test_addRecipientsBatch_revertsOnLengthMismatch() public {
-        address[] memory wallets = new address[](2);
-        uint256[] memory amounts = new uint256[](3);
-        uint256[] memory caps    = new uint256[](2);
-        wallets[0] = alice; wallets[1] = bob;
-        amounts[0] = ALICE_AMOUNT; amounts[1] = BOB_AMOUNT; amounts[2] = CAROL_AMOUNT;
-
-        vm.prank(EMPLOYER);
-        vm.expectRevert(IVirioPayrollManager.ArrayLengthMismatch.selector);
-        mgr.addRecipientsBatch(planId, wallets, amounts, caps);
-    }
-
     // ─── executePayroll (single) ──────────────────────────────────────────────
 
     function test_executePayroll_balanceDeltasAndEvent() public {
@@ -234,76 +206,6 @@ contract VirioPayrollManagerTest is Test {
         mgr.executePayroll(planId, rid);
 
         assertFalse(mgr.getRecipient(planId, rid).active);
-    }
-
-    // ─── executePayrollBatch ──────────────────────────────────────────────────
-
-    function test_executePayrollBatch_paysAllAndEmitsBatchEvent() public {
-        // Add 4 recipients
-        address[] memory wallets = new address[](4);
-        uint256[] memory amounts = new uint256[](4);
-        uint256[] memory caps    = new uint256[](4);
-        (wallets[0], amounts[0], caps[0]) = (alice, ALICE_AMOUNT, 0);
-        (wallets[1], amounts[1], caps[1]) = (bob,   BOB_AMOUNT,   0);
-        (wallets[2], amounts[2], caps[2]) = (carol, CAROL_AMOUNT, 0);
-        (wallets[3], amounts[3], caps[3]) = (dave,  DAVE_AMOUNT,  0);
-
-        vm.prank(EMPLOYER);
-        bytes32[] memory rids = mgr.addRecipientsBatch(planId, wallets, amounts, caps);
-
-        vm.expectEmit(true, true, false, true, address(mgr));
-        emit IVirioPayrollManager.BatchPayrollExecuted(planId, BOT, 4, 0);
-        vm.prank(BOT);
-        mgr.executePayrollBatch(planId, rids);
-
-        // All recipients got paid net amount
-        (, , uint256 aliceNet) = _split(ALICE_AMOUNT);
-        (, , uint256 bobNet)   = _split(BOB_AMOUNT);
-        assertEq(usdc.balanceOf(alice), aliceNet);
-        assertEq(usdc.balanceOf(bob),   bobNet);
-    }
-
-    function test_executePayrollBatch_partialFailDoesNotBlockOthers() public {
-        // Add 3 recipients; second one will fail because we revoke employer
-        // allowance below their threshold mid-batch — actually simpler approach:
-        // include a non-existent recipient id in the batch.
-        address[] memory wallets = new address[](2);
-        uint256[] memory amounts = new uint256[](2);
-        uint256[] memory caps    = new uint256[](2);
-        (wallets[0], amounts[0], caps[0]) = (alice, ALICE_AMOUNT, 0);
-        (wallets[1], amounts[1], caps[1]) = (bob,   BOB_AMOUNT,   0);
-
-        vm.prank(EMPLOYER);
-        bytes32[] memory rids = mgr.addRecipientsBatch(planId, wallets, amounts, caps);
-
-        // Manually craft a batch with one real and one bogus id
-        bytes32[] memory batch = new bytes32[](3);
-        batch[0] = rids[0];
-        batch[1] = keccak256("nonexistent");
-        batch[2] = rids[1];
-
-        vm.expectEmit(true, true, false, true, address(mgr));
-        emit IVirioPayrollManager.BatchPayrollExecuted(planId, BOT, 2, 1);
-        vm.prank(BOT);
-        mgr.executePayrollBatch(planId, batch);
-
-        // Real recipients still got paid
-        (, , uint256 aliceNet) = _split(ALICE_AMOUNT);
-        (, , uint256 bobNet)   = _split(BOB_AMOUNT);
-        assertEq(usdc.balanceOf(alice), aliceNet);
-        assertEq(usdc.balanceOf(bob),   bobNet);
-    }
-
-    function test_executePayrollBatch_revertsIfPlanInactive() public {
-        vm.prank(EMPLOYER);
-        mgr.deactivatePlan(planId);
-
-        bytes32[] memory empty = new bytes32[](0);
-        vm.expectRevert(
-            abi.encodeWithSelector(IVirioPayrollManager.PlanNotActive.selector, planId)
-        );
-        vm.prank(BOT);
-        mgr.executePayrollBatch(planId, empty);
     }
 
     // ─── removeRecipient ──────────────────────────────────────────────────────

@@ -262,18 +262,6 @@ export const payrollAbi = [
   },
   {
     type: "function",
-    name: "addRecipientsBatch",
-    inputs: [
-      { name: "planId", type: "bytes32" },
-      { name: "wallets", type: "address[]" },
-      { name: "amounts", type: "uint256[]" },
-      { name: "spendCaps", type: "uint256[]" },
-    ],
-    outputs: [{ name: "recipientIds", type: "bytes32[]" }],
-    stateMutability: "nonpayable",
-  },
-  {
-    type: "function",
     name: "removeRecipient",
     inputs: [
       { name: "planId", type: "bytes32" },
@@ -300,16 +288,6 @@ export const payrollAbi = [
     inputs: [
       { name: "planId", type: "bytes32" },
       { name: "recipientId", type: "bytes32" },
-    ],
-    outputs: [],
-    stateMutability: "nonpayable",
-  },
-  {
-    type: "function",
-    name: "executePayrollBatch",
-    inputs: [
-      { name: "planId", type: "bytes32" },
-      { name: "recipientIds", type: "bytes32[]" },
     ],
     outputs: [],
     stateMutability: "nonpayable",
@@ -445,17 +423,6 @@ export const payrollAbi = [
       { name: "executorFee", type: "uint256", indexed: false },
       { name: "protocolFee", type: "uint256", indexed: false },
       { name: "nextPayAt", type: "uint256", indexed: false },
-    ],
-    anonymous: false,
-  },
-  {
-    type: "event",
-    name: "BatchPayrollExecuted",
-    inputs: [
-      { name: "planId", type: "bytes32", indexed: true },
-      { name: "executor", type: "address", indexed: true },
-      { name: "successCount", type: "uint256", indexed: false },
-      { name: "failCount", type: "uint256", indexed: false },
     ],
     anonymous: false,
   },

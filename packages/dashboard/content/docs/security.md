@@ -21,7 +21,7 @@ Virio is non-custodial by design — the protocol never holds funds, and every a
 
 ### Reentrancy
 
-`charge()`, `executePayroll()`, and the batch variants use a `nonReentrant` guard and strict Checks-Effects-Interactions ordering: all state is mutated **before** any external token call, so a malicious token cannot re-enter into an inconsistent state.
+`charge()` and `executePayroll()` use a `nonReentrant` guard and strict Checks-Effects-Interactions ordering: all state is mutated **before** any external token call, so a malicious token cannot re-enter into an inconsistent state.
 
 ### Replay
 

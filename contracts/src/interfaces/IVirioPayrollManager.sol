@@ -64,13 +64,6 @@ interface IVirioPayrollManager {
         uint256 nextPayAt
     );
 
-    event BatchPayrollExecuted(
-        bytes32 indexed planId,
-        address indexed executor,
-        uint256 successCount,
-        uint256 failCount
-    );
-
     // ─── Errors ───────────────────────────────────────────────────────────────
 
     error ZeroAddress();
@@ -82,8 +75,6 @@ interface IVirioPayrollManager {
     error RecipientNotActive(bytes32 recipientId);
     error TooEarlyToPay(bytes32 recipientId, uint256 nextPayAt);
     error TransferFailed();
-    error ArrayLengthMismatch();
-
     // ─── Functions ────────────────────────────────────────────────────────────
 
     function EXECUTOR_FEE_BPS() external view returns (uint16);
@@ -100,13 +91,6 @@ interface IVirioPayrollManager {
         uint256 spendCap
     ) external returns (bytes32 recipientId);
 
-    function addRecipientsBatch(
-        bytes32 planId,
-        address[] calldata wallets,
-        uint256[] calldata amounts,
-        uint256[] calldata spendCaps
-    ) external returns (bytes32[] memory recipientIds);
-
     function removeRecipient(bytes32 planId, bytes32 recipientId) external;
 
     function updateRecipient(
@@ -117,8 +101,6 @@ interface IVirioPayrollManager {
     ) external;
 
     function executePayroll(bytes32 planId, bytes32 recipientId) external;
-
-    function executePayrollBatch(bytes32 planId, bytes32[] calldata recipientIds) external;
 
     function getPlan(bytes32 planId) external view returns (Plan memory);
 

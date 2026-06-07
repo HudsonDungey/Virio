@@ -166,26 +166,12 @@ export function usePayrollActions() {
     return hash;
   }
 
-  async function executePayrollBatch(planId: Hex, recipientIds: Hex[]): Promise<Hex> {
-    assertReady();
-    const hash = await writeContract(config, {
-      address: payrollAddress,
-      abi: payrollAbi,
-      functionName: "executePayrollBatch",
-      args: [planId, recipientIds],
-      chainId: expectedChainId,
-    });
-    await waitForTransactionReceipt(config, { hash });
-    return hash;
-  }
-
   return {
     createPlan,
     deactivatePlan,
     addRecipient,
     removeRecipient,
     executePayroll,
-    executePayrollBatch,
     ensureAllowance,
     account,
     expectedChainId,

@@ -4,49 +4,21 @@
 
 Severity counts:
 - Critical: 0
-- High: 1
-- Medium: 2
+- High: 0
+- Medium: 1
 - Low: 4
 - Informational: 1
 
 Top 3 issues by impact:
-1. Payroll batch execution can pay recipients while silently skipping executor and protocol fees.
-2. Payroll batch execution mutates recipient accounting before validating fee feasibility, allowing unpaid cycles to be marked as processed.
-3. Fee-on-transfer reward tokens can over-credit staking rewards and later make claims fail.
+1. Fee-on-transfer reward tokens can over-credit staking rewards and later make claims fail.
+2. Deregistered reward tokens cannot be claimed individually.
+3. Zero delegate period creates a lifetime cap.
 
-Overall risk rating: Medium. The subscription manager's core flow is simple and mostly matches its stated invariants, but the payroll batch path has two concrete accounting issues because it intentionally catches failures without applying the same atomicity guarantees as the single-recipient path. The token-side contracts are not yet covered by tests in this repo and should not be treated as mainnet-ready until the staking, fee-distribution, xERC20 limit, and 7702 delegate edge cases below are covered.
+Overall risk rating: Medium. The subscription manager's core flow is simple and mostly matches its stated invariants. The token-side contracts are not yet covered by tests in this repo and should not be treated as mainnet-ready until the staking, fee-distribution, xERC20 limit, and 7702 delegate edge cases below are covered.
 
 Token-contract mainnet note: I would block `Staking`, `FeeDistributor`, and `VIRIO` from mainnet deployment until dedicated tests exist and the reward-accounting / limit-overflow findings are addressed. `SafetyModule` is minimal and acceptable if the owner address is a governance-controlled multisig or DAO.
 
 ---
-
-```
-[SEVERITY: High]
-Contract: contracts/src/VirioPayrollManager.sol:497-508
-Title: Batch payroll can skip executor and protocol fees
-Description:
-  `_tryExecutePayroll` treats the recipient transfer as the only transfer that must succeed. If the employer allowance or balance covers `recipientAmt` but not the subsequent executor and protocol fees, the fee transfers return false, are ignored, and the function still emits `PayrollExecuted`.
-Impact:
-  Employers can avoid protocol fees and executor fees on batch payroll by approving only the recipient net amount. Bots also lose the economic incentive that the permissionless execution model depends on.
-PoC sketch:
-  In `VirioPayrollManager.t.sol`, add one recipient, compute `recipientAmt`, set employer allowance to exactly `recipientAmt`, call `executePayrollBatch`, then assert the recipient balance increased while `BOT` and `FEE_REC` balances stayed zero and `BatchPayrollExecuted` counted success.
-Suggested fix:
-  Require all three transfers to succeed before returning success, or preflight allowance/balance for the full gross `amount` and roll back `nextPayAt` / `totalPaid` if any transfer fails.
-```
-
-```
-[SEVERITY: Medium]
-Contract: contracts/src/VirioPayrollManager.sol:477-495
-Title: Invalid batch payment advances state without paying
-Description:
-  `_tryExecutePayroll` writes `nextPayAt` and `totalPaid` before checking `amount < execFee + protocolFee`. If that check fails, the function returns false without rolling back the earlier state changes.
-Impact:
-  A low-value recipient can have an unpaid pay period marked as processed. Repeated batch attempts can keep advancing `nextPayAt` and inflating `totalPaid`, and may eventually trigger spend-cap removal without any token movement.
-PoC sketch:
-  Add a recipient with `amount` below the default flat protocol fee, call `executePayrollBatch`, then assert the batch reports one failure while `nextPayAt` increased, `totalPaid` increased, and the recipient balance is unchanged.
-Suggested fix:
-  Move the fee feasibility check before state mutation, or use one rollback block for every false return after state has been changed.
-```
 
 ```
 [SEVERITY: Medium]
@@ -145,12 +117,10 @@ I reviewed `contracts/test/VirioSubscriptionManager.t.sol`, `contracts/test/Viri
 
 - `VirioSubscriptionDelegate7702` has no tests covering initialization, revocation, period caps, zero `periodDuration`, or signature malleability.
 - Token contracts under `contracts/src/token/` have no tests in `contracts/test/*.t.sol`: `VIRIO`, `Staking`, `FeeDistributor`, and `SafetyModule` are untested in this suite.
-- `VirioPayrollManager.t.sol` covers batch partial failure using a nonexistent recipient, but does not cover batch rollback after recipient transfer failure, invalid fee math after state mutation, or failed executor/protocol fee transfers.
 - `VirioPayrollManager.t.sol` does not cover swap-and-pop removal of a middle recipient from a multi-recipient list.
 - `VirioSubscriptionManager.t.sol` and `Scenarios.t.sol` cover revoked allowance, cap auto-cancel, additive timing, merchant/customer cancellation, and deactivated-plan behavior; I did not list those as gaps.
 
 ## Recommended Next Work
 
-1. Fix `_tryExecutePayroll` so every failure path after state mutation rolls back consistently and so gross payroll success requires all intended transfers.
-2. Add focused Foundry tests for the two payroll batch findings before changing production behavior.
-3. Add first-pass token test files for `Staking`, `FeeDistributor`, `VIRIO`, and `VirioSubscriptionDelegate7702`; these contracts currently carry meaningful launch risk because their edge cases are not exercised.
+1. Add first-pass token test files for `Staking`, `FeeDistributor`, `VIRIO`, and `VirioSubscriptionDelegate7702`; these contracts currently carry meaningful launch risk because their edge cases are not exercised.
+2. Add payroll coverage for swap-and-pop removal of a middle recipient from a multi-recipient list.
