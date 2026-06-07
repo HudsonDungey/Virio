@@ -88,7 +88,7 @@ export function HowItWorks() {
         />
 
         <div className="mt-14 grid items-start gap-10 lg:grid-cols-[1.15fr_0.85fr]">
-          <div className="space-y-3">
+          <div className="min-w-0 space-y-3">
             {STEPS.map((s, i) => (
               <Reveal key={s.n} delay={i * 70}>
                 <div className="group relative flex gap-5 rounded-2xl border border-border bg-card p-5 transition-colors duration-fast hover:border-[hsl(var(--hairline-strong))]">
@@ -122,7 +122,7 @@ export function HowItWorks() {
             ))}
           </div>
 
-          <Reveal delay={100} className="lg:sticky lg:top-28">
+          <Reveal delay={100} className="min-w-0 lg:sticky lg:top-28">
             <FeeFlow />
           </Reveal>
         </div>

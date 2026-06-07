@@ -3,7 +3,8 @@
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src",
-    "lib": ["ES2022"],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
     "typeRoots": [
       "./node_modules/@types",
       "/opt/node22/lib/node_modules/ts-node/node_modules/@types"

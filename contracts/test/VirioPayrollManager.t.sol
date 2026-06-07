@@ -31,10 +31,10 @@ contract VirioPayrollManagerTest is Test {
     uint256 constant CAROL_AMOUNT = 1_200e6;
     uint256 constant DAVE_AMOUNT  = 600e6;
 
-    // Fee math (matches contract globals: 10 bps exec, 25 bps proto, 1 USDC flat)
-    uint16  constant EXEC_BPS  = 10;
-    uint16  constant PROTO_BPS = 25;
-    uint256 constant FLAT_FEE  = 1e6;
+    // Fee math (matches contract globals: 1 bps exec, 1 bps proto, no flat fee)
+    uint16  constant EXEC_BPS  = 1;
+    uint16  constant PROTO_BPS = 1;
+    uint256 constant FLAT_FEE  = 0;
 
     bytes32 internal planId;
 

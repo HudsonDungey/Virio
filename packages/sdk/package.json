@@ -10,6 +10,21 @@
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts",
       "default": "./src/index.ts"
+    },
+    "./react": {
+      "import": "./dist/react/index.js",
+      "types": "./dist/react/index.d.ts",
+      "default": "./src/react/index.ts"
+    },
+    "./vanilla": {
+      "import": "./dist/vanilla/index.js",
+      "types": "./dist/vanilla/index.d.ts",
+      "default": "./src/vanilla/index.ts"
+    },
+    "./checkout": {
+      "import": "./dist/checkout/index.js",
+      "types": "./dist/checkout/index.d.ts",
+      "default": "./src/checkout/index.ts"
     }
   },
   "scripts": {
@@ -17,10 +32,28 @@
     "typecheck": "tsc --project tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@walletconnect/ethereum-provider": "^2.11.0",
+    "qrcode": "^1.5.3",
     "viem": "^2.0.0"
+  },
+  "peerDependencies": {
+    "react": ">=18",
+    "react-dom": ">=18"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
+    "@types/qrcode": "^1.5.5",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "react": "^18.2.0",
     "typescript": "^5.4.0"
   }
 }
