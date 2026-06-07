@@ -1,6 +1,6 @@
 ---
 title: Drop-in Button
-description: Add crypto subscriptions to any React app with one component — WalletConnect, plan lookup, approvals and signing handled for you.
+description: Add crypto subscriptions with one component — React, a framework-neutral Web Component, or plain JS. WalletConnect, plan lookup, approvals and signing handled for you.
 section: Build
 order: 3
 ---
@@ -94,3 +94,48 @@ const { connected, address, chainId, connect, disconnect } = useVirio();
 ## Accessibility
 
 The modal is a labelled dialog with focus trapping, `Esc` to close, full keyboard navigation and reduced-motion support.
+
+## Other frameworks & vanilla JS
+
+React is just one binding. The whole flow — WalletConnect, plan lookup, approvals and signing — lives in a framework-agnostic controller, exposed through `@virio/sdk/vanilla` as a **Web Component** and an **imperative function**. No React, no build framework required.
+
+### Web Component (Vue, Svelte, Angular, Solid, plain HTML)
+
+Custom elements work natively in every framework, so one tag covers them all:
+
+```html
+<script type="module">
+  import "@virio/sdk/vanilla"; // registers <virio-button>
+</script>
+
+<virio-button rpc-url="https://…" plan-id="0x123…">Subscribe with Crypto</virio-button>
+```
+
+Attributes map to props: `rpc-url`, `plan-id`, `chain`, `contract-address`, `project-id`, `app-name`, `auto-connect`, `auto-sign`. Results surface as bubbling `CustomEvent`s:
+
+```js
+const btn = document.querySelector("virio-button");
+btn.addEventListener("virio:success", (e) => console.log("active", e.detail));
+btn.addEventListener("virio:error", (e) => console.error(e.detail));
+// also: virio:connect (address), virio:pending (txHash)
+```
+
+It is a normal element in any framework — `<virio-button :plan-id="id" />` in Vue, `<virio-button {planId} />`-style in Svelte, etc. Angular needs `CUSTOM_ELEMENTS_SCHEMA`.
+
+### Imperative API (any JS)
+
+Open the checkout from your own button or logic:
+
+```ts
+import { openVirioCheckout } from "@virio/sdk/vanilla";
+
+openVirioCheckout({
+  rpcUrl: "https://…",
+  planId: "0x123…",
+  onSuccess: (subscriptionId) => console.log(subscriptionId),
+});
+```
+
+### Headless core
+
+Want your own UI? `@virio/sdk/checkout` exports the `VirioCheckout` controller (a `getState()` / `subscribe()` state machine) plus `loadPlan`, `subscribeToPlan` and the session store — build any front end on top.

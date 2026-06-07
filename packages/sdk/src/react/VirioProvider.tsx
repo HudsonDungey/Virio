@@ -1,30 +1,22 @@
 "use client";
 
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-  type ReactNode,
-} from "react";
-import type { Address, Chain } from "viem";
+import { createContext, useContext, useEffect, useMemo, useSyncExternalStore, type ReactNode } from "react";
+import type { Address } from "viem";
 
-import { resolveChain, VIRIO_CONTRACT_ADDRESS, type ChainName } from "../chains.js";
 import {
-  getWcProvider,
-  wcConnect,
-  wcDisconnect,
-  wcSwitchChain,
-  type WcConfig,
-  type WcProvider,
-} from "./walletconnect.js";
-
-// Virio ships a shared WalletConnect project so a merchant only has to provide
-// an RPC URL. Override with the `projectId` prop to use your own WalletConnect
-// Cloud project (recommended for production / branded session metadata).
-const DEFAULT_PROJECT_ID = "2f05a7cdc2bb8b1f4d6e7c8a9b0c1d2e";
+  resolveConfig,
+  toWcConfig,
+  type CheckoutConfigInput,
+  type ResolvedCheckoutConfig,
+} from "../checkout/config.js";
+import {
+  connectSession,
+  disconnectSession,
+  getSession,
+  initSession,
+  subscribeSession,
+} from "../checkout/session.js";
+import type { ChainName } from "../chains.js";
 
 export interface VirioProviderProps {
   /** RPC endpoint for the chain the Virio contract is deployed on. Required. */
@@ -40,21 +32,7 @@ export interface VirioProviderProps {
   children: ReactNode;
 }
 
-/** Full internal context — consumed by VirioButton / VirioModal. */
-interface VirioContextValue {
-  rpcUrl: string;
-  chain: Chain;
-  contractAddress: Address;
-  connected: boolean;
-  address: Address | undefined;
-  chainId: number | undefined;
-  connect: (onDisplayUri?: (uri: string) => void) => Promise<{ address: Address; chainId: number }>;
-  disconnect: () => Promise<void>;
-  switchChain: (chainId: number) => Promise<void>;
-  getProvider: () => Promise<WcProvider>;
-}
-
-const VirioContext = createContext<VirioContextValue | null>(null);
+const VirioConfigContext = createContext<ResolvedCheckoutConfig | null>(null);
 
 export function VirioProvider({
   rpcUrl,
@@ -64,127 +42,31 @@ export function VirioProvider({
   appName,
   children,
 }: VirioProviderProps): JSX.Element {
-  const resolvedChain = useMemo(() => resolveChain(chain ?? "base"), [chain]);
-  const resolvedContract = contractAddress ?? VIRIO_CONTRACT_ADDRESS;
-
-  const config = useMemo<WcConfig>(
-    () => ({
-      projectId: projectId ?? DEFAULT_PROJECT_ID,
-      chainId: resolvedChain.id,
-      rpcUrl,
-      appName: appName ?? "Virio",
-    }),
-    [projectId, resolvedChain.id, rpcUrl, appName],
+  const config = useMemo<ResolvedCheckoutConfig>(
+    () => resolveConfig({ rpcUrl, chain, contractAddress, projectId, appName } satisfies CheckoutConfigInput),
+    [rpcUrl, chain, contractAddress, projectId, appName],
   );
 
-  const [address, setAddress] = useState<Address>();
-  const [chainId, setChainId] = useState<number>();
-
-  // Restore any persisted WalletConnect session on mount and keep local state
-  // in sync with the wallet (account/chain switches, disconnects).
+  // Restore any persisted WalletConnect session and wire wallet events once.
+  // A bad/placeholder projectId or offline relay shouldn't crash the app; the
+  // error surfaces in the modal when the user actually clicks.
   useEffect(() => {
-    let active = true;
-    let provider: WcProvider | null = null;
-
-    const onAccounts = (accounts: string[]): void => {
-      if (active) setAddress((accounts[0] as Address) ?? undefined);
-    };
-    const onChain = (next: string): void => {
-      if (active) setChainId(Number.parseInt(next, 16));
-    };
-    const onDisconnect = (): void => {
-      if (!active) return;
-      setAddress(undefined);
-      setChainId(undefined);
-    };
-
-    void (async () => {
-      try {
-        provider = await getWcProvider(config);
-        provider.on("accountsChanged", onAccounts);
-        provider.on("chainChanged", onChain);
-        provider.on("disconnect", onDisconnect);
-        if (active && provider.accounts.length > 0) {
-          setAddress(provider.accounts[0] as Address);
-          setChainId(provider.chainId);
-        }
-      } catch (err) {
-        // A bad/placeholder projectId or offline relay shouldn't crash the app;
-        // connection errors surface in the modal when the user actually clicks.
-        console.warn("Virio: WalletConnect initialisation failed.", err);
-      }
-    })();
-
-    return () => {
-      active = false;
-      if (provider) {
-        provider.removeListener("accountsChanged", onAccounts);
-        provider.removeListener("chainChanged", onChain);
-        provider.removeListener("disconnect", onDisconnect);
-      }
-    };
+    void initSession(toWcConfig(config)).catch((err) => {
+      console.warn("Virio: WalletConnect initialisation failed.", err);
+    });
   }, [config]);
 
-  const connect = useCallback(
-    async (onDisplayUri?: (uri: string) => void) => {
-      const result = await wcConnect(config, onDisplayUri);
-      setAddress(result.address);
-      setChainId(result.chainId);
-      return result;
-    },
-    [config],
-  );
-
-  const disconnect = useCallback(async () => {
-    await wcDisconnect();
-    setAddress(undefined);
-    setChainId(undefined);
-  }, []);
-
-  const switchChain = useCallback(async (next: number) => {
-    await wcSwitchChain(next);
-    setChainId(next);
-  }, []);
-
-  const getProvider = useCallback(() => getWcProvider(config), [config]);
-
-  const value = useMemo<VirioContextValue>(
-    () => ({
-      rpcUrl,
-      chain: resolvedChain,
-      contractAddress: resolvedContract,
-      connected: address !== undefined,
-      address,
-      chainId,
-      connect,
-      disconnect,
-      switchChain,
-      getProvider,
-    }),
-    [
-      rpcUrl,
-      resolvedChain,
-      resolvedContract,
-      address,
-      chainId,
-      connect,
-      disconnect,
-      switchChain,
-      getProvider,
-    ],
-  );
-
-  return <VirioContext.Provider value={value}>{children}</VirioContext.Provider>;
+  return <VirioConfigContext.Provider value={config}>{children}</VirioConfigContext.Provider>;
 }
 
-/** Internal accessor used by VirioButton / VirioModal. */
-export function useVirioContext(): VirioContextValue {
-  const ctx = useContext(VirioContext);
-  if (!ctx) throw new Error("Virio components must be used within <VirioProvider>.");
-  return ctx;
+/** Resolved config from the nearest provider. Used by VirioButton. */
+export function useVirioConfig(): ResolvedCheckoutConfig {
+  const config = useContext(VirioConfigContext);
+  if (!config) throw new Error("Virio components must be used within <VirioProvider>.");
+  return config;
 }
 
-/** Public connection state + actions. */
+/** Public connection state + actions, backed by the shared session store. */
 export interface UseVirio {
   connected: boolean;
   address: string | undefined;
@@ -194,14 +76,15 @@ export interface UseVirio {
 }
 
 export function useVirio(): UseVirio {
-  const ctx = useVirioContext();
+  const config = useVirioConfig();
+  const session = useSyncExternalStore(subscribeSession, getSession, getSession);
   return {
-    connected: ctx.connected,
-    address: ctx.address,
-    chainId: ctx.chainId,
+    connected: session.address !== undefined,
+    address: session.address,
+    chainId: session.chainId,
     connect: async () => {
-      await ctx.connect();
+      await connectSession(toWcConfig(config));
     },
-    disconnect: ctx.disconnect,
+    disconnect: disconnectSession,
   };
 }

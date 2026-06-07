@@ -15,6 +15,16 @@
       "import": "./dist/react/index.js",
       "types": "./dist/react/index.d.ts",
       "default": "./src/react/index.ts"
+    },
+    "./vanilla": {
+      "import": "./dist/vanilla/index.js",
+      "types": "./dist/vanilla/index.d.ts",
+      "default": "./src/vanilla/index.ts"
+    },
+    "./checkout": {
+      "import": "./dist/checkout/index.js",
+      "types": "./dist/checkout/index.d.ts",
+      "default": "./src/checkout/index.ts"
     }
   },
   "scripts": {

@@ -3,8 +3,10 @@
 import { useState, type CSSProperties, type ReactNode } from "react";
 import type { Hex } from "viem";
 
+import { VirioCheckout } from "../checkout/controller.js";
+import { styles } from "../checkout/styles.js";
 import { VirioModal } from "./VirioModal.js";
-import { styles } from "./styles.js";
+import { useVirioConfig } from "./VirioProvider.js";
 
 export interface VirioButtonProps {
   /** The plan to subscribe to. Resolved from the contract — the source of truth. */
@@ -37,7 +39,28 @@ export function VirioButton({
   onSuccess,
   onError,
 }: VirioButtonProps): JSX.Element {
-  const [open, setOpen] = useState(false);
+  const config = useVirioConfig();
+  const [checkout, setCheckout] = useState<VirioCheckout | null>(null);
+
+  const open = (): void => {
+    const instance = new VirioCheckout({
+      config,
+      planId: planId as Hex,
+      autoConnect,
+      autoSign,
+      onConnect,
+      onPending,
+      onSuccess,
+      onError,
+    });
+    setCheckout(instance);
+    instance.open();
+  };
+
+  const close = (): void => {
+    checkout?.destroy();
+    setCheckout(null);
+  };
 
   // A custom className opts out of the default look entirely; otherwise the
   // built-in style applies and `style` merges on top.
@@ -52,22 +75,11 @@ export function VirioButton({
         className={className}
         style={buttonStyle}
         disabled={disabled}
-        onClick={() => setOpen(true)}
+        onClick={open}
       >
         {children ?? "Subscribe with Crypto"}
       </button>
-      {open && (
-        <VirioModal
-          planId={planId as Hex}
-          autoConnect={autoConnect}
-          autoSign={autoSign}
-          onConnect={onConnect}
-          onPending={onPending}
-          onSuccess={onSuccess}
-          onError={onError}
-          onClose={() => setOpen(false)}
-        />
-      )}
+      {checkout && <VirioModal checkout={checkout} autoSign={autoSign} onClose={close} />}
     </>
   );
 }

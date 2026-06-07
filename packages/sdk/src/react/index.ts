@@ -8,4 +8,4 @@ export type { VirioProviderProps, UseVirio } from "./VirioProvider.js";
 export { VirioButton } from "./VirioButton.js";
 export type { VirioButtonProps } from "./VirioButton.js";
 
-export type { PlanSummary } from "./transaction.js";
+export type { PlanSummary } from "../checkout/transaction.js";
