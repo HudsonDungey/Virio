@@ -323,6 +323,18 @@ function Hero() {
           </Link>
         </div>
 
+        <div className="mt-4 flex animate-fade-up justify-center animation-delay-350">
+          <a
+            href="mailto:HudsonDungeyDev@outlook.com?subject=Virio%20Seed%20Round%20%E2%80%94%20EOI&body=Hi%2C%0A%0AI%27m%20interested%20in%20participating%20in%20the%20Virio%20seed%20round%20as%20an%20%5Bangel%20%2F%20strategic%20partner%5D.%0A%0APlease%20send%20me%20more%20details."
+            className="group inline-flex items-center gap-2 rounded-full border border-virio-emerald/40 bg-virio-emerald/10 px-5 py-2.5 text-[13px] font-medium text-foreground transition-colors hover:border-virio-emerald/70 hover:bg-virio-emerald/15"
+          >
+            <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-virio-emerald text-virio-emerald-ink">
+              <ArrowRight className="h-3 w-3" />
+            </span>
+            Seed round open — express interest as an angel or strategic partner
+          </a>
+        </div>
+
         {/* quick stats */}
         <div className="mt-16 grid animate-fade-up grid-cols-2 gap-4 animation-delay-400 sm:grid-cols-4">
           <Stat value="1B" label="Total supply" sub="Fixed forever — no inflation" />
