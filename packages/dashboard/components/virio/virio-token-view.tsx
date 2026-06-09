@@ -119,7 +119,7 @@ const BUCKETS: Bucket[] = [
     tokens: "50M",
     vesting: "25% at TGE, 9-mo linear",
     group: "public",
-    blurb: "Open public sale on Virio. No allowlists, no VC sweetheart pricing, no private rounds — same terms for everyone.",
+    blurb: "Open public sale on Virio. Same terms for everyone.",
     Icon: Coins,
   },
   {
@@ -302,7 +302,7 @@ function Hero() {
 
         <p className="mx-auto mt-6 max-w-[680px] animate-fade-up text-balance text-center text-[16.5px] leading-relaxed text-muted-foreground animation-delay-200">
           $VIRIO is one token across every EVM chain Virio runs on. Stake it on your chain of choice,
-          earn real fee-token yield where you staked. No VC round, no inflation, no NFTs, and every LP
+          earn real fee-token yield where you staked. Fixed supply, no inflation, no NFTs, and every LP
           token burns the moment it&apos;s minted.
         </p>
 
@@ -1089,12 +1089,8 @@ function HolderEarnings() {
 function Launch() {
   const items = [
     {
-      label: "No VC round",
-      body: "Investor reserve (5%) is only drawn for strategic partners. Anything unsold returns to the community at month 24.",
-    },
-    {
       label: "Public sale",
-      body: "50M VIRIO offered openly — no allowlist, no private pricing. 25% unlocks at TGE; the rest streams linearly over 9 months. Expected clear $0.10–$0.30, raising $5–15M.",
+      body: "50M VIRIO offered openly. 25% unlocks at TGE; the rest streams linearly over 9 months. Expected clear $0.10–$0.30, raising $5–15M.",
     },
     {
       label: "DEX liquidity",
@@ -1115,7 +1111,7 @@ function Launch() {
         <SectionHeading
           eyebrow="Launch"
           title={<>how $VIRIO goes <span className="text-virio-emerald">live</span></>}
-          description="Public sale only. No private rounds, no sweetheart pricing."
+          description="Public sale open to everyone."
         />
         <div className="mt-12 grid gap-4 md:grid-cols-2">
           {items.map((it, i) => (
@@ -1131,6 +1127,101 @@ function Launch() {
               </div>
             </Reveal>
           ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ─────────────────────────  SEED ROUND  ───────────────────────── */
+
+function SeedRound() {
+  return (
+    <section id="invest" className="scroll-mt-24 py-20">
+      <div className="mx-auto max-w-[1100px] px-6 sm:px-8">
+        <SectionHeading
+          eyebrow="Seed round"
+          title={<>raising <span className="text-virio-emerald">$200k</span> at a $5M valuation</>}
+          description="A small seed round to fund the initial liquidity pool and cover launch costs. Details below."
+        />
+
+        <div className="mt-12 grid gap-5 lg:grid-cols-[1.1fr_1fr]">
+          <Reveal>
+            <div className="h-full rounded-3xl border border-border bg-card p-6 sm:p-8">
+              <div className="inline-flex items-center gap-2 rounded-full bg-secondary px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-foreground">
+                <Coins className="h-3 w-3" />
+                Round terms
+              </div>
+              <h3 className="mt-4 font-display text-[22px] font-semibold text-foreground">
+                Seed details
+              </h3>
+
+              <div className="mt-5 divide-y divide-border rounded-xl border border-border">
+                {[
+                  { label: "Raise target",    value: "$200,000" },
+                  { label: "Valuation (FDV)", value: "$5,000,000" },
+                  { label: "LP allocation",   value: "2.5% of supply (25M VIRIO)" },
+                  { label: "USDC for LP",     value: "$125,000 USDC" },
+                  { label: "Token price",     value: "$0.005 / VIRIO" },
+                  { label: "Website",         value: "virio.xyz" },
+                ].map((row) => (
+                  <div key={row.label} className="flex items-center justify-between px-4 py-3.5">
+                    <span className="text-[13.5px] text-muted-foreground">{row.label}</span>
+                    <span className="font-display text-[14px] font-semibold text-foreground">
+                      {row.label === "Website" ? (
+                        <a
+                          href="https://virio.xyz"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-virio-emerald hover:underline"
+                        >
+                          {row.value}
+                        </a>
+                      ) : (
+                        row.value
+                      )}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              <PlainEnglish>
+                2.5% of the total supply (25M VIRIO) is paired with $125,000 USDC to seed the
+                initial liquidity pool. LP tokens are burnt on deposit — nobody can ever pull
+                that liquidity out.
+              </PlainEnglish>
+            </div>
+          </Reveal>
+
+          <Reveal delay={120}>
+            <div className="flex h-full flex-col rounded-3xl border border-border bg-card p-6 sm:p-8">
+              <div className="inline-flex items-center gap-2 rounded-full bg-secondary px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-foreground">
+                <Wallet className="h-3 w-3" />
+                Interested in investing?
+              </div>
+              <h3 className="mt-4 font-display text-[22px] font-semibold text-foreground">
+                Get in touch
+              </h3>
+              <p className="mt-2 text-[14px] leading-relaxed text-muted-foreground">
+                If you&apos;re interested in participating in the seed round, reach out directly.
+                Include your background, how much you&apos;re looking to put in, and any questions
+                you have about the protocol.
+              </p>
+
+              <div className="mt-auto pt-6">
+                <a
+                  href="mailto:HudsonDungeyDev@outlook.com"
+                  className="group inline-flex w-full items-center justify-center gap-2 overflow-hidden rounded-xl bg-virio-emerald px-7 py-3.5 text-[15px] font-semibold text-virio-emerald-ink transition-all duration-200 ease-out hover:-translate-y-0.5"
+                >
+                  <span>HudsonDungeyDev@outlook.com</span>
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                </a>
+                <p className="mt-3 text-center text-[11.5px] text-muted-foreground">
+                  Replies within 48 hours.
+                </p>
+              </div>
+            </div>
+          </Reveal>
         </div>
       </div>
     </section>
@@ -1267,8 +1358,7 @@ function CtaFooter() {
                 be there at <span className="text-virio-emerald">launch</span>
               </h2>
               <p className="mx-auto mt-3 max-w-[520px] text-[14.5px] leading-relaxed text-muted-foreground">
-                Watch the docs for the sale date. No allowlist, no private rounds — anyone can
-                participate when the public sale opens.
+                Watch the docs for the sale date. Anyone can participate when the public sale opens.
               </p>
               <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
                 <Link
