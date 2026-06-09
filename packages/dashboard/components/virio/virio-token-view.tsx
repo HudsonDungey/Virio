@@ -1141,8 +1141,8 @@ function SeedRound() {
       <div className="mx-auto max-w-[1100px] px-6 sm:px-8">
         <SectionHeading
           eyebrow="Seed round"
-          title={<>raising <span className="text-virio-emerald">$200k</span> at a $5M valuation</>}
-          description="A small seed round to fund the initial liquidity pool and cover launch costs. Details below."
+          title={<>raising <span className="text-virio-emerald">$1M</span> at a $15M FDV</>}
+          description="Token Warrants (SAFT) — angels & strategic partners. Pre-audit capital to fund Code4rena and the launch."
         />
 
         <div className="mt-12 grid gap-5 lg:grid-cols-[1.1fr_1fr]">
@@ -1153,24 +1153,27 @@ function SeedRound() {
                 Round terms
               </div>
               <h3 className="mt-4 font-display text-[22px] font-semibold text-foreground">
-                Seed details
+                Round terms
               </h3>
 
               <div className="mt-5 divide-y divide-border rounded-xl border border-border">
                 {[
-                  { label: "Raise target",    value: "$200,000" },
-                  { label: "Valuation (FDV)", value: "$5,000,000" },
-                  { label: "LP allocation",   value: "2.5% of supply (25M VIRIO)" },
-                  { label: "USDC for LP",     value: "$125,000 USDC" },
-                  { label: "Token price",     value: "$0.005 / VIRIO" },
-                  { label: "Website",         value: "virio.xyz" },
+                  { label: "Raise target",    value: "$1,000,000" },
+                  { label: "Valuation (FDV)", value: "$15,000,000" },
+                  { label: "Token price",     value: "$0.015 / VIRIO" },
+                  { label: "Tokens issued",   value: "66.7M VIRIO (6.67%)" },
+                  { label: "Instrument",      value: "Token Warrant (SAFT)" },
+                  { label: "Vesting",         value: "12-mo cliff, 24-mo linear" },
+                  { label: "Min ticket",      value: "$25,000" },
+                  { label: "Audit",           value: "Code4rena pre-TGE" },
+                  { label: "Website",         value: "virio.io" },
                 ].map((row) => (
                   <div key={row.label} className="flex items-center justify-between px-4 py-3.5">
                     <span className="text-[13.5px] text-muted-foreground">{row.label}</span>
                     <span className="font-display text-[14px] font-semibold text-foreground">
                       {row.label === "Website" ? (
                         <a
-                          href="https://virio.xyz"
+                          href="https://virio.io"
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-virio-emerald hover:underline"
@@ -1186,9 +1189,8 @@ function SeedRound() {
               </div>
 
               <PlainEnglish>
-                2.5% of the total supply (25M VIRIO) is paired with $125,000 USDC to seed the
-                initial liquidity pool. LP tokens are burnt on deposit — nobody can ever pull
-                that liquidity out.
+                Investors receive token warrants (SAFT) exercisable at $0.015 at TGE.
+                No equity, no direct token sale. 12-month cliff then 24-month linear vest — no TGE dump.
               </PlainEnglish>
             </div>
           </Reveal>

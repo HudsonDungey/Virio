@@ -14,7 +14,7 @@ export function SeedBanner() {
         <Coins className="h-3 w-3" />
         Seed Round
       </span>
-      <span>Raising $200k at a $5M valuation</span>
+      <span>Raising $1M at a $15M FDV — Token Warrants (SAFT)</span>
       <ArrowRight className="h-3.5 w-3.5 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
     </Link>
   );
