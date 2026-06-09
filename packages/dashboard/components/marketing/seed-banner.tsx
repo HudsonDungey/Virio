@@ -2,37 +2,20 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { X, ArrowRight } from "lucide-react";
+import { ArrowRight, Coins } from "lucide-react";
 
 export function SeedBanner() {
-  const [dismissed, setDismissed] = React.useState(false);
-
-  if (dismissed) return null;
-
   return (
-    <div className="relative z-50 w-full bg-virio-emerald px-4 py-2.5">
-      <div className="mx-auto flex max-w-[1200px] items-center justify-between gap-4">
-        <div className="flex flex-1 items-center justify-center gap-2 text-center text-[13px] font-medium text-virio-emerald-ink">
-          <span className="font-semibold">Seed round open</span>
-          <span className="hidden opacity-70 sm:inline">·</span>
-          <span className="hidden sm:inline opacity-90">Raising $200k at a $5M valuation</span>
-          <Link
-            href="/virio#invest"
-            className="inline-flex items-center gap-1 font-semibold underline underline-offset-2 hover:no-underline"
-          >
-            Learn more
-            <ArrowRight className="h-3 w-3" />
-          </Link>
-        </div>
-        <button
-          type="button"
-          onClick={() => setDismissed(true)}
-          aria-label="Dismiss"
-          className="flex-shrink-0 rounded p-0.5 opacity-70 transition-opacity hover:opacity-100"
-        >
-          <X className="h-4 w-4 text-virio-emerald-ink" />
-        </button>
-      </div>
-    </div>
+    <Link
+      href="/virio#invest"
+      className="group inline-flex items-center gap-2 rounded-full border border-virio-emerald/40 bg-virio-emerald/10 px-4 py-2 text-[12.5px] font-medium text-foreground transition-colors hover:border-virio-emerald/70 hover:bg-virio-emerald/15"
+    >
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-virio-emerald px-2 py-0.5 text-[11px] font-semibold text-virio-emerald-ink">
+        <Coins className="h-3 w-3" />
+        Seed Round
+      </span>
+      <span>Raising $200k at a $5M valuation</span>
+      <ArrowRight className="h-3.5 w-3.5 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+    </Link>
   );
 }

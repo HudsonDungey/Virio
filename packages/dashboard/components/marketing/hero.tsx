@@ -4,6 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { ArrowRight, BookOpen } from "lucide-react";
 import { DashboardPreview } from "./dashboard-preview";
+import { SeedBanner } from "./seed-banner";
 
 export function Hero() {
   return (
@@ -51,7 +52,11 @@ export function Hero() {
           </Link>
         </div>
 
-        <div className="mt-6 flex animate-fade-up flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[12.5px] text-muted-foreground animation-delay-400">
+        <div className="mt-5 flex animate-fade-up justify-center animation-delay-350">
+          <SeedBanner />
+        </div>
+
+        <div className="mt-4 flex animate-fade-up flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[12.5px] text-muted-foreground animation-delay-400">
           <span className="inline-flex items-center gap-1.5">
             <span className="status-dot" />
             live on testnet
