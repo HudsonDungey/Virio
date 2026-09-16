@@ -144,6 +144,7 @@ export class Virio {
   private readonly pub: PublicClient;
   private readonly wal: WalletClient<Transport, Chain> | undefined;
   private readonly decimalsCache = new Map<Address, number>();
+  private readonly symbolCache = new Map<Address, string>();
 
   /** Stripe-style resource namespace for plans. */
   readonly plans: PlansNamespace;
@@ -303,6 +304,20 @@ export class Virio {
     );
     this.decimalsCache.set(tok, decimals);
     return decimals;
+  }
+
+  /** Read (and cache) an ERC-20 token's symbol, e.g. "USDC". */
+  async getSymbol(token?: Address): Promise<string> {
+    const tok = this.requireToken(token);
+    const cached = this.symbolCache.get(tok);
+    if (cached !== undefined) return cached;
+    const symbol = (await this.pub.readContract({
+      address: tok,
+      abi: ERC20_ABI,
+      functionName: "symbol",
+    })) as string;
+    this.symbolCache.set(tok, symbol);
+    return symbol;
   }
 
   // ─── Reads: lists (event-indexed) ──────────────────────────────────────────

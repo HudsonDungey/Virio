@@ -151,6 +151,37 @@ export async function subscribeToPlan(
   return { subscriptionId, txHash: subscribeHash };
 }
 
+export interface CancelArgs {
+  rpcUrl: string;
+  chain: Chain;
+  contractAddress: Address;
+  subscriptionId: Hex;
+  account: Address;
+  provider: WcProvider;
+  onPending?: (txHash: Hash) => void;
+}
+
+/** Cancel the given subscription from the connected account. */
+export async function cancelSubscription(args: CancelArgs): Promise<Hash> {
+  const pub = createPublicClient({ chain: args.chain, transport: http(args.rpcUrl) });
+  const wallet = createWalletClient({
+    account: args.account,
+    chain: args.chain,
+    transport: custom(args.provider as unknown as EIP1193Provider),
+  });
+  const hash = await wallet.writeContract({
+    address: args.contractAddress,
+    abi: VIRIO_ABI,
+    functionName: "cancel",
+    args: [args.subscriptionId],
+    account: args.account,
+    chain: args.chain,
+  });
+  args.onPending?.(hash);
+  await pub.waitForTransactionReceipt({ hash });
+  return hash;
+}
+
 // ── Display helpers (UI edge: bigint → string) ──
 
 /** "20 USDC" */

@@ -180,6 +180,37 @@ export const styles: Record<string, CSSProperties> = {
     placeItems: "center",
     fontSize: "22px",
   },
+
+  // ── Subscription manager (list + rows) ──
+  list: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "10px",
+    marginTop: "16px",
+  },
+  row: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: "12px",
+    padding: "14px 16px",
+    border: "1px solid #eee",
+    borderRadius: "12px",
+    background: "#fafafa",
+  },
+  badge: {
+    display: "inline-block",
+    padding: "2px 8px",
+    borderRadius: "999px",
+    fontSize: "12px",
+    fontWeight: "600",
+    background: "#0a7d33",
+    color: "#fff",
+  },
+  badgeInactive: {
+    background: "#e3e3e3",
+    color: "#555",
+  },
 };
 
 // Keyframes can't live in an inline style object, so the modal renders this once.
