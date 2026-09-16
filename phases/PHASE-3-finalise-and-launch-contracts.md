@@ -14,7 +14,7 @@
 - [ ] Verify source, ownership and allocation funding on BaseScan.
 - [ ] Publish token, treasury, vesting, safety and liquidity addresses.
 - [ ] Configure transparent protocol-controlled liquidity, bounded by GENESIS_LP_TOKEN_AMOUNT and GENESIS_LP_QUOTE_AMOUNT.
-- [ ] Keep fee distribution and buyback gates disabled pending legal/security approval.
+- [ ] Keep fee distribution and buyback gates disabled pending security approval.
 
 ## Future expansion
 

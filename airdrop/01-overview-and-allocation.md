@@ -62,5 +62,5 @@ This keeps the cap intact and returns unused allocations to future community par
 ## Why holders don't need an airdrop
 
 The airdrop's job is community bootstrap. Fee distribution and other staking mechanisms are
-separate proposed functionality and are disabled until legal and security review approves them.
+separate proposed functionality and are disabled until security review approves them.
 </content>

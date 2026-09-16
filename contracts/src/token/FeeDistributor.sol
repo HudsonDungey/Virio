@@ -14,7 +14,7 @@ pragma solidity ^0.8.24;
 //                            and forwards to the SafetyModule)
 //
 // The split percentages are immutable at deploy. The mechanism is disabled at
-// genesis pending legal/security approval. The sink addresses are
+// genesis pending security approval. The sink addresses are
 // owner-tunable so a DAO can rotate them without redeploy. The token set is
 // dynamic — any IERC20 with non-zero balance can be distributed.
 //
@@ -159,13 +159,13 @@ contract FeeDistributor is Ownable2Step, ReentrancyGuard {
         emit BuybackOperatorSet(_buybackOperator);
     }
 
-    /// @notice Legal/security-gated. Defaults false at genesis.
+    /// @notice Security-gated. Defaults false at genesis.
     function setFeeDistributionEnabled(bool enabled) external onlyOwner {
         feeDistributionEnabled = enabled;
         emit FeeDistributionEnabledSet(enabled);
     }
 
-    /// @notice Legal/security-gated. Defaults false at genesis.
+    /// @notice Security-gated. Defaults false at genesis.
     function setProtocolBuybackEnabled(bool enabled) external onlyOwner {
         protocolBuybackEnabled = enabled;
         emit ProtocolBuybackEnabledSet(enabled);

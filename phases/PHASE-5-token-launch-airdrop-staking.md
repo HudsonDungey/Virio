@@ -17,4 +17,4 @@
 
 ## Post-mainnet consideration
 
-Executor staking, merchant incentives, fee distribution and Safety Module acquisition paths require separate legal/security approval and timelocked activation. They are not promised genesis functionality.
+Executor staking, merchant incentives, fee distribution and Safety Module acquisition paths require separate security approval and timelocked activation. They are not promised genesis functionality.

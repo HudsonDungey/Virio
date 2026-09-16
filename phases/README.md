@@ -41,5 +41,5 @@ Already built (`contracts/src/`):
 Not yet built (needed for launch):
 - `AirdropDistributor` (Phase 1 / [`../airdrop/05`](../airdrop/05-architecture-and-contracts.md))
 - Allocation custody and vesting contracts for team, founder, advisors and community schedules (Phase 1)
-- Legal/security review and gated activation decision for fee distribution and any buyback mechanism
+- Security review and gated activation decision for fee distribution and any buyback mechanism
 </content>

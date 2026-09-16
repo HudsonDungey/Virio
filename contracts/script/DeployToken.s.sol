@@ -86,7 +86,7 @@ contract DeployToken is Script {
         console.log("Genesis LP quote amount:", genesisLpQuote);
         console.log("");
         console.log("Next steps:");
-        console.log("  - Keep FeeDistributor legal/security gates disabled at genesis");
+        console.log("  - Keep FeeDistributor security gates disabled at genesis");
         console.log("  - Deploy allocation custody and vesting contracts before distributing genesis supply");
         console.log("  - Do not configure bridges until an expansion is approved");
     }

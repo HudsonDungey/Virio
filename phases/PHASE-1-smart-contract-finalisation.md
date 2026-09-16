@@ -28,7 +28,7 @@ test suite green; internal review + threat model done; audit scope document writ
       Merkle claim, 10-tranche vesting, `claimAndStake` + bonus, monthly roots, forfeiture recycling.
 - [ ] **Allocation custody and vesting contracts** for team (12/36), founder (6/30), advisors
       (6/24), community streaming and timelocked protocol reserves.
-- [ ] **Legal/security activation decision** for fee distribution, buyback, transferable stVIRIO,
+- [ ] **Security activation decision** for fee distribution, buyback, transferable stVIRIO,
       merchant discounts and governance rights. These must remain disabled at genesis.
 - [ ] **Treasury/multisig + timelock** config (4-of-7 Safe + 48h timelock per `TOKENOMICS.md` §8).
 

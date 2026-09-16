@@ -21,7 +21,7 @@ The maximum supply is **1,000,000,000 VIRIO**, minted once on **Base**. xERC20-c
 | Launch / Network Incentives | 3% | 30M | Verified launch/testnet contributions at genesis |
 | Advisors | 2% | 20M | 6-month cliff + 24-month linear |
 
-The allocation totals exactly 1,000,000,000 VIRIO. The Protocol Treasury is not founder property. Founder tokens are fully locked at launch: **zero founder VIRIO is liquid at TGE**. A founder may independently make lawful personal financing decisions using legitimately vested holdings; that is neither a protocol commitment nor a token-holder entitlement.
+The allocation totals exactly 1,000,000,000 VIRIO. The Protocol Treasury is not founder property. Founder tokens are fully locked at launch: **zero founder VIRIO is liquid at TGE**. A founder may independently make personal financing decisions using legitimately vested holdings; that is neither a protocol commitment nor a token-holder entitlement.
 
 ## Circulation schedule
 
@@ -49,17 +49,17 @@ Those inputs are selected immediately before launch, bounded by the 50M allocati
 
 The early-community allocation combines a small genesis claim with a long-duration, participation-based stream. Eligibility is assessed with sybil-resistance controls, contribution quality, rate limits, cohort analysis and anti-farming review. Cheap, manufactured activity must not qualify as meaningful participation. See [airdrop documentation](airdrop/README.md).
 
-## Protocol economics and legal review
+## Protocol economics and security review
 
 Virio can model protocol usage (subscriptions, payment volume, charges, executor fees and treasury revenue) for product planning. Those are **protocol scenarios**, not token-price forecasts or return projections.
 
 The current FeeDistributor and staking contracts contain proposed technical mechanisms for fee-token distribution, transferable stVIRIO and a Safety Module acquisition path. They are **disabled at genesis**:
 
-LEGAL_REVIEW_REQUIRED = true
+SECURITY_REVIEW_REQUIRED = true
 FEE_DISTRIBUTION_ENABLED = false
 PROTOCOL_BUYBACK_ENABLED = false
 
-Activation requires legal review, security review and the applicable timelocked governance action. A future Safety Module acquisition mechanism, if approved, may acquire VIRIO for protocol security/reserve purposes; it is not an assertion of market support.
+Activation requires security review and the applicable timelocked governance action. A future Safety Module acquisition mechanism, if approved, may acquire VIRIO for protocol security/reserve purposes; it is not an assertion of market support.
 
 ## Utility and roadmap
 
