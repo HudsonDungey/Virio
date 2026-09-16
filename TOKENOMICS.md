@@ -53,6 +53,12 @@ The early-community allocation combines a small genesis claim with a long-durati
 
 Virio can model protocol usage (subscriptions, payment volume, charges, executor fees and treasury revenue) for product planning. Those are **protocol scenarios**, not token-price forecasts or return projections.
 
+### How protocol fees relate to VIRIO
+
+Virio payment activity is denominated in stablecoins such as USDC. Successful recurring charges produce observable protocol-fee records and transparent treasury accounting. At genesis, fee distribution and acquisition mechanisms are disabled, so payment volume does not automatically flow to VIRIO holders or create a token-price outcome.
+
+VIRIO is intended to coordinate concrete network roles rather than sit in the payment path: ecosystem incentives for useful contributions, potential future executor stake/reputation/security, optional merchant participation benefits and governance. Protocol adoption can make these roles more relevant, but it does not guarantee liquidity, demand or price appreciation. Market participants establish VIRIO's price independently.
+
 The current FeeDistributor and staking contracts contain proposed technical mechanisms for fee-token distribution, transferable stVIRIO and a Safety Module acquisition path. They are **disabled at genesis**:
 
 SECURITY_REVIEW_REQUIRED = true
