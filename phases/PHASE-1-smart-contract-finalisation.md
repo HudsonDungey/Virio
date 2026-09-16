@@ -15,8 +15,8 @@ test suite green; internal review + threat model done; audit scope document writ
 - [ ] `token/VIRIO.sol` — confirm 1B cap, xERC20 rate limits, ERC20Votes wiring.
 - [ ] `token/Staking.sol` — confirm `stake`/`stakeFor`/`unstake`/cooldown, Synthetix
       `rewardPerToken` math, multi-reward-token support, `stakeFor` usable by `AirdropDistributor`.
-- [ ] `token/FeeDistributor.sol` — confirm 60/25/15 split, `distribute`/`distributeMany`,
-      staking pre-approval path.
+- [ ] `token/FeeDistributor.sol` — confirm proposed 60/25/15 path remains disabled pending legal
+      and security approval; test its activation gates.
 - [ ] `token/SafetyModule.sol` — confirm it can receive buyback VIRIO; decide if v1 minimal holder
       is enough for launch or needs buyback-execution logic.
 - [ ] `VirioSubscriptionManager.sol` / `VirioPayrollManager.sol` — confirm fee math (0.1% executor,
@@ -26,11 +26,10 @@ test suite green; internal review + threat model done; audit scope document writ
 ### Missing — must be built this phase
 - [ ] **`AirdropDistributor`** — full spec in [`../airdrop/05`](../airdrop/05-architecture-and-contracts.md).
       Merkle claim, 10-tranche vesting, `claimAndStake` + bonus, monthly roots, forfeiture recycling.
-- [ ] **Vesting contracts** for the insider/sale schedules in `TOKENOMICS.md`:
-      Team (12-mo cliff, 36-mo linear), Creator (6/24), Investor (12/24), Advisors (6/24),
-      Public Sale (25% TGE, 9-mo linear). Decide: one parameterised vesting contract vs. several.
-- [ ] **Buyback executor** — if the 15% buyback is on-chain (DEX swap → SafetyModule) rather than
-      operator-driven. Decide on-chain vs. operator and document the trust assumption.
+- [ ] **Allocation custody and vesting contracts** for team (12/36), founder (6/30), advisors
+      (6/24), community streaming and timelocked protocol reserves.
+- [ ] **Legal/security activation decision** for fee distribution, buyback, transferable stVIRIO,
+      merchant discounts and governance rights. These must remain disabled at genesis.
 - [ ] **Treasury/multisig + timelock** config (4-of-7 Safe + 48h timelock per `TOKENOMICS.md` §8).
 
 ## 1.2 Refinements to land before freeze
@@ -40,7 +39,8 @@ test suite green; internal review + threat model done; audit scope document writ
       reward-token registration, `SafetyModule.withdraw`).
 - [ ] **Reentrancy / CEI:** audit all external-call paths (`FeeDistributor.distribute`,
       `Staking.claim`, buyback swaps).
-- [ ] **xERC20 bridge limits:** per-bridge mint/burn ceilings set sanely for day-one LayerZero V2.
+- [ ] **xERC20 bridge limits:** keep all bridges unconfigured at Base genesis; specify a
+      governance-approved expansion procedure.
 - [ ] **Pause / guardian:** confirm emergency stop coverage where it matters; document what is and
       isn't pausable.
 - [ ] **Events:** ensure every state change the **airdrop engine** and **dashboard indexer** need

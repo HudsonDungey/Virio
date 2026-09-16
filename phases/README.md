@@ -6,15 +6,15 @@ checklist of what to finalise, what to refine, and the exit criteria that gate t
 | # | Phase | Goal | Doc |
 |---|---|---|---|
 | 1 | Smart contract finalisation | Every contract feature-complete, tested, internally reviewed, freeze-ready | [`PHASE-1-smart-contract-finalisation.md`](./PHASE-1-smart-contract-finalisation.md) |
-| 2 | Private investment & token sales | Raise capital to fund audits + finalisation | [`PHASE-2-private-investment-and-token-sales.md`](./PHASE-2-private-investment-and-token-sales.md) |
-| 3 | Finalise & launch smart contracts | Audit, fix, deploy the suite multichain | [`PHASE-3-finalise-and-launch-contracts.md`](./PHASE-3-finalise-and-launch-contracts.md) |
+| 2 | Public genesis preparation | Transparent Base bootstrap | [`PHASE-2-private-investment-and-token-sales.md`](./PHASE-2-private-investment-and-token-sales.md) |
+| 3 | Security and Base genesis | Audit, remediate and deploy Base-first | [`PHASE-3-finalise-and-launch-contracts.md`](./PHASE-3-finalise-and-launch-contracts.md) |
 | 4 | Website / UI | Smooth, correct, production-grade product + claim UX | [`PHASE-4-website-and-ui.md`](./PHASE-4-website-and-ui.md) |
 | 5 | Token launch, airdrop, staking & distribution | TGE, run the airdrop season, distribute | [`PHASE-5-token-launch-airdrop-staking.md`](./PHASE-5-token-launch-airdrop-staking.md) |
 
 ## How the phases relate
 
 ```
-P1 finalise contracts ──► P2 raise funds ──► P3 audit + deploy ──► P4 polish UI ──► P5 TGE + airdrop
+P1 finalise contracts ──► P2 prepare public genesis ──► P3 security + Base deploy ──► P4 polish UI ──► P5 community bootstrap
    (incl. AirdropDistributor)   (funds the audit)   (fund 100M airdrop)   (claim UX)   (run the season)
 ```
 
@@ -40,6 +40,6 @@ Already built (`contracts/src/`):
 
 Not yet built (needed for launch):
 - `AirdropDistributor` (Phase 1 / [`../airdrop/05`](../airdrop/05-architecture-and-contracts.md))
-- Vesting contracts for team/investor/advisor/creator/public-sale schedules (Phase 1)
-- Buyback executor (if the 15% buyback is to be on-chain rather than operator-driven)
+- Allocation custody and vesting contracts for team, founder, advisors and community schedules (Phase 1)
+- Legal/security review and gated activation decision for fee distribution and any buyback mechanism
 </content>

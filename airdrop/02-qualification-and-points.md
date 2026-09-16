@@ -2,7 +2,7 @@
 
 This is the scoring model the off-chain **Points & Sybil Engine** runs each season. All numbers
 below are **starting parameters** — they are published before the season and tunable
-month-to-month, as reserved in `TOKENOMICS.md` §8. Treat them as a v1 proposal to calibrate, not
+between published distribution periods. Treat them as a v1 proposal to calibrate, not
 gospel.
 
 ## Inputs (all on-chain, all verifiable)
@@ -10,7 +10,6 @@ gospel.
 Read from existing contracts:
 - `VirioSubscriptionManager` events: `PlanCreated`, `Subscribed`, `Charged` (executed charges).
 - `VirioPayrollManager` events: payroll runs / executed payments.
-- `Staking.sol`: current stVIRIO balance and stake age (for ongoing-eligibility gating).
 
 Off-chain only:
 - Referral graph (referrer → referee), tied to wallet/account at signup.
@@ -94,8 +93,7 @@ For each wallet w:
    → totalAllocation(w) = userTokens(w) + refTokens(w) + communityTokens(w)
 ```
 
-`totalAllocation(w)` is the value that goes into the merkle leaf
-`keccak256(w, totalAllocation)` (see [`06-claim-flow-and-vesting.md`](./06-claim-flow-and-vesting.md)).
+`totalAllocation(w)` is the value that goes into the published distribution allocation record.
 
 ## Publish-before-season checklist
 

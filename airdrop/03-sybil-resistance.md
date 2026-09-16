@@ -1,8 +1,7 @@
 # 03 — Sybil Resistance
 
-> The biggest dump risk is sybil farmers who only ever intended to sell. **The cheapest
-> anti-dump measure is not allocating to mercenaries in the first place** (this is also
-> "System 7" in the anti-dump stack — see [`04-anti-dump-design.md`](./04-anti-dump-design.md)).
+> The central risk is sybil farming. The distribution rewards useful, sustained participation,
+> not cheaply manufactured activity.
 
 All filtering is **off-chain and transparent**: the chain only ever sees the final merkle root,
 but the methodology and the filtered eligibility list are published for anyone to audit. Rules
@@ -52,9 +51,8 @@ ingest events ──► score (doc 02) ──► SYBIL FILTERS (this doc) ──
                                           └─ outputs: filtered list + reason codes (published)
 ```
 
-Filters run **before each monthly root**, not just once. A wallet that looks clean at TGE but
-behaves like a farmer in month 3 simply doesn't appear in `root₃` — and forfeits the rest of its
-allocation (System 3). This makes sybil resistance an ongoing gate, not a one-time check.
+Filters run before each distribution period. This makes sybil resistance an ongoing gate, not a
+one-time check.
 
 ## Appeals & transparency
 

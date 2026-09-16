@@ -30,7 +30,7 @@ From [`../thingstoworkon.md`](../thingstoworkon.md) — these are correctness bu
 ## 4.2 Core product UX
 
 - [ ] Plan creation / subscription / payroll flows, end-to-end on mainnet.
-- [ ] Wallet connect, multichain switching (Ethereum/Base/Arbitrum), correct chain-local reads.
+- [ ] Wallet connect and Base chain reads at genesis; expansion UI only after approved deployment.
 - [ ] Accurate stats (TPV, active relationships, charges) sourced from the de-duped indexer.
 - [ ] Merchant fee-discount tiers surfaced (stake → lower bps / flat fee, per `TOKENOMICS.md` §4).
 - [ ] Error states, loading states, empty states; mobile-responsive.

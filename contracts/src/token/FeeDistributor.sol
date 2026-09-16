@@ -2,7 +2,7 @@
 pragma solidity ^0.8.24;
 
 // ─────────────────────────────────────────────────────────────────────────────
-// FeeDistributor — chain-local 60/25/15 fee splitter for Virio.
+// FeeDistributor — proposed chain-local 60/25/15 fee splitter for Virio.
 //
 // Virio managers (VirioSubscriptionManager / VirioPayrollManager) are
 // configured to transfer their protocol fees into this contract on every
@@ -13,7 +13,8 @@ pragma solidity ^0.8.24;
 //   • 15% → buybackOperator (off-chain or contract that swaps into VIRIO
 //                            and forwards to the SafetyModule)
 //
-// The split percentages are immutable at deploy. The sink addresses are
+// The split percentages are immutable at deploy. The mechanism is disabled at
+// genesis pending legal/security approval. The sink addresses are
 // owner-tunable so a DAO can rotate them without redeploy. The token set is
 // dynamic — any IERC20 with non-zero balance can be distributed.
 //
@@ -47,12 +48,16 @@ contract FeeDistributor is Ownable2Step, ReentrancyGuard {
     IStaking public staking;
     address  public treasury;
     address  public buybackOperator;
+    bool public feeDistributionEnabled;
+    bool public protocolBuybackEnabled;
 
     // ─── Events ───────────────────────────────────────────────────────────────
 
     event StakingSet(address indexed staking);
     event TreasurySet(address indexed treasury);
     event BuybackOperatorSet(address indexed buybackOperator);
+    event FeeDistributionEnabledSet(bool enabled);
+    event ProtocolBuybackEnabledSet(bool enabled);
     event Distributed(
         address indexed token,
         uint256 total,
@@ -66,6 +71,8 @@ contract FeeDistributor is Ownable2Step, ReentrancyGuard {
     error ZeroAddress();
     error NothingToDistribute();
     error StakingDoesNotAcceptToken(address token);
+    error FeeDistributionDisabled();
+    error ProtocolBuybackDisabled();
 
     // ─── Constructor ──────────────────────────────────────────────────────────
 
@@ -91,6 +98,8 @@ contract FeeDistributor is Ownable2Step, ReentrancyGuard {
     /// @dev Anyone may call. CEI: external interactions only after computing
     ///      the split.
     function distribute(address token) external nonReentrant returns (uint256 total) {
+        if (!feeDistributionEnabled) revert FeeDistributionDisabled();
+        if (!protocolBuybackEnabled) revert ProtocolBuybackDisabled();
         total = IERC20(token).balanceOf(address(this));
         if (total == 0) revert NothingToDistribute();
 
@@ -148,6 +157,18 @@ contract FeeDistributor is Ownable2Step, ReentrancyGuard {
         if (_buybackOperator == address(0)) revert ZeroAddress();
         buybackOperator = _buybackOperator;
         emit BuybackOperatorSet(_buybackOperator);
+    }
+
+    /// @notice Legal/security-gated. Defaults false at genesis.
+    function setFeeDistributionEnabled(bool enabled) external onlyOwner {
+        feeDistributionEnabled = enabled;
+        emit FeeDistributionEnabledSet(enabled);
+    }
+
+    /// @notice Legal/security-gated. Defaults false at genesis.
+    function setProtocolBuybackEnabled(bool enabled) external onlyOwner {
+        protocolBuybackEnabled = enabled;
+        emit ProtocolBuybackEnabledSet(enabled);
     }
 
     /// @notice Owner-only rescue for tokens nobody is interested in distributing.

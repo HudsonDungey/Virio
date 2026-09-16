@@ -1,136 +1,72 @@
-# $VIRIO Tokenomics
+# VIRIO Tokenomics
 
-## Overview
+VIRIO is the coordination and utility asset for the Virio programmable-payments ecosystem. It is not an equity offering, a substitute for a financing round, or a promise of price appreciation or returns.
 
-Virio is a permissionless subscription + payroll protocol that runs natively on every major EVM chain. Every charge pays a 0.1% executor fee, a 0.25% protocol fee, and a $1 USDC flat fee. $VIRIO captures that revenue and pays it back to stakers as real fee-token yield, on the same chain the fee was earned.
+Virio is being built and launched in public. The VIRIO genesis is designed to bootstrap a Base-based network and community; Virio's recurring-payment protocol remains testnet/beta until professional security review is complete.
 
-- Total supply: **1,000,000,000 VIRIO** (fixed, no inflation)
-- Cross-chain via **xERC20 (ERC-7281)** — single canonical supply across every chain
-- Community-aligned: **75%** · Insiders: **20%** · Public: **5%**
-- LP tokens are burnt **on deposit** — liquidity can grow but never be removed
+## Fixed maximum supply
 
-## 1. Allocation (1,000,000,000 VIRIO)
+The maximum supply is **1,000,000,000 VIRIO**, minted once on **Base**. xERC20-compatible code is retained for later expansion, but bridges and other genesis markets are not configured at launch.
 
-| Bucket | % | Tokens | Vesting |
-|---|---|---|---|
-| Community Ecosystem | 30% | 300M | 5-yr programmatic emission |
-| Treasury (DAO) | 25% | 250M | Multisig at TGE → DAO at M12 |
-| Airdrop | 10% | 100M | 1% / month for 10 months |
-| Team & Future Hires | 8% | 80M | 12-mo cliff, 36-mo linear |
-| Creator | 5% | 50M | 6-mo cliff, 24-mo linear |
-| Investor Reserve | 5% | 50M | 12-mo cliff, 24-mo linear |
-| Insurance / Safety Module | 5% | 50M | Held by contract |
-| LP (burnt on deposit) | 5% | 50M | LP token sent to 0x…dead at mint |
-| Public Sale | 5% | 50M | 25% TGE, 9-mo linear |
-| Advisors | 2% | 20M | 6-mo cliff, 24-mo linear |
+| Bucket | % | VIRIO | Release / custody |
+|---|---:|---:|---|
+| Community Ecosystem | 30% | 300M | Participation-earned, linear over 60 months |
+| Protocol Treasury | 25% | 250M | Protocol multisig + 48-hour timelock |
+| Early Community / Airdrop | 10% | 100M | 10M genesis claim; 90M streams M3–M24 |
+| Team & Future Hires | 8% | 80M | 12-month cliff + 36-month linear |
+| Founder | 7% | 70M | 6-month cliff + 30-month linear |
+| Strategic Ecosystem Reserve | 5% | 50M | Timelocked integrations, infrastructure partners and contributors |
+| Safety Module | 5% | 50M | Reserved and undeployed at genesis |
+| Protocol Launch Liquidity | 5% | 50M | Maximum long-term allocation; not all need enter genesis liquidity |
+| Launch / Network Incentives | 3% | 30M | Verified launch/testnet contributions at genesis |
+| Advisors | 2% | 20M | 6-month cliff + 24-month linear |
 
-The initial 1B is minted on Ethereum mainnet only. On every other chain, VIRIO's `totalSupply()` starts at zero and only grows as the token bridges in via burn-and-mint. The sum of `totalSupply()` across every chain is always exactly 1,000,000,000.
+The allocation totals exactly 1,000,000,000 VIRIO. The Protocol Treasury is not founder property. Founder tokens are fully locked at launch: **zero founder VIRIO is liquid at TGE**. A founder may independently make lawful personal financing decisions using legitimately vested holdings; that is neither a protocol commitment nor a token-holder entitlement.
 
-## 2. Emission Schedule
+## Circulation schedule
 
-Approx. % circulating:
+“Circulating” excludes locked treasury, team, founder, advisor, strategic reserve, Safety Module, and undeployed liquidity. It also excludes unearned community emissions. Amounts are calculated by GenesisTokenomics.circulatingAt, using 30-day months.
 
-| TGE | M12 | M24 | M36 | M48 |
-|---|---|---|---|---|
-| 32% | 52% | 66% | 80% | 89% |
+| Time | Circulating VIRIO | % of maximum |
+|---|---:|---:|
+| TGE | 100.0M | 10.00% |
+| Month 6 | 141.9M | 14.19% |
+| Month 12 | 215.6M | 21.56% |
+| Month 24 | 389.7M | 38.97% |
+| Month 36 | 507.3M | 50.73% |
+| Month 48 | 592.0M | 59.20% |
+| Month 60 | 650.0M | 65.00% |
 
-No insider unlocks before month 6.
+The published schedule assumes 50M VIRIO deployed into the Base genesis pool: 10M is the small early-community genesis claim, 30M rewards verified launch/testnet contribution, and 10M rewards verified pre-genesis ecosystem contribution. If less LP is deployed, the circulating-supply calculation reduces by the difference; the actual configuration must be published. The remaining early-community and ecosystem allocations are earned progressively for useful activity such as execution, merchant and SDK integrations, developer and security work, infrastructure, bug reports, and sustained protocol participation.
 
-## 3. Multichain Architecture
+## Genesis liquidity
 
-$VIRIO deploys to **Ethereum, Base, and Arbitrum at TGE**, with more EVMs to follow. Same source, deterministic CREATE3 address, same protocol behavior everywhere.
+Protocol Launch Liquidity is an allocation ceiling, not an instruction to deploy all 50M VIRIO. The launch process records GENESIS_LP_TOKEN_AMOUNT and GENESIS_LP_QUOTE_AMOUNT.
 
-**Cross-chain token (xERC20 / ERC-7281).** Bridging is burn-and-mint: VIRIO burns on the source chain and mints on the destination via an allowlisted bridge with per-window rate limits. There are no wrapped or bridged variants — every VIRIO is the canonical VIRIO, just temporarily resident on a particular chain. Day-one bridge is **LayerZero V2**; additional bridges (Hyperlane, Across, CCIP) can be added under the same xERC20 limits with no token migration.
+Those inputs are selected immediately before launch, bounded by the 50M allocation, and must be publicly reported. The initial pool only establishes starting market mechanics; subsequent market activity establishes price. Liquidity is protocol-controlled through disclosed multisig, timelock and on-chain visibility rather than being burned permanently.
 
-**Price peg.** Because supply is conserved and every VIRIO is fungible across chains, any price spread between chains is closed by arbitrageurs. Same mechanism that keeps USDC at $1.00 across 12+ chains.
+## Airdrop and anti-farming
 
-**Stake locally, earn locally.** Staking, fee distribution, treasury, and the Safety Module are all **chain-local**. Fees earned on Base pay Base stakers; fees earned on Arbitrum pay Arbitrum stakers. No bridging needed to collect yield.
+The early-community allocation combines a small genesis claim with a long-duration, participation-based stream. Eligibility is assessed with sybil-resistance controls, contribution quality, rate limits, cohort analysis and anti-farming review. Cheap, manufactured activity must not qualify as meaningful participation. See [airdrop documentation](airdrop/README.md).
 
-## 4. Value Accrual
+## Protocol economics and legal review
 
-**stVIRIO — a fungible 1:1 staking receipt.** Stake N VIRIO → receive N stVIRIO. Burn N stVIRIO → redeem N VIRIO. No NFTs, no lock duration, no decay. stVIRIO is a regular transferable ERC-20 (with ERC20Votes for governance), so it can be traded, LP'd, or used as collateral while it earns.
+Virio can model protocol usage (subscriptions, payment volume, charges, executor fees and treasury revenue) for product planning. Those are **protocol scenarios**, not token-price forecasts or return projections.
 
-Rewards accrue **continuously** against your stVIRIO balance using the Synthetix `StakingRewards` math:
+The current FeeDistributor and staking contracts contain proposed technical mechanisms for fee-token distribution, transferable stVIRIO and a Safety Module acquisition path. They are **disabled at genesis**:
 
-```
-rewardPerToken[t] += (rewardsDeposited × 1e18) / stVIRIO.totalSupply
-earned(user)       = stBalance[user] × (rewardPerToken[t] − rewardPerTokenPaid[user]) / 1e18
-```
+LEGAL_REVIEW_REQUIRED = true
+FEE_DISTRIBUTION_ENABLED = false
+PROTOCOL_BUYBACK_ENABLED = false
 
-A user who stakes one second before a fee distribution earns **zero** from that distribution (their accumulator snapshot is taken at stake). No timing attack.
+Activation requires legal review, security review and the applicable timelocked governance action. A future Safety Module acquisition mechanism, if approved, may acquire VIRIO for protocol security/reserve purposes; it is not an assertion of market support.
 
-The reward accumulator is **token-agnostic**: any fee token Virio collects on that chain (USDC, USDT, DAI, …) accrues independently and is claimed via `claim(token)`.
+## Utility and roadmap
 
-Unstaking is subject to a DAO-tunable cooldown (default `0` at launch, can be raised to ≤7 days if needed).
+Merchants can integrate Virio, use the SDK and accept recurring USDC payments without purchasing VIRIO. Potential VIRIO utility includes sustainably configured merchant fee discounts, governance, ecosystem incentives and future executor security. A future executor model may require stake for eligibility, build reputation and apply carefully designed penalties for malicious behavior; it is not genesis functionality.
 
-**Protocol fee split (per chain, DAO-set at TGE):**
+Roadmap: **Base genesis → community/network bootstrap → protocol completion and professional audit → remediation and independent review → Virio mainnet → demand-led EVM expansion** (Base → Arbitrum → Ethereum → additional networks).
 
-- 60% → stVIRIO stakers (paid in the fee token, on that chain)
-- 25% → Chain-local treasury
-- 15% → On-market VIRIO buyback on that chain → Safety Module
+## Transparency and deployment status
 
-**Merchant fee-discount staking:**
-
-| Stake (VIRIO) | Protocol bps | Flat fee |
-|---|---|---|
-| 0 | 25 | $1.00 |
-| 10k | 22 | $1.00 |
-| 50k | 20 | $0.50 |
-| 250k | 17 | $0.25 |
-| 1M | 13 | waived |
-
-## 5. Revenue Model
-
-Assumptions: avg charge $50, 1.5 charges/relationship/month. `rev = TPV × 0.25% + charges × $1`.
-
-| Year | Scenario | Active | TPV | Protocol Rev |
-|---|---|---|---|---|
-| 1 | Base | 50k | $37.5M | $1.2M |
-| 1 | Bull | 200k | $150M | $4.9M |
-| 3 | Base | 1M | $750M | $24M |
-| 3 | Bull | 5M | $3.75B | $122M |
-| 5 | Bull | 20M | $15B | $488M |
-
-## 6. Holder Earnings
-
-**USDC yield per 10k stVIRIO / yr** (assuming 125M stVIRIO outstanding across all chains, 60% of fees to stakers):
-
-| Scenario | Annual USDC |
-|---|---|
-| Y1 Base ($1.2M) | $58 |
-| Y3 Base ($24M) | $1,152 |
-| Y3 Bull ($122M) | $5,856 |
-| Y5 Bull ($488M) | $23,424 |
-
-**Token FDV @ P/F multiples** (price = FDV / 1B supply):
-
-| Year / Rev | 20× FDV (price) | 40× FDV (price) | 80× FDV (price) |
-|---|---|---|---|
-| Y1 Base $1.2M | $24M ($0.024) | $48M ($0.048) | $96M ($0.096) |
-| Y3 Base $24M | $480M ($0.48) | $960M ($0.96) | $1.92B ($1.92) |
-| Y3 Bull $122M | $2.44B ($2.44) | $4.88B ($4.88) | $9.76B ($9.76) |
-| Y5 Bull $488M | $9.76B ($9.76) | $19.5B ($19.5) | $39B ($39) |
-
-**Example position** — buy 100k VIRIO at public sale $0.30 = $30k cost, stake all of it:
-
-- Y3 Base @ 40× P/F → token value $96k + ~$12k accumulated USDC yield = **~3.6× / $108k**
-- Y3 Bull @ 40× P/F → token value $488k + ~$61k accumulated USDC yield = **~18× / $549k**
-
-**Buyback floor** — 15% of fees → constant VIRIO bid, executed on each chain's local DEX. Y3 Base = $3.6M/yr; Y3 Bull = $18.3M/yr.
-
-## 7. Fundraise & Launch
-
-- No VC round. Investor Reserve (5%) drawn only for strategic partners; unsold portion → Community at M24.
-- **Public sale**: 50M VIRIO offered openly — no allowlist, no private rounds. Expected clear $0.10–$0.30, raises $5–15M. 25% unlocks at TGE; 9-mo linear thereafter.
-- **DEX liquidity**: Uniswap V3 on Ethereum, Base, and Arbitrum at TGE. Every LP token from the launch bucket is burnt the instant it is minted — liquidity grows but is never withdrawable.
-- **Listings**: tier-2 CEX at M1; tier-1 conditional on volume.
-- **Launch FDV**: $50–300M. Initial circ MC: $16–96M.
-
-## 8. Risks & Mitigations
-
-- LP burnt on deposit → liquidity is one-way, no rug surface
-- xERC20 with per-bridge rate limits → no single bridge can drain supply on any chain
-- Insider footprint 20%, no unlocks before M6
-- Treasury 25% in 4-of-7 Safe + 48h timelock until DAO at M12
-- Audits: Spearbit + Trail of Bits pre-TGE
-- Airdrop sybil filters adjustable month-to-month
+No production VIRIO deployment is recorded in this repository. The only broadcast artifacts are local and Sepolia protocol-test deployments, not a VIRIO mainnet launch. The new allocation requires a fresh Base deployment plus allocation custody, timelock and vesting contracts; immutable values in any already deployed contract cannot be retroactively changed. A public transparency surface should publish token, treasury, vesting and liquidity addresses, supply, emissions, grants, major expenditure, protocol status, audit status and governance status once deployed.

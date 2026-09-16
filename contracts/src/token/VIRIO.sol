@@ -4,7 +4,7 @@ pragma solidity ^0.8.24;
 // ─────────────────────────────────────────────────────────────────────────────
 // VIRIO — the cross-chain governance token for Virio.
 //
-// Same source, deployed identically on every supported EVM via CREATE3.
+// Genesis is Base-first. xERC20 support is retained for later, demand-led expansion.
 // Standards:
 //   • ERC-20 (fungible)
 //   • ERC-20 Permit (EIP-2612 signed approvals)
@@ -43,8 +43,8 @@ contract VIRIO is ERC20, ERC20Permit, ERC20Votes, Ownable2Step, IXERC20 {
     /// @notice Total supply cap. Minted once on the home chain at deploy.
     uint256 public constant GENESIS_SUPPLY = 1_000_000_000e18;
 
-    /// @notice Ethereum mainnet. The only chain where the initial supply is minted.
-    uint256 public constant HOME_CHAIN_ID = 1;
+    /// @notice Base mainnet. The only chain where the initial supply is minted.
+    uint256 public constant HOME_CHAIN_ID = 8453;
 
     /// @notice Each bridge limit refills linearly from 0 → max over this window.
     ///         24h matches industry standard (USDC CCTP, USDT0, etc.).

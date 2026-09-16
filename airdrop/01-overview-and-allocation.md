@@ -12,9 +12,8 @@ Two design commitments flow from that:
 1. **Product first, token second.** The product is live and a usage season runs *before* TGE.
    We snapshot real behaviour, then make the airdrop claimable at/after TGE. Nobody is rewarded
    for speculation that hasn't happened yet.
-2. **Retention is a mechanism, not a hope.** Vesting, claim-and-stake bonuses, use-it-or-lose-it
-   tranches, real USDC yield, and sybil filtering are layered so that *holding/using* is the
-   higher-EV choice. See [`04-anti-dump-design.md`](./04-anti-dump-design.md).
+2. **Meaningful participation is the criterion.** Long-duration streaming and sybil filtering
+   reward sustained, verifiable contribution rather than cheaply manufactured activity.
 
 ## Allocation (100,000,000 VIRIO = 10% of supply)
 
@@ -35,8 +34,7 @@ It is **not new supply** — total stays 100M. The bonus pool is funded by:
 - the **5% community slice** (or a portion of it), and/or
 - **recycled forfeitures** from wallets that miss windows or churn.
 
-This keeps the cap intact and makes the program self-funding over its 10-month life: the more
-mercenaries forfeit, the larger the reward for loyal stakers.
+This keeps the cap intact and returns unused allocations to future community participation.
 
 ## Sequencing & release
 
@@ -51,26 +49,18 @@ mercenaries forfeit, the larger the reward for loyal stakers.
           testnet/OG/early Discord       on continued eligibility (System 3)
 ```
 
-- **Per-protocol release:** 1% of *total supply* unlocks each month for 10 months (matches
-  `TOKENOMICS.md`).
-- **Per-wallet vesting:** each eligible wallet's allocation vests in **10 equal tranches of 10%**.
-- Tranche 1 unlocks **at TGE**; tranches 2–10 unlock monthly thereafter.
+- **Per-protocol release:** 10M VIRIO may be claimed at genesis; the remaining 90M streams from
+  month 3 through month 24.
+- **Per-wallet vesting:** claims are participation-based and may be streamed, capped or withheld
+  after sybil and quality review.
 
 ## What this is NOT
 
-- **Not sale access.** The eligibility allowlist has nothing to do with buying tokens. The
-  public sale is open with no allowlist and no private rounds (`TOKENOMICS.md` §7).
-- **Not a holder reward.** There are no pre-TGE holders to snapshot. Holders/stakers are paid
-  separately and continuously via fee yield — see below.
+- **Not sale access.** There is no VIRIO public-sale allocation.
+- **Not a holder reward.** There are no pre-TGE holders to snapshot.
 
 ## Why holders don't need an airdrop
 
-In a product-first launch there is nothing to "reward holders" for at TGE. Holder value is
-structural and ongoing, straight from `TOKENOMICS.md`:
-- **stVIRIO earns 60% of protocol fees in USDC**, continuously, on the chain the fee was earned.
-- **15% of fees fund an on-market buyback** → standing VIRIO bid → Safety Module.
-- **Merchant fee discounts** for staked VIRIO create non-speculative demand.
-
-The airdrop's job is **user acquisition**; fee yield's job is **retention**. Keeping them
-separate prevents the airdrop from becoming a disguised inflation event.
+The airdrop's job is community bootstrap. Fee distribution and other staking mechanisms are
+separate proposed functionality and are disabled until legal and security review approves them.
 </content>

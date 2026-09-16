@@ -8,12 +8,13 @@ import {VIRIO}           from "../src/token/VIRIO.sol";
 import {Staking}         from "../src/token/Staking.sol";
 import {FeeDistributor, IStaking} from "../src/token/FeeDistributor.sol";
 import {SafetyModule}    from "../src/token/SafetyModule.sol";
+import {GenesisTokenomics} from "../src/token/GenesisTokenomics.sol";
 
-/// @notice Multichain-aware deploy script for $VIRIO.
+/// @notice Base-first deploy script for $VIRIO.
 ///
-/// Run on each supported chain (Ethereum, Base, Arbitrum, plus testnets).
-/// The VIRIO constructor mints the 1B genesis supply only on chainid 1.
-/// Every other chain starts at totalSupply == 0 and only fills via bridges.
+/// Run on Base at genesis. The VIRIO constructor mints the 1B genesis supply
+/// only on Base (chainid 8453). Other chains remain unsupported until a later
+/// governance-approved expansion and bridge configuration.
 ///
 ///   forge script script/DeployToken.s.sol \
 ///       --rpc-url $RPC_URL \
@@ -23,9 +24,11 @@ import {SafetyModule}    from "../src/token/SafetyModule.sol";
 /// Required env vars:
 ///   PRIVATE_KEY        — deployer private key
 ///   VIRIO_OWNER        — initial owner (multisig at TGE, DAO at month 12)
-///   VIRIO_GENESIS_TO   — address receiving the 1B mint (mainnet only; ignored elsewhere)
+///   VIRIO_GENESIS_TO   — token allocation distributor / timelock on Base
 ///   VIRIO_TREASURY     — chain-local treasury sink
-///   VIRIO_BUYBACK_OP   — chain-local buyback operator (EOA or contract)
+///   VIRIO_BUYBACK_OP   — reserved operator; buybacks are disabled at genesis
+///   GENESIS_LP_TOKEN_AMOUNT — amount of the 50M LP allocation actually deposited
+///   GENESIS_LP_QUOTE_AMOUNT — corresponding quote asset amount (recorded for launch ops)
 ///   VIRIO_FEE_TOKEN    — primary fee token to register with Staking (e.g. USDC)
 ///
 /// CREATE3 deterministic deployment is left as a follow-up; for v1 we accept
@@ -38,11 +41,15 @@ contract DeployToken is Script {
         address treasury      = vm.envAddress("VIRIO_TREASURY");
         address buybackOp     = vm.envAddress("VIRIO_BUYBACK_OP");
         address feeToken      = vm.envAddress("VIRIO_FEE_TOKEN");
+        uint256 genesisLpTokens = vm.envUint("GENESIS_LP_TOKEN_AMOUNT");
+        uint256 genesisLpQuote = vm.envUint("GENESIS_LP_QUOTE_AMOUNT");
+        require(block.chainid == 8453, "DeployToken: Base only at genesis");
+        require(genesisLpTokens <= GenesisTokenomics.allocation(GenesisTokenomics.Bucket.ProtocolLaunchLiquidity), "DeployToken: LP exceeds allocation");
 
         vm.startBroadcast(pk);
 
         // 1. VIRIO token (xERC20 + ERC20Votes).
-        //    Mints 1B to genesisTo iff this is mainnet (chainid 1).
+        //    Mints 1B to the allocation distributor on Base only.
         VIRIO virio = new VIRIO(owner, genesisTo);
 
         // 2. Staking (1:1 stVIRIO receipt).
@@ -75,10 +82,12 @@ contract DeployToken is Script {
         console.log("Treasury       :", treasury);
         console.log("BuybackOperator:", buybackOp);
         console.log("Fee token      :", feeToken);
+        console.log("Genesis LP VIRIO (of 50M max):", genesisLpTokens);
+        console.log("Genesis LP quote amount:", genesisLpQuote);
         console.log("");
         console.log("Next steps:");
-        console.log("  - Call VirioSubscriptionManager.setFeeRecipient(feeDistributor)");
-        console.log("  - Call VirioPayrollManager.setFeeRecipient(feeDistributor)");
-        console.log("  - Add bridge(s) via VIRIO.setLimits(bridge, mintMax, burnMax)");
+        console.log("  - Keep FeeDistributor legal/security gates disabled at genesis");
+        console.log("  - Deploy allocation custody and vesting contracts before distributing genesis supply");
+        console.log("  - Do not configure bridges until an expansion is approved");
     }
 }
