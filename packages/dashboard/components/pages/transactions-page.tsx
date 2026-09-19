@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useAccount } from "wagmi";
+import { AlertCircle, Loader2, ReceiptText } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -16,31 +17,65 @@ interface Props {
   visible: boolean;
 }
 
+const transactionRequests = new Map<string, Promise<Transaction[]>>();
+
 export function TransactionsPage({ visible }: Props) {
   const { address } = useAccount();
   const [customer, setCustomer] = React.useState("");
   const [status, setStatus] = React.useState("");
   const [items, setItems] = React.useState<Transaction[]>([]);
-
-  const fetchTx = React.useCallback(async () => {
-    if (!address) {
-      setItems([]);
-      return;
-    }
-    const params = new URLSearchParams({ wallet: address });
-    if (customer) params.set("counterparty", customer);
-    if (status) params.set("status", status);
-    try {
-      const r = await api<Transaction[]>("GET", "/api/transactions?" + params.toString());
-      setItems(r);
-    } catch {
-      /* ignore */
-    }
-  }, [address, customer, status]);
-
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
   React.useEffect(() => {
-    if (visible) fetchTx();
-  }, [visible, fetchTx]);
+    const wallet = address?.toLowerCase();
+    if (!visible || !wallet) return;
+    const walletKey = wallet;
+    let cancelled = false;
+
+    async function load() {
+      setLoading(true);
+      setError(null);
+      setItems([]);
+      try {
+        let request = transactionRequests.get(walletKey);
+        if (!request) {
+          request = api<Transaction[]>("GET", "/api/transactions?wallet=" + encodeURIComponent(walletKey));
+          transactionRequests.set(walletKey, request);
+        }
+        const r = await request;
+        if (!cancelled) setItems(r);
+      } catch (cause) {
+        if (!cancelled) {
+          setError(cause instanceof Error ? cause.message : "Could not load transaction history.");
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    void load();
+    return () => { cancelled = true; };
+  }, [address, visible]);
+
+  const filteredItems = React.useMemo(() => {
+    const counterparty = customer.trim().toLowerCase();
+    return items.filter((transaction) => {
+      if (counterparty && !transaction.counterparty.toLowerCase().includes(counterparty)) return false;
+      return !status || transaction.status === status;
+    });
+  }, [items, customer, status]);
+
+  const hasActiveFilters = customer.trim().length > 0 || status.length > 0;
+  const emptyMessage = !address
+    ? "Connect the wallet whose payment history you want to view."
+    : hasActiveFilters
+      ? "No transactions match those filters."
+      : "No transactions found for this wallet.";
+
+  /* The history request intentionally runs once per connected wallet. Filters are local. */
+  const clearFilters = () => {
+    setCustomer("");
+    setStatus("");
+  };
 
   return (
     <section className="animate-page-in mx-auto w-full max-w-[1180px] px-4 pb-20 pt-8 sm:px-6 sm:pt-9 lg:px-12">
@@ -59,7 +94,18 @@ export function TransactionsPage({ visible }: Props) {
             <option value="success">Success</option>
             <option value="failed">Failed</option>
           </Select>
+          {hasActiveFilters && (
+            <button onClick={clearFilters} className="text-left text-xs font-medium text-muted-foreground hover:text-foreground sm:ml-auto">
+              Clear filters
+            </button>
+          )}
         </div>
+        {error && (
+          <div className="mx-4 mt-4 flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive sm:mx-5">
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent">
@@ -74,14 +120,20 @@ export function TransactionsPage({ visible }: Props) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {items.length === 0 ? (
+            {loading ? (
               <TableRow className="hover:bg-transparent">
                 <TableCell colSpan={8} className="py-12 text-center text-sm text-muted-foreground">
-                  No transactions found
+                  <span className="inline-flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />Loading transaction history…</span>
+                </TableCell>
+              </TableRow>
+            ) : filteredItems.length === 0 ? (
+              <TableRow className="hover:bg-transparent">
+                <TableCell colSpan={8} className="py-12 text-center text-sm text-muted-foreground">
+                  <span className="inline-flex flex-col items-center gap-2"><ReceiptText className="h-5 w-5" />{emptyMessage}</span>
                 </TableCell>
               </TableRow>
             ) : (
-              items.map((t, i) => (
+              filteredItems.map((t, i) => (
                 <TableRow
                   key={t.id}
                   className="animate-row-in cursor-pointer"

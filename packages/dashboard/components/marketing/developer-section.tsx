@@ -84,17 +84,17 @@ const POINTS = [
   {
     icon: Terminal,
     title: "one-line install",
-    body: "npm install @virio/sdk — typed end to end, zero config.",
+    body: "Install the SDK and start creating subscription plans in your app.",
   },
   {
     icon: Boxes,
     title: "framework adapters",
-    body: "first-class entrypoints for react, vue, angular, and framework-neutral web apps.",
+    body: "Use Virio with React, Vue, Angular, or a plain web app.",
   },
   {
     icon: GitBranch,
     title: "test before mainnet",
-    body: "a full sandbox with mock wallets, executor simulation, and webhook replay.",
+    body: "Test plans, wallet approvals, scheduled charges, and webhooks before launch.",
   },
 ];
 
@@ -107,8 +107,8 @@ export function DeveloperSection() {
             <SectionHeading
               align="left"
               eyebrow="developer-first"
-              title="billing that disappears into your stack"
-              description="typed SDKs, predictable webhooks, and a sandbox that mirrors mainnet. ship onchain billing without becoming a payments team."
+              title="add crypto billing to your app"
+              description="Use SDKs, webhooks, and a test environment to launch subscriptions without building payment infrastructure yourself."
             />
             <div className="mt-8 space-y-4">
               {POINTS.map((p, i) => (

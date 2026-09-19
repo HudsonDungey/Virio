@@ -9,7 +9,7 @@ const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
     links: [
       { label: "Subscriptions", href: "/#features" },
       { label: "Payroll", href: "/dashboard" },
-      { label: "Programmable billing", href: "/#features" },
+      { label: "Crypto billing", href: "/#features" },
       { label: "Pricing", href: "/#pricing" },
       { label: "$VIRIO token", href: "/virio" },
     ],
@@ -42,8 +42,8 @@ export function Footer() {
           <div>
             <Logo size={28} />
             <p className="mt-4 max-w-[260px] text-[13px] leading-relaxed text-muted-foreground">
-              wallet-native subscription &amp; payroll infrastructure for
-              programmable money.
+              Crypto-native infrastructure for subscriptions, recurring
+              stablecoin payments, and payroll.
             </p>
             <div className="mt-5 flex items-center gap-2">
               <a

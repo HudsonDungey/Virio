@@ -19,19 +19,19 @@ export function Hero() {
             className="group inline-flex animate-fade-up items-center gap-2 rounded-full border border-border bg-card/80 px-3.5 py-1.5 text-[12px] font-medium text-muted-foreground backdrop-blur transition-colors hover:text-foreground"
           >
             <span className="status-dot" />
-            programmable billing v2 is live
+            crypto-native billing is on testnet
             <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
           </Link>
         </div>
 
         <h1 className="mx-auto mt-7 max-w-[920px] animate-fade-up text-balance text-center font-display text-[clamp(2.5rem,6vw,4.25rem)] font-semibold leading-[1.04] tracking-[-0.045em] text-foreground animation-delay-100">
-          recurring payments for{" "}
-          <span className="text-virio-emerald">programmable money</span>.
+          crypto-native{" "}
+          <span className="text-virio-emerald">subscription infrastructure</span>.
         </h1>
 
         <p className="mx-auto mt-6 max-w-[600px] animate-fade-up text-balance text-center text-[16px] leading-relaxed text-muted-foreground animation-delay-200">
-          wallet-native subscriptions, automated payroll, and stablecoin
-          billing infrastructure. settled onchain, executed autonomously.
+          Billing subscriptions with crypto is now possible. Accept recurring
+          stablecoin payments, manage plans, and automate payroll from one place.
         </p>
 
         <div className="mt-9 flex animate-fade-up flex-col items-center justify-center gap-3 animation-delay-300 sm:flex-row">
@@ -39,7 +39,7 @@ export function Hero() {
             href="/dashboard"
             className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-[10px] bg-virio-emerald px-5 text-[14px] font-semibold text-virio-emerald-ink transition-opacity duration-fast hover:opacity-90 sm:w-auto"
           >
-            start building
+            build with Virio
             <ArrowRight className="h-4 w-4" />
           </Link>
           <Link
@@ -47,7 +47,7 @@ export function Hero() {
             className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-[10px] border border-border bg-card px-5 text-[14px] font-semibold text-foreground transition-colors duration-fast hover:border-[hsl(var(--hairline-strong))] sm:w-auto"
           >
             <BookOpen className="h-4 w-4 text-muted-foreground" />
-            read the docs
+            see how it works
           </Link>
         </div>
 

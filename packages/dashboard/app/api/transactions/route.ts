@@ -16,10 +16,13 @@ export async function GET(req: Request) {
   if (!wallet || !/^0x[0-9a-fA-F]{40}$/.test(wallet)) {
     return NextResponse.json([]);
   }
-  const [subTxns, payrollTxns] = await Promise.all([
+  // One source being unavailable must not hide valid history from the other.
+  const [subResult, payrollResult] = await Promise.allSettled([
     transactionsByWallet(wallet as Hex),
     payrollTransactionsByWallet(wallet),
   ]);
+  const subTxns = subResult.status === "fulfilled" ? subResult.value : [];
+  const payrollTxns = payrollResult.status === "fulfilled" ? payrollResult.value : [];
   const merged = [...subTxns, ...payrollTxns].sort(
     (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
   );

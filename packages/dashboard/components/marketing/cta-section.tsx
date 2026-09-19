@@ -30,18 +30,18 @@ export function CtaSection() {
                 live on testnet
               </span>
               <h2 className="mx-auto mt-5 max-w-[640px] text-balance font-display text-[clamp(1.9rem,4.2vw,3rem)] font-semibold leading-[1.06] tracking-[-0.04em] text-white">
-                start settling onchain in an afternoon
+                start accepting crypto subscriptions
               </h2>
               <p className="mx-auto mt-4 max-w-[480px] text-balance text-[15px] leading-relaxed text-white/60">
-                spin up products, payroll, and programmable billing with one SDK.
-                no monthly fees — you only pay when you get paid.
+                Create stablecoin subscription plans and payroll schedules with
+                one SDK. No monthly platform fees.
               </p>
               <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
                 <Link
                   href="/dashboard"
                   className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-[10px] bg-virio-emerald px-5 text-[14px] font-semibold text-virio-emerald-ink transition-opacity duration-fast hover:opacity-90 sm:w-auto"
                 >
-                  start building
+                  build with Virio
                   <ArrowRight className="h-4 w-4" />
                 </Link>
                 <Link
@@ -49,7 +49,7 @@ export function CtaSection() {
                   className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-[10px] border border-white/15 bg-white/[0.04] px-5 text-[14px] font-medium text-white transition-colors duration-fast hover:bg-white/[0.08] sm:w-auto"
                 >
                   <BookOpen className="h-4 w-4 text-white/60" />
-                  read the docs
+                  see the docs
                 </Link>
               </div>
             </div>

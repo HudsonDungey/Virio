@@ -59,6 +59,12 @@ Virio payment activity is denominated in stablecoins such as USDC. Successful re
 
 VIRIO is intended to coordinate concrete network roles rather than sit in the payment path: ecosystem incentives for useful contributions, potential future executor stake/reputation/security, optional merchant participation benefits and governance. Protocol adoption can make these roles more relevant, but it does not guarantee liquidity, demand or price appreciation. Market participants establish VIRIO's price independently.
 
+If a security-approved Safety Module acquisition mechanism is enabled with the currently proposed 15% share, its quote-asset budget is mechanically calculated from actual protocol fees. For an annual protocol-fee amount F, the acquisition budget is 0.15 × F USDC and the units acquired are:
+
+    VIRIO acquired = (0.15 × F) / average execution price in USDC
+
+For example, under the product-planning assumption of $50 average charges and 1.5 charges per active relationship each month, 100,000 active relationships produce $90M annual payment volume and 1.8M charges. At the current fee parameters (0.25% plus $1 per charge), that is $2.025M in annual protocol fees, creating a $303,750 acquisition budget if the 15% mechanism is approved and enabled. The actual VIRIO amount depends on the market execution price, trading fees and slippage; this is not a token-price forecast.
+
 The current FeeDistributor and staking contracts contain proposed technical mechanisms for fee-token distribution, transferable stVIRIO and a Safety Module acquisition path. They are **disabled at genesis**:
 
 SECURITY_REVIEW_REQUIRED = true
