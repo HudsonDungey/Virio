@@ -8,21 +8,21 @@ const STEPS = [
     n: "01",
     icon: PackagePlus,
     title: "create a product or payroll",
-    body: "define a pricing plan or a payroll schedule. set the token, interval, spend caps, and webhook endpoints — from the dashboard or SDK.",
+    body: "Create a subscription plan or payroll schedule. Choose the stablecoin, billing interval, spending cap, and notifications.",
     code: "virio.products.create({ price: 49, interval: 'month' })",
   },
   {
     n: "02",
     icon: Fingerprint,
     title: "user approves once",
-    body: "the customer signs a single onchain approval. no re-signing every cycle — the agreement is enforced by the contracts themselves.",
+    body: "Your customer approves the plan in their wallet once. They do not need to approve each recurring charge again.",
     code: "await virio.subscriptions.subscribe(planId)",
   },
   {
     n: "03",
     icon: Workflow,
     title: "executors automate settlement",
-    body: "the executor network triggers every charge and payroll run on schedule, splits fees onchain, and settles directly to your wallet.",
+    body: "Executors run each payment on schedule. Funds settle onchain and the merchant receives the payment in their wallet.",
     code: "executor.run() → settle() → payout()",
   },
 ];
@@ -84,7 +84,7 @@ export function HowItWorks() {
         <SectionHeading
           eyebrow="how it works"
           title="from integration to settlement in three steps"
-          description="virio turns recurring payments into a single onchain primitive — the same execution model powers both subscriptions and payroll."
+          description="Virio handles the recurring payment flow: create a plan, get customer approval, then let scheduled stablecoin payments run onchain."
         />
 
         <div className="mt-14 grid items-start gap-10 lg:grid-cols-[1.15fr_0.85fr]">

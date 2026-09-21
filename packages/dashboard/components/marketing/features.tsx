@@ -22,42 +22,42 @@ const FEATURES: Feature[] = [
   {
     icon: Repeat,
     title: "recurring subscriptions",
-    body: "monthly, yearly, or custom intervals. customers approve once — executors handle every charge after that.",
+    body: "Set weekly, monthly, yearly, or custom billing. Your customer approves once; future charges run on schedule.",
   },
   {
     icon: Wallet,
     title: "automated payroll",
-    body: "store recipients onchain, schedule runs, and pay contractors and employees in stablecoins on autopilot.",
+    body: "Create a pay schedule and send stablecoins to contractors or team members automatically.",
   },
   {
     icon: Network,
     title: "executor network",
-    body: "a permissionless network of executors triggers settlement and earns rewards. no cron jobs to babysit.",
+    body: "Independent executors run scheduled charges, so you do not need to maintain a cron job or payment server.",
   },
   {
     icon: Code2,
     title: "developer SDKs",
-    body: "typed SDKs for typescript, react, and solidity. integrate billing in an afternoon.",
+    body: "Use TypeScript, React, or Solidity tools to add crypto billing to your product.",
   },
   {
     icon: BarChart3,
     title: "real-time analytics",
-    body: "MRR, churn, payroll volume, failed settlements, and protocol fees — streamed live to your dashboard.",
+    body: "See payments, failed charges, subscription activity, and payroll volume in one dashboard.",
   },
   {
     icon: Layers,
-    title: "multi-chain",
-    body: "deploy once, settle across every major EVM chain from a single integration.",
+    title: "built for EVM",
+    body: "Start on the supported network today, with an architecture designed to expand as usage grows.",
   },
   {
     icon: Coins,
     title: "stablecoin payments",
-    body: "native USDC and stablecoin support with transparent, onchain-verifiable settlement.",
+    body: "Accept USDC and other supported stablecoins with settlement you can verify onchain.",
   },
   {
     icon: Webhook,
-    title: "programmable billing",
-    body: "webhooks, spend caps, auto-cancel rules, and metered usage — billing logic that lives in code.",
+    title: "billing controls",
+    body: "Set spending caps, cancellation rules, webhooks, and custom billing intervals.",
   },
 ];
 
@@ -67,8 +67,8 @@ export function Features() {
       <div className="mx-auto max-w-[1200px] px-5 sm:px-8">
         <SectionHeading
           eyebrow="platform"
-          title="everything you need to bill onchain"
-          description="one programmable platform for subscriptions, payroll, and settlement — built for engineers who want billing to disappear into the stack."
+          title="everything you need for crypto subscriptions"
+          description="Create subscription plans, accept stablecoin payments, and automate payroll without building payment infrastructure from scratch."
         />
 
         <div className="mt-14 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
