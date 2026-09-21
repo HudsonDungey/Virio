@@ -72,7 +72,6 @@ contract FeeDistributor is Ownable2Step, ReentrancyGuard {
     error NothingToDistribute();
     error StakingDoesNotAcceptToken(address token);
     error FeeDistributionDisabled();
-    error ProtocolBuybackDisabled();
 
     // ─── Constructor ──────────────────────────────────────────────────────────
 
@@ -99,7 +98,6 @@ contract FeeDistributor is Ownable2Step, ReentrancyGuard {
     ///      the split.
     function distribute(address token) external nonReentrant returns (uint256 total) {
         if (!feeDistributionEnabled) revert FeeDistributionDisabled();
-        if (!protocolBuybackEnabled) revert ProtocolBuybackDisabled();
         total = IERC20(token).balanceOf(address(this));
         if (total == 0) revert NothingToDistribute();
 
@@ -109,8 +107,12 @@ contract FeeDistributor is Ownable2Step, ReentrancyGuard {
         uint256 toStakers  = total - toTreasury - toBuyback;
 
         // Treasury and buyback are simple transfers.
+        if (!protocolBuybackEnabled) {
+            toTreasury += toBuyback;
+            toBuyback = 0;
+        }
         if (toTreasury > 0) IERC20(token).safeTransfer(treasury, toTreasury);
-        if (toBuyback  > 0) IERC20(token).safeTransfer(buybackOperator, toBuyback);
+        if (toBuyback > 0) IERC20(token).safeTransfer(buybackOperator, toBuyback);
 
         // Staker portion goes through notifyReward, which is "pull" via
         // safeTransferFrom. We pre-approve the staking contract for exactly
@@ -171,9 +173,4 @@ contract FeeDistributor is Ownable2Step, ReentrancyGuard {
         emit ProtocolBuybackEnabledSet(enabled);
     }
 
-    /// @notice Owner-only rescue for tokens nobody is interested in distributing.
-    ///         Cannot front-run an in-flight distribute() because of nonReentrant.
-    function rescue(address token, address to, uint256 amount) external onlyOwner {
-        IERC20(token).safeTransfer(to, amount);
-    }
 }

@@ -2,92 +2,109 @@
 pragma solidity ^0.8.24;
 
 import {Script, console} from "forge-std/Script.sol";
-import {IERC20}          from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {TimelockController} from "@openzeppelin/contracts/governance/TimelockController.sol";
 
-import {VIRIO}           from "../src/token/VIRIO.sol";
-import {Staking}         from "../src/token/Staking.sol";
+import {VIRIO} from "../src/token/VIRIO.sol";
+import {Staking} from "../src/token/Staking.sol";
 import {FeeDistributor, IStaking} from "../src/token/FeeDistributor.sol";
-import {SafetyModule}    from "../src/token/SafetyModule.sol";
-import {GenesisTokenomics} from "../src/token/GenesisTokenomics.sol";
+import {SafetyModule} from "../src/token/SafetyModule.sol";
+import {GenesisAllocationVault} from "../src/token/GenesisAllocationVault.sol";
 
-/// @notice Base-first deploy script for $VIRIO.
-///
-/// Run on Base at genesis. The VIRIO constructor mints the 1B genesis supply
-/// only on Base (chainid 8453). Other chains remain unsupported until a later
-/// governance-approved expansion and bridge configuration.
-///
-///   forge script script/DeployToken.s.sol \
-///       --rpc-url $RPC_URL \
-///       --broadcast \
-///       -vvvv
-///
-/// Required env vars:
-///   PRIVATE_KEY        — deployer private key
-///   VIRIO_OWNER        — initial owner (multisig at TGE, DAO at month 12)
-///   VIRIO_GENESIS_TO   — token allocation distributor / timelock on Base
-///   VIRIO_TREASURY     — chain-local treasury sink
-///   VIRIO_BUYBACK_OP   — reserved operator; buybacks are disabled at genesis
-///   GENESIS_LP_TOKEN_AMOUNT — amount of the 50M LP allocation actually deposited
-///   GENESIS_LP_QUOTE_AMOUNT — corresponding quote asset amount (recorded for launch ops)
-///   VIRIO_FEE_TOKEN    — primary fee token to register with Staking (e.g. USDC)
-///
-/// CREATE3 deterministic deployment is left as a follow-up; for v1 we accept
-/// chain-specific addresses and surface them via the `chains.ts` SDK module.
+/// @notice Base genesis deployment with allocation custody and Vultisig-controlled timelock handoff.
+/// @dev The broadcast key is the temporary setup owner. It performs only the
+///      initialization needed to make the genesis allocation enforceable, then
+///      transfers every Ownable2Step contract to the timelock. Vultisig executes
+///      acceptOwnership through the 48-hour timelock after deployment.
 contract DeployToken is Script {
+    uint256 internal constant TIMELOCK_DELAY = 48 hours;
+
     function run() external {
-        uint256 pk            = vm.envUint("PRIVATE_KEY");
-        address owner         = vm.envAddress("VIRIO_OWNER");
-        address genesisTo     = vm.envOr("VIRIO_GENESIS_TO", owner);
-        address treasury      = vm.envAddress("VIRIO_TREASURY");
-        address buybackOp     = vm.envAddress("VIRIO_BUYBACK_OP");
-        address feeToken      = vm.envAddress("VIRIO_FEE_TOKEN");
-        uint256 genesisLpTokens = vm.envUint("GENESIS_LP_TOKEN_AMOUNT");
-        uint256 genesisLpQuote = vm.envUint("GENESIS_LP_QUOTE_AMOUNT");
+        uint256 pk = vm.envUint("PRIVATE_KEY");
+        address deploymentAdmin = vm.addr(pk);
+        address vultisig = vm.envAddress("VIRIO_VULTISIG");
+        address communityCustody = vm.envAddress("VIRIO_COMMUNITY_CUSTODY");
+        address earlyCommunityDistributor = vm.envAddress("VIRIO_EARLY_COMMUNITY_DISTRIBUTOR");
+        address founder = vm.envAddress("VIRIO_FOUNDER");
+        address team = vm.envAddress("VIRIO_TEAM");
+        address strategicCustody = vm.envAddress("VIRIO_STRATEGIC_ECOSYSTEM_CUSTODY");
+        address liquidityCustody = vm.envAddress("VIRIO_LIQUIDITY_CUSTODY");
+        address launchIncentivesCustody = vm.envAddress("VIRIO_LAUNCH_INCENTIVES_CUSTODY");
+        address advisors = vm.envAddress("VIRIO_ADVISORS");
+        address buybackOp = vm.envAddress("VIRIO_BUYBACK_OP");
+        address feeToken = vm.envAddress("VIRIO_FEE_TOKEN");
+        uint64 tgeTimestamp = uint64(vm.envUint("VIRIO_TGE_TIMESTAMP"));
+
         require(block.chainid == 8453, "DeployToken: Base only at genesis");
-        require(genesisLpTokens <= GenesisTokenomics.allocation(GenesisTokenomics.Bucket.ProtocolLaunchLiquidity), "DeployToken: LP exceeds allocation");
+
+        address[] memory proposers = new address[](1);
+        proposers[0] = vultisig;
+        address[] memory executors = new address[](1);
+        executors[0] = vultisig;
 
         vm.startBroadcast(pk);
 
-        // 1. VIRIO token (xERC20 + ERC20Votes).
-        //    Mints 1B to the allocation distributor on Base only.
-        VIRIO virio = new VIRIO(owner, genesisTo);
-
-        // 2. Staking (1:1 stVIRIO receipt).
-        Staking staking = new Staking(IERC20(address(virio)), owner);
-
-        // 3. SafetyModule (holds buyback VIRIO).
-        SafetyModule safetyModule = new SafetyModule(owner);
-
-        // 4. FeeDistributor (60/25/15 splitter).
+        TimelockController timelock = new TimelockController(
+            TIMELOCK_DELAY, proposers, executors, deploymentAdmin
+        );
+        GenesisAllocationVault allocationVault = new GenesisAllocationVault(deploymentAdmin);
+        VIRIO virio = new VIRIO(deploymentAdmin, address(allocationVault));
+        Staking staking = new Staking(IERC20(address(virio)), deploymentAdmin);
+        SafetyModule safetyModule = new SafetyModule(deploymentAdmin);
         FeeDistributor feeDistributor = new FeeDistributor(
-            owner,
-            IStaking(address(staking)),
-            treasury,
-            buybackOp
+            deploymentAdmin, IStaking(address(staking)), address(timelock), buybackOp
         );
 
-        // 5. Wire reward token into Staking up-front (owner action; deployer
-        //    is still owner pre-handoff). The DAO can add more later.
+        // The setup signer owns Staking at this point, so this cannot fail due
+        // to a multisig-only owner during deployment.
         staking.registerRewardToken(feeToken);
+
+        // The vault verifies it received the exact fixed supply and atomically
+        // funds all published allocations, including immutable vesting wallets.
+        allocationVault.initialize(
+            IERC20(address(virio)),
+            tgeTimestamp,
+            address(timelock),
+            communityCustody,
+            earlyCommunityDistributor,
+            founder,
+            team,
+            strategicCustody,
+            address(safetyModule),
+            liquidityCustody,
+            launchIncentivesCustody,
+            advisors
+        );
+
+        // Vultisig controls the timelock. Ownership acceptance must be queued
+        // through it after the mandatory 48-hour delay.
+        virio.transferOwnership(address(timelock));
+        staking.transferOwnership(address(timelock));
+        feeDistributor.transferOwnership(address(timelock));
+        safetyModule.transferOwnership(address(timelock));
+        allocationVault.transferOwnership(address(timelock));
+        timelock.revokeRole(timelock.DEFAULT_ADMIN_ROLE(), deploymentAdmin);
 
         vm.stopBroadcast();
 
-        console.log("=== Virio token deploy on chainid", block.chainid, "===");
-        console.log("VIRIO          :", address(virio));
-        console.log("Staking        :", address(staking));
-        console.log("FeeDistributor :", address(feeDistributor));
-        console.log("SafetyModule   :", address(safetyModule));
-        console.log("Owner          :", owner);
-        console.log("Genesis -> to  :", genesisTo);
-        console.log("Treasury       :", treasury);
-        console.log("BuybackOperator:", buybackOp);
-        console.log("Fee token      :", feeToken);
-        console.log("Genesis LP VIRIO (of 50M max):", genesisLpTokens);
-        console.log("Genesis LP quote amount:", genesisLpQuote);
+        console.log("=== VIRIO Base genesis deployment ===");
+        console.log("VIRIO                :", address(virio));
+        console.log("Allocation vault     :", address(allocationVault));
+        console.log("Founder vesting      :", allocationVault.founderVesting());
+        console.log("Team vesting         :", allocationVault.teamVesting());
+        console.log("Advisor vesting      :", allocationVault.advisorVesting());
+        console.log("Staking              :", address(staking));
+        console.log("FeeDistributor       :", address(feeDistributor));
+        console.log("SafetyModule         :", address(safetyModule));
+        console.log("48h timelock         :", address(timelock));
+        console.log("Vultisig proposer/executor:", vultisig);
+        console.log("Setup admin          :", deploymentAdmin);
         console.log("");
-        console.log("Next steps:");
-        console.log("  - Keep FeeDistributor security gates disabled at genesis");
-        console.log("  - Deploy allocation custody and vesting contracts before distributing genesis supply");
-        console.log("  - Do not configure bridges until an expansion is approved");
+        console.log("Required post-deploy action after timelock delay:");
+        console.log("  - Schedule and execute acceptOwnership on VIRIO, Staking, FeeDistributor,");
+        console.log("    SafetyModule and GenesisAllocationVault through the Vultisig timelock.");
+        console.log("  - Create liquidity separately from VIRIO_LIQUIDITY_CUSTODY; this script");
+        console.log("    deliberately does not claim to create a DEX pool.");
+        console.log("  - Keep bridge limits and fee/buyback gates disabled until approved.");
     }
 }

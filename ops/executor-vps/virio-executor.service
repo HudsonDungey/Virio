@@ -1,0 +1,24 @@
+[Unit]
+Description=Virio subscription executor
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=virio
+Group=virio
+WorkingDirectory=/opt/virio
+EnvironmentFile=/etc/virio-executor/executor.env
+ExecStart=/usr/bin/node /opt/virio/ops/executor-vps/virio-executor.mjs
+Restart=always
+RestartSec=5
+TimeoutStopSec=30
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/virio-executor
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target
