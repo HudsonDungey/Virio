@@ -5,9 +5,11 @@ section: Getting started
 order: 1
 ---
 
-Virio is **wallet-native recurring payments and programmable billing infrastructure for stablecoins**. It turns subscriptions, payroll, and metered billing into a single onchain primitive that any application can integrate.
+Virio is **open programmable billing infrastructure for stablecoins**. It gives applications, wallets and agents programmable payment authorization for recurring, usage-based and hybrid billing.
 
-Everything is **100% onchain, public, and permissionless**. There are no API keys, no accounts, and no hosted services. You integrate with your own RPC endpoint and the `@virio/sdk` framework, signing with your own wallet.
+Authorization and settlement are **onchain, public and permissionless**. There are no API keys, no accounts, and no hosted services: you integrate with your own RPC endpoint and the `@virio/sdk` framework, signing with your own wallet. Virio never custodies customer funds — money moves directly from payer to merchant.
+
+One part is deliberately not onchain. **Usage metering happens offchain**, because a transaction per API call would cost more than the call is worth. Usage settles in batches from statements the merchant signs, which introduces a trust assumption the rest of the protocol does not have. It is bounded by onchain spend caps, and [Metered Billing](/docs/metered-billing) states exactly what you are trusting and what you are not.
 
 :::diagram architecture
 :::

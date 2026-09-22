@@ -291,3 +291,90 @@ interface Fees {
 ```
 
 `PlanRecord` and `SubscriptionRecord` extend these with their onchain `id` (and `planId` for subscriptions). `Charge` mirrors the `ChargeExecuted` event.
+
+## Programmable billing
+
+The `virio.billing` surface talks to the authorization registry and its modules — a separate deployment from `virio.plans` / `virio.subscriptions`, which still drive the original subscription manager. Configure it with the three addresses:
+
+```ts
+const virio = new Virio({
+  contractAddress, chain, rpcUrl,
+  billing: { authorizationRegistry, recurringBilling, meteredBilling },
+});
+```
+
+Omit `billing` and everything else works exactly as before; `virio.billing` throws only if you use it unconfigured.
+
+### One call per billing relationship
+
+```ts
+// Recurring
+await virio.billing.create({
+  type: "recurring",
+  amount: "29.00",
+  interval: "month",
+  token: "USDC",
+});
+
+// Metered
+await virio.billing.create({
+  type: "metered",
+  meter: { unit: "api_request", pricePerUnit: "0.002" },
+  settlement: { interval: "day" },
+  limits: { monthlyCap: "100" },
+  token: "USDC",
+});
+
+// Hybrid — base + usage against ONE authorization, sharing one cap
+await virio.billing.create({
+  type: "hybrid",
+  base: { amount: "20", interval: "month" },
+  usage: { unit: "api_request", includedUnits: 10_000, pricePerUnit: "0.001" },
+  limits: { monthlyCap: "50" },
+  token: "USDC",
+});
+```
+
+`maxPerCharge` is mandatory onchain. Omit it and the SDK derives the tightest value your terms can need — it never defaults to something open-ended.
+
+### The lower-level calls
+
+`create()` is a composition, not a wall. Everything it uses is public:
+
+```ts
+virio.billing.authorize(params)                 // the authorization itself
+virio.billing.restrict(id, limits)              // tighten; never loosens
+virio.billing.revoke(id)
+virio.billing.remaining(id)                     // headroom under each cap
+virio.billing.listAuthorizations(address, role)
+virio.billing.listSettlements(filter)
+
+virio.billing.createPlan / subscribe / cancel / charge / chargeable
+virio.billing.createMeter / disableMeter / signStatement / settleStatement / settleable
+
+virio.billing.prepareAuthorize(params)          // calldata, no signing
+virio.billing.prepareRevoke(id)
+```
+
+`prepare*` returns calldata without touching the chain, so wallets and agents can inspect exactly what they are about to sign.
+
+## Usage
+
+```ts
+await virio.usage.record({
+  authorizationId,
+  meter: meterId,
+  quantity: 1,
+  idempotencyKey: requestId,   // required — a retry must bill once
+});
+
+await virio.usage.recordBatch(events);
+
+const usage = await virio.usage.get({ authorizationId, meterId, period: "current" });
+// { units, billableUnits, unitPrice, accruedAmount, periodCap, remainingCap, eventCount }
+
+const signed = await virio.usage.signNextStatement({ authorizationId, meterId });
+if (signed) await virio.billing.settleStatement(signed);
+```
+
+`signNextStatement` returns `null` when nothing is billable, so a quiet period costs no transaction. Storage sits behind a `UsageStore` interface; the default is in-memory, and production should back it with a real database.

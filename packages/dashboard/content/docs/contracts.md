@@ -139,6 +139,38 @@ Automated, bot-executable ERC-20 payroll. An employer creates a plan, adds recip
 | `getDueRecipients(planId) → bytes32[]` | view | Recipients currently payable. |
 | `getPlanRecipients(planId) → Recipient[]` | view | Full roster. |
 
+## VirioAuthorizationRegistry
+
+The authorization and settlement layer of the programmable billing stack. Holds every payer's spend limits and is the only place money moves — billing modules call `settle()`, which re-checks the caps from its own storage before transferring.
+
+| Function | Caller | Effect |
+| --- | --- | --- |
+| `authorize(params)` | payer | Creates an authorization with per-charge, period and lifetime limits. |
+| `restrict(id, …)` | payer | Tightens limits. Can never raise one. |
+| `revoke(id)` | payer or merchant | Stops every module settling against it. |
+| `settle(id, amount, executor)` | registered module | Checks limits, then transfers payer → merchant / executor / protocol. |
+| `remaining(id)` | anyone | Headroom under each cap, after any pending period rollover. |
+| `canSettle(module, id, amount)` | anyone | Whether a settlement would succeed, and the error selector if not. |
+| `setModuleStatus(module, status)` | owner | Registers, pauses or retires a billing module. |
+
+`authorizationId = keccak256(payer ‖ nonce ‖ chainId)`.
+
+## VirioRecurringBilling
+
+Fixed-amount, fixed-interval billing as a module. Plans and due dates live here; limits and settlement live in the registry.
+
+`createPlan` · `deactivatePlan` · `subscribe(planId, authorizationId)` · `cancel` · `charge` (permissionless) · `chargeable`
+
+`subscriptionId = keccak256(planId ‖ payer)` — unchanged from the original manager.
+
+## VirioMeteredBilling
+
+Usage billing settled from EIP-712 statements the merchant signs. See [Metered Billing](/docs/metered-billing) for the trust model before integrating.
+
+`createMeter` · `disableMeter` · `settle(statement, signature)` (permissionless) · `settleable` · `lastSettledEnd`
+
+A meter's `unitPrice` is immutable — repricing means a new meter.
+
 ## SubscriptionDelegate7702
 
 An [EIP-7702](https://eips.ethereum.org/EIPS/eip-7702) delegation target. When an EOA designates this contract as its delegate (a Type 4 transaction), `address(this)` **is** the EOA — the wallet's own code — while all token balances stay with the EOA. This enforces recurring permissions at the wallet itself.

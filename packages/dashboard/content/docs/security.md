@@ -37,6 +37,16 @@ The `SubscriptionDelegate7702` initialization is EIP-712 signed and bound to:
 - **`expiry`** — initialization signatures are time-boxed.
 - **signer must be `address(this)`** — only the EOA itself can authorize its delegate, preventing front-running.
 
+### Merchant-signed usage (metered billing)
+
+Metered billing settles from statements the merchant signs over off-chain usage. **A signature proves the merchant attested to the usage; it does not prove the usage occurred.** This is not trustless usage verification and should not be described as such.
+
+The on-chain protections are the meter's immutable unit price, the per-settlement / period / lifetime caps, the expiry, and revocation. A dishonest merchant can overstate usage *up to those caps*; it cannot exceed them, change the price, bill a revoked payer, or settle a window twice. Set caps to the most you would accept losing to a merchant you stop trusting.
+
+Statement replay is blocked twice over: the merchant's nonce is burned, and a per-(meter, authorization) watermark rejects any window overlapping one already settled. Signatures are verified with OpenZeppelin `SignatureChecker` — ERC-1271 is accepted, malleable signatures are not, and the recovered signer must be **exactly** the meter's merchant, never merely non-zero.
+
+See [Metered Billing](/docs/metered-billing) for the full verification list.
+
 ### Spend limits
 
 Two independent caps protect customers: the subscription's `totalSpendCap` (lifetime) and the delegate's `maxPerPeriod` (per window). Breaching the lifetime cap auto-cancels; breaching the per-period cap reverts `PeriodCapExceeded`.
@@ -47,11 +57,25 @@ A customer can stop future charges in any of these ways, all without involving t
 
 1. **Cancel** the subscription (`cancel`) — sets it inactive.
 2. **Set allowance to 0** — `approve(manager, 0)`; the next charge reverts.
-3. **Revoke the delegate** (EIP-7702) — `revoke()` bumps `authEpoch` and invalidates all authorizations atomically.
+3. **Revoke the authorization** (billing stack) — `revoke()` on the registry stops every billing module at once, so one call ends both halves of a hybrid plan.
+4. **Tighten limits instead of revoking** — `restrict()` lowers a cap or shortens an expiry. It can only ever tighten; there is no function that raises a limit.
+5. **Revoke the delegate** (EIP-7702) — `revoke()` bumps `authEpoch` and invalidates all authorizations atomically.
 
 ## Owner controls
 
 The managers have an `owner` that can tune fees and the fee recipient. The owner **cannot** touch user funds, move subscriptions, or charge on a user's behalf — its powers are limited to fee configuration and ownership transfer. Run ownership behind a multisig or timelock in production.
+
+:::warning
+**Known limitation in `VirioSubscriptionManager`.** Its `setExecutorFeeBps` and `setProtocolFeeBps` accept any value up to 10,000 — that is, 100%. Against a customer who has already approved the contract, a compromised owner key could therefore take far more per charge than the customer expected. The contract is immutable, so this cannot be fixed in place; it is a reason to hold ownership behind a multisig, and a reason the fee configuration is worth monitoring.
+
+`VirioAuthorizationRegistry` closes this: total fees are capped at `MAX_TOTAL_FEE_BPS` (5%) and the flat fee at 10 USDC, both far above the 0.35% + $1 default. Attempting to set more reverts.
+:::
+
+### Emergency controls on the billing stack
+
+The registry admits billing modules by address and can set one to `Paused`, which stops it settling without touching any payer's authorization. Pausing metered billing leaves recurring running, and vice versa — there is deliberately no single global switch.
+
+No owner action can redirect or seize a payer's funds. Pausing stops settlement; it does not reroute it.
 
 ## Upgradeability
 
