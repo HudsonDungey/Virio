@@ -4,7 +4,7 @@ Virio moves from a recurring-subscription protocol to open programmable billing
 infrastructure for stablecoins, adding metered and hybrid billing without
 touching the deployed subscription contract.
 
-Branch `claude/virio-billing-refactor-4skjd3` · 64 files, +9,184 / −41.
+Branch `claude/virio-billing-refactor-4skjd3` · 65 files, +9,616 / −41.
 
 ---
 
