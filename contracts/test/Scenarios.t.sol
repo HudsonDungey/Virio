@@ -185,9 +185,9 @@ contract ScenariosTest is Test {
         _chargeAndAssert(dave,  idC, planC.amount, botAlpha);
         _chargeAndAssert(eve,   idC, planC.amount, botBeta);
 
-        // planD is due multiple times over the past 25 hours; one charge per
-        // call moves nextChargeAt forward by period — call repeatedly to drain.
-        // First, charge carol's D once (she has no cap).
+        // planD (1 hour period) was last charged an hour in. Re-anchoring means
+        // the 24 idle hours collapse into a single catch-up charge rather than
+        // 24 queued ones — charge carol's D once (she has no cap).
         _chargeAndAssert(carol, idD, planD.amount, botAlpha);
 
         // eve.D has cap = 3 charges. She's used 2 (t=0 + t=1h). The next charge
@@ -197,7 +197,9 @@ contract ScenariosTest is Test {
 
         // ── Trigger eve.D spend-cap auto-cancel on next charge ───────────────
         bytes32 eveDid = mgr.computeSubId(idD, eve);
-        // Don't warp — the sub's nextChargeAt is already < now after 25h passed
+        // The charge above re-anchored eve.D to now + 1 hour, so warp a period
+        // to make it due again.
+        vm.warp(block.timestamp + planD.period);
         vm.expectEmit(true, true, false, false, address(mgr));
         emit IVirioSubscriptionManager.Cancelled(eveDid, address(mgr));
         vm.prank(botAlpha);
@@ -315,7 +317,13 @@ contract ScenariosTest is Test {
         assertEq(usdc.balanceOf(stranger), before + execFee, "stranger earned executor fee");
     }
 
-    function test_lateCharge_additivePeriod_noDrift() public {
+    /// A late executor does not produce a burst of catch-up charges: the
+    /// manager re-anchors nextChargeAt on the charge time, so a backlog costs
+    /// the customer one charge, not one per missed period. This is the
+    /// deployed contract's documented behaviour (invariant 6), and the property
+    /// customers actually care about — an executor outage cannot bill them
+    /// three times when it comes back.
+    function test_lateCharge_reanchorsOnChargeTime_noBackfill() public {
         // Anchor at a literal so the compiler can't re-evaluate `block.timestamp` later.
         uint256 t0 = 1_000_000;
         vm.warp(t0);
@@ -325,17 +333,24 @@ contract ScenariosTest is Test {
         // First charge at t0 → nextChargeAt = t0 + period
         vm.prank(botAlpha);
         mgr.charge(sid);
+        assertEq(mgr.getSubscription(sid).nextChargeAt, t0 + planA.period);
 
-        // Warp 3 periods ahead (executor was late). One catch-up charge should
-        // advance nextChargeAt by exactly one period (not anchor to block.timestamp).
+        // Warp 3 periods ahead (executor was late). One catch-up charge lands,
+        // and the schedule restarts from now rather than backfilling.
+        uint256 spentBefore = mgr.getSubscription(sid).totalSpent;
         vm.warp(t0 + 3 * planA.period);
         vm.prank(botAlpha);
         mgr.charge(sid);
 
         assertEq(
+            mgr.getSubscription(sid).totalSpent,
+            spentBefore + planA.amount,
+            "one charge for the whole backlog"
+        );
+        assertEq(
             mgr.getSubscription(sid).nextChargeAt,
-            t0 + 2 * planA.period,
-            "additive period anchoring"
+            t0 + 3 * planA.period + planA.period,
+            "schedule re-anchors on the charge time"
         );
     }
 
@@ -369,7 +384,9 @@ contract ScenariosTest is Test {
 
         IVirioSubscriptionManager.Subscription memory sub = mgr.getSubscription(sid);
         address merchant     = sub.merchant;
-        uint256 expectedNext = sub.nextChargeAt + sub.period;
+        // The manager re-anchors on the charge time (invariant 6), so a late
+        // charge does not inherit the missed due date.
+        uint256 expectedNext = block.timestamp + sub.period;
 
         uint256 mBefore = usdc.balanceOf(merchant);
         uint256 fBefore = usdc.balanceOf(FEE_RECIP);

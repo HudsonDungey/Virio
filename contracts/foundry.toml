@@ -18,8 +18,11 @@ fs_permissions = [
 # Named RPC endpoints — referenced as `forge script --rpc-url sepolia`.
 # Forge auto-loads contracts/.env, so SEPOLIA_RPC_URL there is picked up.
 [rpc_endpoints]
-anvil   = "http://127.0.0.1:8545"
-sepolia = "${SEPOLIA_RPC_URL}"
+anvil        = "http://127.0.0.1:8545"
+sepolia      = "${SEPOLIA_RPC_URL}"
+# New billing modules target Base Sepolia first — see docs/deployment.
+base-sepolia = "${BASE_SEPOLIA_RPC_URL}"
 
 [etherscan]
-sepolia = { key = "${ETHERSCAN_API_KEY}", chain = 11155111 }
+sepolia      = { key = "${ETHERSCAN_API_KEY}", chain = 11155111 }
+base-sepolia = { key = "${ETHERSCAN_API_KEY}", chain = 84532 }
