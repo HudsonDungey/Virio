@@ -12,6 +12,8 @@ import {
   BookOpen,
   Code2,
   Search,
+  ShieldCheck,
+  Gauge,
   X,
 } from "lucide-react";
 import { Logo } from "@/components/logo";
@@ -23,6 +25,8 @@ export type PageKey =
   | "payroll"
   | "products"
   | "subscriptions"
+  | "authorizations"
+  | "usage"
   | "transactions"
   | "testing";
 
@@ -41,6 +45,8 @@ const NAV: { key: PageKey; label: string; Icon: React.ElementType }[] = [
   { key: "payroll", label: "Payroll", Icon: Wallet },
   { key: "products", label: "Products", Icon: Package },
   { key: "subscriptions", label: "Subscriptions", Icon: RefreshCw },
+  { key: "authorizations", label: "Authorizations", Icon: ShieldCheck },
+  { key: "usage", label: "Usage", Icon: Gauge },
   { key: "transactions", label: "Transactions", Icon: ArrowLeftRight },
   { key: "testing", label: "Testing", Icon: FlaskConical },
 ];

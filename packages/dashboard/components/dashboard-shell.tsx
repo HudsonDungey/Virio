@@ -14,6 +14,8 @@ import {
   Plus,
   Zap,
   Send,
+  ShieldCheck,
+  Gauge,
 } from "lucide-react";
 import { Sidebar, type PageKey } from "@/components/sidebar";
 import { Topbar } from "@/components/topbar";
@@ -25,6 +27,8 @@ import { SubscriptionsPage } from "@/components/pages/subscriptions-page";
 import { TransactionsPage } from "@/components/pages/transactions-page";
 import { PayrollPage } from "@/components/pages/payroll-page";
 import { TestingPage } from "@/components/pages/testing-page";
+import { AuthorizationsPage, type AuthorizationRow } from "@/components/pages/authorizations-page";
+import { UsagePage, type SettlementRow } from "@/components/pages/usage-page";
 import { CreatePlanDialog } from "@/components/dialogs/create-plan-dialog";
 import { CreateSubDialog } from "@/components/dialogs/create-sub-dialog";
 import { useToast } from "@/components/ui/toast";
@@ -42,6 +46,8 @@ const PAGE_TITLES: Record<PageKey, string> = {
   payroll: "Payroll",
   products: "Products",
   subscriptions: "Subscriptions",
+  authorizations: "Authorizations",
+  usage: "Usage",
   transactions: "Transactions",
   testing: "Testing Suite",
 };
@@ -62,6 +68,8 @@ export function DashboardShell() {
   const [stats, setStats] = React.useState<Stats | null>(null);
   const [plans, setPlans] = React.useState<Plan[]>([]);
   const [subs, setSubs] = React.useState<Subscription[]>([]);
+  const [authorizations, setAuthorizations] = React.useState<AuthorizationRow[]>([]);
+  const [settlements, setSettlements] = React.useState<SettlementRow[]>([]);
 
   const knownTxIdsRef = React.useRef<Set<string>>(new Set());
   const [newTxIds, setNewTxIds] = React.useState<Set<string>>(new Set());
@@ -122,11 +130,33 @@ export function DashboardShell() {
     }
   }, [walletParam]);
 
+  /// Authorizations and settlements come from the billing stack. Both return
+  /// an empty list when the billing contracts are not configured, so the app
+  /// works the same before and after that deployment.
+  const fetchBilling = React.useCallback(async () => {
+    if (!walletParam) {
+      setAuthorizations([]);
+      setSettlements([]);
+      return;
+    }
+    try {
+      const [rows, settled] = await Promise.all([
+        api<AuthorizationRow[]>("GET", `/api/authorizations${walletParam}`),
+        api<SettlementRow[]>("GET", `/api/settlements${walletParam}`),
+      ]);
+      setAuthorizations(rows);
+      setSettlements(settled);
+    } catch (e) {
+      console.error("billing load failed", e);
+    }
+  }, [walletParam]);
+
   const refreshAll = React.useCallback(() => {
     fetchStats();
     fetchPlans();
     fetchSubs();
-  }, [fetchStats, fetchPlans, fetchSubs]);
+    fetchBilling();
+  }, [fetchStats, fetchPlans, fetchSubs, fetchBilling]);
 
   /// Fetch once when the connected wallet changes — never on page navigation.
   /// Refreshes are explicit (post-mutation via refreshAll or a manual reload).
@@ -135,7 +165,8 @@ export function DashboardShell() {
     fetchStats();
     fetchPlans();
     fetchSubs();
-  }, [fetchConfig, fetchStats, fetchPlans, fetchSubs]);
+    fetchBilling();
+  }, [fetchConfig, fetchStats, fetchPlans, fetchSubs, fetchBilling]);
 
   // No timed polling — initial fetch on mount, refreshAll is called by mutations
   // (createPlan, subscribe, cancel, deactivate) so the UI stays consistent.
@@ -158,6 +189,8 @@ export function DashboardShell() {
       { id: "nav-payroll", group: "Navigate", label: "Payroll", Icon: Wallet, run: () => go("payroll") },
       { id: "nav-products", group: "Navigate", label: "Products", Icon: Package, run: () => go("products") },
       { id: "nav-subs", group: "Navigate", label: "Subscriptions", Icon: RefreshCw, run: () => go("subscriptions") },
+      { id: "nav-auth", group: "Navigate", label: "Authorizations", Icon: ShieldCheck, keywords: "revoke spend limits caps", run: () => go("authorizations") },
+      { id: "nav-usage", group: "Navigate", label: "Usage", Icon: Gauge, keywords: "metered meters settlements", run: () => go("usage") },
       { id: "nav-tx", group: "Navigate", label: "Transactions", Icon: ArrowLeftRight, run: () => go("transactions") },
       { id: "nav-testing", group: "Navigate", label: "Testing Suite", Icon: FlaskConical, run: () => go("testing") },
       { id: "act-product", group: "Actions", label: "Create product", Icon: Plus, keywords: "new plan pricing", run: () => { go("products"); setCreatePlanOpen(true); } },
@@ -227,6 +260,12 @@ export function DashboardShell() {
               refresh={refreshAll}
               onCreate={() => setCreateSubOpen(true)}
             />
+          )}
+          {page === "authorizations" && (
+            <AuthorizationsPage authorizations={authorizations} refresh={refreshAll} />
+          )}
+          {page === "usage" && (
+            <UsagePage authorizations={authorizations} settlements={settlements} />
           )}
           {page === "transactions" && <TransactionsPage visible={page === "transactions"} />}
           {page === "testing" && <TestingPage testMode={config.testMode} />}
