@@ -47,6 +47,17 @@ Statement replay is blocked twice over: the merchant's nonce is burned, and a pe
 
 See [Metered Billing](/docs/metered-billing) for the full verification list.
 
+### Token assumptions
+
+Virio is **stablecoin-first, and only safe with well-behaved stablecoins**. Saying it supports arbitrary ERC-20s would not be true.
+
+The authorization registry uses OpenZeppelin `SafeERC20`, so tokens that return nothing or return `false` on failure are handled correctly. What is **not** safe:
+
+- **Fee-on-transfer tokens.** The registry charges `amount` against the payer's caps and transfers the net to the merchant. A token that deducts on transfer means the merchant receives less than was charged, and the payer's spend counter no longer matches what anyone received.
+- **Rebasing tokens.** Balances that change out from under a settlement break the same accounting.
+
+There is no on-chain token allowlist today — any ERC-20 can be named in an authorization or a plan. Choosing the token is the merchant's responsibility, and the payer sees it before authorizing. **Use USDC and equivalents.** Before approving spend against any contract, verify both the contract address and the token.
+
 ### Spend limits
 
 Two independent caps protect customers: the subscription's `totalSpendCap` (lifetime) and the delegate's `maxPerPeriod` (per window). Breaching the lifetime cap auto-cancels; breaching the per-period cap reverts `PeriodCapExceeded`.
