@@ -6,14 +6,12 @@ import { writeContract, waitForTransactionReceipt, readContract } from "wagmi/ac
 import { decodeEventLog, maxUint256, type Hex } from "viem";
 import { payrollAbi, erc20Abi } from "./abis";
 import { useVirioConfig } from "@/app/providers";
+import { chainIdFor, networkLabel } from "./networks";
 
 export function usdcUnits(display: number): bigint {
   return BigInt(Math.round(display * 1_000_000));
 }
 
-function chainIdFor(network: "sepolia" | "anvil"): number {
-  return network === "anvil" ? 31337 : 11155111;
-}
 
 interface CreatePayrollPlanInput {
   periodSeconds: number;
@@ -40,7 +38,7 @@ export function usePayrollActions() {
     if (account.chainId !== expectedChainId) {
       throw new Error(
         `wrong network — switch to ${
-          publicCfg.network === "anvil" ? "Anvil (31337)" : "Sepolia (11155111)"
+          networkLabel(publicCfg.network)
         }`,
       );
     }

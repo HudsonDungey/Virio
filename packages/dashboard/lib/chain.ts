@@ -11,20 +11,20 @@ import {
   type Chain,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { sepolia, foundry } from "viem/chains";
 import { getLocalConfig, buildRpcUrl } from "./local-config";
+import { chainFor, networkLabel } from "./networks";
 import { managerAbi, payrollAbi, erc20Abi } from "./abis";
 
 const cfg = getLocalConfig();
 const rpcUrl = buildRpcUrl(cfg);
-const chain: Chain = cfg.network === "anvil" ? foundry : sepolia;
+const chain: Chain = chainFor(cfg.network);
 
-if (cfg.network === "sepolia" && !rpcUrl) {
+if (cfg.network !== "anvil" && !rpcUrl) {
   // Console warning rather than a throw — lets the app still boot so the user
   // sees "Connect Wallet" + a clear "no RPC configured" error in the UI.
   // eslint-disable-next-line no-console
   console.warn(
-    "[virio] No Alchemy key or VIRIO_RPC_URL set in env — Sepolia reads will use viem's default public RPC and likely rate-limit.",
+    `[virio] No Alchemy key or VIRIO_RPC_URL set in env — ${networkLabel(cfg.network)} reads will use viem's default public RPC and likely rate-limit.`,
   );
 }
 

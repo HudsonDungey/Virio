@@ -51,3 +51,32 @@ Use a reliable authenticated RPC and a conservative confirmation count on mainne
   only after the next state read.
 - The health endpoint is localhost-only. Add a monitored reverse proxy only if remote health checks
   are required.
+
+## Programmable billing executor
+
+`virio-billing-executor.mjs` is a second executor for the authorization registry
+and its billing modules (recurring + metered). It does **not** replace
+`virio-executor.mjs` — that one keeps serving the deployed subscription manager
+on Ethereum Sepolia, and the two run side by side on different chains.
+
+```bash
+cp executor.env.base-sepolia.example /etc/virio-executor/billing.env
+# fill in the addresses printed by `yarn deploy:billing:base-sepolia`
+node virio-billing-executor.mjs
+```
+
+It exposes `/health` on `EXECUTOR_HEALTH_PORT` (9465 by default, so it does not
+collide with the subscription executor's 9464).
+
+**Recurring** works out of the box: it indexes subscriptions and charges the ones
+`chargeable()` says are due and still within the payer's limits.
+
+**Metered** needs a signed statement, and only the merchant can sign one. Set
+`VIRIO_STATEMENTS_URL` to a merchant-run endpoint returning
+`[{ statement, signature }, …]` and the executor will settle what it finds.
+Without it, the executor runs recurring only.
+
+That endpoint is untrusted input and the executor treats it as such — a
+malformed entry is skipped rather than taking the tick down, and every statement
+is checked with `settleable()` before any gas is spent. Nothing about it can
+make the contracts accept a bad settlement.

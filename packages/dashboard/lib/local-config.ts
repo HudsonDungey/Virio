@@ -2,6 +2,7 @@
 /// from a client component. Addresses live in `lib/addresses.ts`.
 
 import type { Network, VirioLocalConfig } from "./types";
+import { alchemyHostFor, ALL_NETWORKS } from "./networks";
 import {
   CONTRACTS,
   DEPLOYMENT_BLOCK,
@@ -27,7 +28,7 @@ export function getLocalConfig(): VirioLocalConfig {
   const execPk = asPk(process.env.EXECUTOR_PRIVATE_KEY ?? null);
 
   cached = {
-    network: (process.env.VIRIO_NETWORK?.trim() as "sepolia" | "anvil" | undefined) ?? NETWORK,
+    network: parseNetwork(process.env.VIRIO_NETWORK) ?? NETWORK,
     rpc: {
       alchemyKey,
       fullUrlOverride,
@@ -69,9 +70,23 @@ export interface PublicLocalConfig {
 export function buildRpcUrl(cfg: VirioLocalConfig): string | null {
   if (cfg.rpc.fullUrlOverride) return cfg.rpc.fullUrlOverride;
   if (!cfg.rpc.alchemyKey) return null;
-  const host =
-    cfg.network === "sepolia" ? "eth-sepolia.g.alchemy.com" : "eth-mainnet.g.alchemy.com";
+  const host = alchemyHostFor(cfg.network);
+  if (!host) return null;
   return `https://${host}/v2/${cfg.rpc.alchemyKey}`;
+}
+
+/// VIRIO_NETWORK is user input, so validate it rather than casting. An unknown
+/// value silently falling back to the wrong chain is how funds go to the wrong
+/// contract.
+function parseNetwork(value: string | undefined): Network | null {
+  const trimmed = value?.trim();
+  if (!trimmed) return null;
+  if (!(ALL_NETWORKS as string[]).includes(trimmed)) {
+    throw new Error(
+      `VIRIO_NETWORK must be one of ${ALL_NETWORKS.join(", ")} — received "${trimmed}"`,
+    );
+  }
+  return trimmed as Network;
 }
 
 export function publicView(cfg: VirioLocalConfig): PublicLocalConfig {

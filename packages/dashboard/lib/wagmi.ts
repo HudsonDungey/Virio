@@ -1,7 +1,7 @@
 "use client";
 
 import { http, createConfig, type Config } from "wagmi";
-import { mainnet, sepolia, foundry } from "wagmi/chains";
+import { mainnet, sepolia, baseSepolia, foundry } from "wagmi/chains";
 import {
   metaMaskWallet,
   rainbowWallet,
@@ -14,7 +14,12 @@ import type { PublicLocalConfig } from "./local-config";
 
 /// Build the wagmi config from the runtime public config. Called once in the providers tree.
 export function buildWagmiConfig(publicCfg: PublicLocalConfig): Config {
-  const primary = publicCfg.network === "anvil" ? foundry : sepolia;
+  const primary =
+    publicCfg.network === "anvil"
+      ? foundry
+      : publicCfg.network === "base-sepolia"
+        ? baseSepolia
+        : sepolia;
   const rpcUrl = publicCfg.rpcUrl ?? undefined;
 
   const connectors = connectorsForWallets(
@@ -39,13 +44,14 @@ export function buildWagmiConfig(publicCfg: PublicLocalConfig): Config {
     },
   );
 
-  // We list all three chains so the union of chain IDs in the wagmi types is stable.
+  // List every chain so the union of chain IDs in the wagmi types is stable.
   // The user's selected `primary` gets the Alchemy URL; the rest use viem defaults.
   return createConfig({
-    chains: [primary, sepolia, mainnet, foundry],
+    chains: [primary, sepolia, baseSepolia, mainnet, foundry],
     connectors,
     transports: {
       [sepolia.id]: http(primary.id === sepolia.id ? rpcUrl : undefined),
+      [baseSepolia.id]: http(primary.id === baseSepolia.id ? rpcUrl : undefined),
       [mainnet.id]: http(),
       [foundry.id]: http(primary.id === foundry.id ? rpcUrl : "http://127.0.0.1:8545"),
     },

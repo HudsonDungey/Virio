@@ -12,7 +12,8 @@ export interface VirioConfig {
   maxTransactions: number;
 }
 
-export type Network = "sepolia" | "anvil";
+/// The dashboard targets one chain at a time — see lib/networks.ts.
+export type Network = "sepolia" | "base-sepolia" | "anvil";
 
 export interface VirioLocalConfig {
   network: Network;

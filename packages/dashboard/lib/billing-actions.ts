@@ -7,6 +7,7 @@ import { decodeEventLog, type Hex } from "viem";
 import { registryAbi, recurringAbi, meteredAbi } from "./billing-abis";
 import { BILLING } from "./billing-config";
 import { useVirioConfig } from "@/app/providers";
+import { chainIdFor, networkLabel } from "./networks";
 
 /// Client-side billing writes. Every one is signed by the connected wallet —
 /// the dashboard never holds a key and never signs on a user's behalf.
@@ -40,14 +41,14 @@ export function useBillingActions() {
   const publicCfg = useVirioConfig();
 
   const expectedChainId = React.useMemo(
-    () => (publicCfg.network === "anvil" ? 31337 : 11155111),
+    () => chainIdFor(publicCfg.network),
     [publicCfg.network],
   );
 
   function assertReady() {
     if (!account.address) throw new Error("connect your wallet first");
     if (account.chainId !== expectedChainId) {
-      throw new Error(`wrong network — switch your wallet to chain ${expectedChainId}`);
+      throw new Error(`wrong network — switch your wallet to ${networkLabel(publicCfg.network)}`);
     }
     if (BILLING.authorizationRegistry === "0x0000000000000000000000000000000000000000") {
       throw new Error(

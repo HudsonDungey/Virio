@@ -6,6 +6,7 @@ import { writeContract, waitForTransactionReceipt, readContract } from "wagmi/ac
 import { decodeEventLog, maxUint256, type Hex } from "viem";
 import { managerAbi, erc20Abi } from "./abis";
 import { useVirioConfig } from "@/app/providers";
+import { chainIdFor, networkLabel } from "./networks";
 
 /// Convert a USDC display amount (e.g. 9.99) to base units (6 decimals).
 export function usdcUnits(display: number): bigint {
@@ -13,12 +14,8 @@ export function usdcUnits(display: number): bigint {
 }
 
 interface WriteHelpers {
-  /// On Sepolia we expect the user to be on Sepolia (11155111). On anvil we expect 31337.
+  /// The chain id the connected wallet must be on — see lib/networks.ts.
   expectedChainId: number;
-}
-
-function chainIdFor(network: "sepolia" | "anvil"): number {
-  return network === "anvil" ? 31337 : 11155111;
 }
 
 interface CreatePlanInput {
@@ -46,7 +43,7 @@ export function useVirioActions() {
     if (!account.address) throw new Error("connect your wallet first");
     if (account.chainId !== help.expectedChainId) {
       throw new Error(
-        `wrong network — please switch your wallet to ${publicCfg.network === "anvil" ? "Anvil (31337)" : "Sepolia (11155111)"}`,
+        `wrong network — please switch your wallet to ${networkLabel(publicCfg.network)}`,
       );
     }
     if (publicCfg.contracts.manager === "0x0000000000000000000000000000000000000000") {
