@@ -22,6 +22,7 @@ import {
   MissingAccountError,
   MissingTokenError,
   MissingWalletError,
+  VirioError,
 } from "./errors.js";
 import {
   findChargeLogs,
@@ -29,6 +30,9 @@ import {
   findSubscribedLogs,
   type IndexerOptions,
 } from "./indexer.js";
+import { BillingClient, type BillingAddresses } from "./billing/client.js";
+import { UsageClient } from "./usage/client.js";
+import type { UsageStore } from "./usage/store.js";
 import type {
   Charge,
   CreatePlanParams,
@@ -77,6 +81,16 @@ export interface VirioOptions {
   publicClient?: PublicClient;
   /** Block to start event scans from (skips pre-deployment history). */
   deploymentBlock?: bigint | number;
+  /**
+   * Addresses of the programmable billing stack. Omit them and `virio.billing`
+   * / `virio.usage` throw a configuration error on first use — every existing
+   * subscription-manager call keeps working either way.
+   */
+  billing?: BillingAddresses;
+  /** First block scanned for billing events; defaults to `deploymentBlock`. */
+  billingDeploymentBlock?: bigint | number;
+  /** Backing store for off-chain usage. Defaults to an in-memory store. */
+  usageStore?: UsageStore;
 }
 
 // ─── Resource namespaces (Stripe-style grouping) ─────────────────────────────
@@ -153,6 +167,10 @@ export class Virio {
   /** Stripe-style resource namespace for subscriptions. */
   readonly subscriptions: SubscriptionsNamespace;
 
+  private readonly billingClient: BillingClient | undefined;
+  private usageClient: UsageClient | undefined;
+  private readonly usageStore: UsageStore | undefined;
+
   constructor(options: VirioOptions) {
     this.contractAddress = options.contractAddress;
     this.chain = resolveChain(options.chain);
@@ -201,6 +219,48 @@ export class Virio {
       prepareCharge: (id) => this.prepareCharge(id),
       prepareCheckout: (p, customer) => this.prepareCheckout(p, customer),
     };
+
+    this.usageStore = options.usageStore;
+    this.billingClient = options.billing
+      ? new BillingClient({
+          addresses: options.billing,
+          publicClient: this.pub,
+          walletClient: this.wal,
+          chain: this.chain,
+          token: this.usdc,
+          deploymentBlock:
+            options.billingDeploymentBlock === undefined
+              ? this.deploymentBlock
+              : BigInt(options.billingDeploymentBlock),
+        })
+      : undefined;
+  }
+
+  // ─── Programmable billing ─────────────────────────────────────────────────
+
+  /**
+   * Recurring, metered and hybrid billing on the authorization registry.
+   *
+   * Separate from `subscriptions`, which talks to the original
+   * VirioSubscriptionManager. Both work; they are different deployments, and an
+   * integration on the old one needs no changes.
+   */
+  get billing(): BillingClient {
+    if (!this.billingClient) {
+      throw new VirioError(
+        "CONFIG_INVALID",
+        "Virio: billing is not configured. Pass `billing: { authorizationRegistry, recurringBilling, meteredBilling }` to the constructor.",
+      );
+    }
+    return this.billingClient;
+  }
+
+  /** Off-chain usage recording and settlement statements for metered billing. */
+  get usage(): UsageClient {
+    if (!this.usageClient) {
+      this.usageClient = new UsageClient({ billing: this.billing, store: this.usageStore });
+    }
+    return this.usageClient;
   }
 
   // ─── Constructors ────────────────────────────────────────────────────────

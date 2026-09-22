@@ -25,7 +25,7 @@ export interface IndexerOptions {
   limit?: number;
 }
 
-type DecodedLog = {
+export type DecodedLog = {
   eventName: string;
   args: Record<string, unknown>;
   blockNumber: bigint;
@@ -60,6 +60,33 @@ async function getLogsPaged(
     cursor = end + 1n;
   }
   return out;
+}
+
+/**
+ * Paged logs for one event of any Virio contract, filtered by its indexed args.
+ *
+ * The helpers below predate the billing stack and stay for the subscription
+ * manager's fixed event set. New callers (the billing client) pass their own
+ * ABI and event name rather than adding another near-identical helper here.
+ */
+export async function scanLogs(
+  pub: PublicClient,
+  contractAddress: Address,
+  abi: readonly unknown[],
+  eventName: string,
+  filter: Record<string, unknown>,
+  opts: IndexerOptions,
+): Promise<DecodedLog[]> {
+  const event = (abi as { type: string; name?: string }[]).find(
+    (x) => x.type === "event" && x.name === eventName,
+  );
+  if (!event) throw new Error(`Virio: no "${eventName}" event in the supplied ABI.`);
+
+  const args: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(filter)) {
+    if (value !== undefined) args[key] = value;
+  }
+  return getLogsPaged(pub, contractAddress, event, args, opts);
 }
 
 /** All `Subscribed` logs, optionally filtered by indexed `customer` and/or `planId`. */
